@@ -1,0 +1,17 @@
+{
+  "name": "threadverse",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter server dev\" \"pnpm --filter web dev\"",
+    "dev:web": "pnpm --filter web dev",
+    "dev:server": "pnpm --filter server dev",
+    "dev:desktop": "pnpm --filter desktop dev",
+    "build": "pnpm --filter web build && pnpm --filter server build",
+    "electron:dev": "pnpm --filter desktop dev",
+    "electron:build": "pnpm --filter desktop build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
