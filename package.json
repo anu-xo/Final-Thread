@@ -12,6 +12,27 @@
     "electron:build": "pnpm --filter desktop build"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@tailwindcss/vite": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.4",
+    "tailwindcss": "^4.3.1"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "@tanstack/react-query": "^5.101.1",
+    "@tiptap/pm": "^3.27.1",
+    "@tiptap/react": "^3.27.1",
+    "@tiptap/starter-kit": "^3.27.1",
+    "axios": "^1.18.1",
+    "mongodb": "^7.4.0",
+    "react-helmet-async": "^3.0.0",
+    "react-hook-form": "^7.80.0",
+    "react-router-dom": "^6.30.4",
+    "react-window": "^2.2.7",
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
   }
 }

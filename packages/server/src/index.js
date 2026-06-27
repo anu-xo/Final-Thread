@@ -5,7 +5,9 @@ const morgan = require('morgan');
 const compression = require('compression');
 const mongoose = require('mongoose');
 const { Redis } = require('ioredis');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+console.log('MONGODB_URI loaded:', !!process.env.MONGODB_URI);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 // ── MongoDB Connection ──────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
+    console.log("Your URI is:", process.env.MONGODB_URI);
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 5000,
     });
@@ -45,6 +48,11 @@ redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 
 // Make redis available globally in app
 app.set('redis', redis);
+
+// ── Embedding Worker ─────────────────────────────────────────────────────────
+require('./jobs/embeddingWorker') // starts listening for embedding jobs
+const { testEmbeddingConnection } = require('./services/embeddingService')
+testEmbeddingConnection() // non-blocking test on startup
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {

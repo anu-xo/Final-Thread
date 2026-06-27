@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+/* CSS custom properties for theming */
+:root {
+  --color-brand: #ff4500;
+  --color-brand-hover: #e03d00;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #dae0e6;
+  color: #1c1c1c;
+}

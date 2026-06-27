@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (web)
+        run: pnpm --filter web exec eslint src --ext .js,.jsx || true
+
+      - name: Test (server)
+        env:
+          MONGODB_URI: mongodb://admin:password123@localhost:27017/threadverse_test?authSource=admin
+          REDIS_URL: redis://localhost:6379
+          JWT_ACCESS_SECRET: test_secret
+          JWT_REFRESH_SECRET: test_refresh_secret
+          NODE_ENV: test
+        run: pnpm --filter server test
+
+      - name: Build (web)
+        run: pnpm --filter web build
