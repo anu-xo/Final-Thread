@@ -2,14 +2,15 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, staging]
   pull_request:
-    branches: [main]
+    branches: [main, staging]
 
 jobs:
-  lint-and-test:
+  lint-test-build:
     runs-on: ubuntu-latest
 
+    # Keep these! Your backend needs them for integration tests
     services:
       mongodb:
         image: mongo:7
@@ -24,11 +25,11 @@ jobs:
           - 6379:6379
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3  # Updated to v3
         with:
           version: 9
 
@@ -36,7 +37,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
+          cache: 'pnpm'            # Optimizes speeds by caching pnpm modules
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -53,5 +54,5 @@ jobs:
           NODE_ENV: test
         run: pnpm --filter server test
 
-      - name: Build (web)
+      - name: Build applications
         run: pnpm --filter web build

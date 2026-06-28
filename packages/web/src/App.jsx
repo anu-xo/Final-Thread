@@ -1,19 +1,20 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
+import Register from './pages/Register'
+import Login from './pages/Login'
 
-// Page placeholders (will be built out Day 2+)
 const Home = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center">
       <h1 className="text-4xl font-bold text-[#ff4500]">⚡ ThreadVerse</h1>
       <p className="text-gray-600 mt-2">Day 1 scaffold — frontend running ✅</p>
       
-      {/* FIXED: Added the missing '<a' to the anchor tag below */}
+      {/* Fixed the missing opening tag here */}
       <a 
         href="http://localhost:5000/api/health"
         target="_blank"
-        rel="noopener noreferrer" 
+        rel="noopener noreferrer"
         className="mt-4 inline-block text-blue-600 underline"
       >
         Check API Health →
@@ -38,7 +39,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* All routes will be added Day 2+ */}
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>
