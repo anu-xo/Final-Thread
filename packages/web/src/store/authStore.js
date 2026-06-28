@@ -1,13 +1,12 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 export const useAuthStore = create((set) => ({
   user: null,
   accessToken: null,
-  isAuthenticated: false,
 
-  setAuth: (user, accessToken) =>
-    set({ user, accessToken, isAuthenticated: true }),
+  setAuth: (user, accessToken) => set({ user, accessToken }),
+  clearAuth: () => set({ user: null, accessToken: null }),
 
-  clearAuth: () =>
-    set({ user: null, accessToken: null, isAuthenticated: false }),
-}))
+  // Called after a refresh — only update the token, keep user data
+  setAccessToken: (accessToken) => set({ accessToken }),
+}));

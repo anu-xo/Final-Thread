@@ -2,8 +2,8 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const express = require('express');
-const http = require('http');                 // Added for Socket.io wrapper
-const { Server } = require('socket.io');       // Added Socket.io server
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── HTTP & Socket.io Server Setup ───────────────────────────────────────────
-const httpServer = http.createServer(app);     // Wrap Express in an HTTP Server
+const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: [
@@ -28,12 +28,10 @@ const io = new Server(httpServer, {
   },
 });
 
-// Make socket.io available globally in app
 app.set('io', io);
 
 io.on('connection', (socket) => {
   console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
-
   socket.on('disconnect', () => {
     console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
   });
@@ -43,8 +41,8 @@ io.on('connection', (socket) => {
 app.use(helmet());
 app.use(cors({
   origin: [
-    'http://localhost:5173',  // Vite dev server
-    'electron://'             // Electron renderer
+    'http://localhost:5173',
+    'electron://'
   ],
   credentials: true,
 }));
@@ -81,11 +79,11 @@ const redis = new Redis(process.env.REDIS_URL, {
 redis.on('connect', () => console.log('✅ Redis connected'));
 redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 
-// Make redis available globally in app
 app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
+
 app.get('/api/health', async (req, res) => {
   const dbState = mongoose.connection.readyState;
   const dbStatus = dbState === 1 ? 'connected' : 'disconnected';
@@ -106,7 +104,6 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
-// Desktop version endpoint (Day 3 task, scaffolded now)
 app.get('/api/desktop/version', (req, res) => {
   res.json({
     minimum: '1.0.0',
@@ -128,17 +125,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── Start ────────────────────────────────────────────────────────────────────
-connectDB().then(() => {
-  // CRITICAL: We listen using httpServer now, NOT app.listen
-  httpServer.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-    console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-    
-    // ── Embedding Worker Startup ─────────────────────────────────────────────
-    require('./jobs/embeddingWorker.js'); 
-    console.log('[Server] Embedding worker started');
+// ── Start (only when run directly, not when imported by tests) ───────────────
+if (require.main === module) {
+  connectDB().then(() => {
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+      console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+      require('./jobs/embeddingWorker.js');
+      console.log('[Server] Embedding worker started');
+    });
   });
-});
+}
 
-module.exports = app; // for Jest tests
+// ── Exports (app for Jest tests, httpServer for graceful shutdown etc.) ───────
+module.exports = { app, httpServer };

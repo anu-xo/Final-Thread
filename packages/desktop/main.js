@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, Tray, Menu, shell, Notification, dialog } = require('electron')
 const path = require('path')
 const Store = require('electron-store')
 
@@ -16,12 +16,12 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    frame: false,           // custom title bar (built Day 14)
+    frame: false,            // Custom title bar (built Day 14)
     titleBarStyle: 'hidden',
     webPreferences: {
-      nodeIntegration: false,       // security: no Node in renderer
-      contextIsolation: true,       // security: isolate preload
-      sandbox: true,                // security: sandboxed renderer
+      nodeIntegration: false, // Security: no Node in renderer
+      contextIsolation: true, // Security: isolate preload
+      sandbox: true,          // Security: sandboxed renderer
       webSecurity: true,
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -39,7 +39,7 @@ function createWindow() {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
-// Window controls (for frameless window)
+// 1. Window controls (Frameless windows require synchronous `.on` events)
 ipcMain.on('window:minimize', () => mainWindow?.minimize())
 ipcMain.on('window:maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize()
@@ -47,20 +47,46 @@ ipcMain.on('window:maximize', () => {
 })
 ipcMain.on('window:close', () => mainWindow?.close())
 
-// Settings (electron-store)
+// 2. Notifications
+ipcMain.handle('show-notification', (_, { title, body }) => {
+  new Notification({ title, body }).show()
+})
+
+// 3. Settings (Merged the two styles using the safer object-iterator style)
 ipcMain.handle('settings:get', () => store.store)
+ipcMain.handle('get-settings', () => store.store) // Alias helper
+
 ipcMain.handle('settings:set', (_, key, value) => {
   store.set(key, value)
   return true
 })
-
-// Update installer
-ipcMain.on('app:install-update', () => {
-  // Will be wired to electron-updater on Day 16
-  console.log('Install update requested')
+ipcMain.handle('set-settings', (_, settings) => {
+  Object.entries(settings).forEach(([key, value]) => store.set(key, value))
+  return store.store
 })
 
-// Navigate renderer to a path
+// 4. Updates & Version Check (Wired for Day 16 hooks)
+ipcMain.handle('check-for-updates', () => {
+  console.log('Update check triggered from UI')
+  // autoUpdater.checkForUpdates() — Day 16
+})
+ipcMain.on('app:install-update', () => console.log('Install update requested'))
+ipcMain.handle('install-update', () => {
+  console.log('Quit and install update requested')
+  // autoUpdater.quitAndInstall() — Day 16
+})
+ipcMain.handle('get-version', () => app.getVersion())
+
+// 5. File Selection Native Dialogs
+ipcMain.handle('select-file', async (_, options = {}) => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile'],
+    filters: options.filters || [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
+  })
+  return result.filePaths // Returns array of selected file paths to renderer
+})
+
+// 6. Navigation Helpers
 ipcMain.on('navigate', (_, path) => {
   mainWindow?.webContents.send('navigate', path)
 })
@@ -84,9 +110,13 @@ app.setAsDefaultProtocolClient('threadverse')
 
 app.on('open-url', (event, url) => {
   event.preventDefault()
-  const parsed = new URL(url)
-  const deepPath = `/${parsed.host}${parsed.pathname}`
-  mainWindow?.webContents.send('navigate', deepPath)
-  mainWindow?.show()
-  mainWindow?.focus()
+  try {
+    const parsed = new URL(url)
+    const deepPath = `/${parsed.host}${parsed.pathname}`
+    mainWindow?.webContents.send('navigate', deepPath)
+    mainWindow?.show()
+    mainWindow?.focus()
+  } catch (err) {
+    console.error('Failed to parse deep link URL:', err)
+  }
 })

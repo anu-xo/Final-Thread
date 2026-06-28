@@ -1,30 +1,29 @@
-const { contextBridge, ipcRenderer } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose ONLY whitelisted, typed methods to the renderer
-// Never expose raw ipcRenderer or Node.js APIs
 contextBridge.exposeInMainWorld('electronAPI', {
-  // Window controls
-  minimize: () => ipcRenderer.send('window:minimize'),
-  maximize: () => ipcRenderer.send('window:maximize'),
-  close: () => ipcRenderer.send('window:close'),
+  // Notification
+  showNotification: (title, body) =>
+    ipcRenderer.invoke('show-notification', { title, body }),
 
-  // Settings (electron-store)
-  getSettings: () => ipcRenderer.invoke('settings:get'),
-  setSettings: (key, value) => ipcRenderer.invoke('settings:set', key, value),
+  // Settings persistence
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
 
   // Updates
-  installUpdate: () => ipcRenderer.send('app:install-update'),
-
-  // Navigation (deep links trigger this)
-  onNavigate: (callback) => ipcRenderer.on('navigate', (_, path) => callback(path)),
-
-  // Notifications
-  showNotification: (title, body) => {
-    new Notification(title, { body }).onclick = () => {
-      ipcRenderer.send('window:focus')
-    }
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (_, info) => callback(info));
+    return () => ipcRenderer.removeAllListeners('update-available');
   },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', (_, info) => callback(info));
+    return () => ipcRenderer.removeAllListeners('update-downloaded');
+  },
+  installUpdate: () => ipcRenderer.invoke('install-update'),
 
-  // Check if running in Electron (used by useIsDesktop hook)
-  isElectron: true,
-})
+  // File selection (for post image attachment — Day 7)
+  selectFile: (options) => ipcRenderer.invoke('select-file', options),
+
+  // App info
+  getVersion: () => ipcRenderer.invoke('get-version'),
+});
