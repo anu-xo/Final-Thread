@@ -1,30 +1,21 @@
-import Bull from 'bull';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+﻿import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getEmbeddingQueue } from './embeddingQueue.js';
 import { PostEmbedding } from '../models/index.js';
 
-const embeddingQueue = new Bull('embedding', {
-  redis: process.env.REDIS_URL,
-});
-
+const embeddingQueue = getEmbeddingQueue();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Process embedding jobs
 embeddingQueue.process(async (job) => {
   const { postId, communityId, text, type = 'post' } = job.data;
-
   console.log(`[EmbeddingWorker] Processing ${type} ${postId}`);
-
   const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
   const result = await model.embedContent(text);
-  const embedding = result.embedding.values;   // 768-dim array
-
+  const embedding = result.embedding.values;
   await PostEmbedding.create({ postId, communityId, type, text, embedding });
-
-  console.log(`[EmbeddingWorker] ✓ Embedded ${type} ${postId} (${embedding.length} dims)`);
+  console.log(`[EmbeddingWorker] Done: ${postId} (${embedding.length} dims)`);
   return { success: true };
 });
 
-// Dead-letter queue — log failures
 embeddingQueue.on('failed', (job, err) => {
   console.error(`[EmbeddingWorker] Job ${job.id} failed:`, err.message);
 });

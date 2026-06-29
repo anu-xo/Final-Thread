@@ -10,17 +10,16 @@ export function useAuthInit() {
   useEffect(() => {
     const init = async () => {
       try {
-        // Get new access token using the httpOnly cookie (sent automatically)
-        const { data: refreshData } = await api.post('/auth/refresh');
-        
-        // Fetch user profile with the new access token
-        const { data: meData } = await api.get('/auth/me', {
-          headers: { Authorization: `Bearer ${refreshData.accessToken}` }
+        const { data: refreshData } = await api.post('/auth/refresh', null, {
+          signal: AbortSignal.timeout(3000), // fail fast if backend is down
         });
-        
+        const { data: meData } = await api.get('/auth/me', {
+          headers: { Authorization: `Bearer ${refreshData.accessToken}` },
+          signal: AbortSignal.timeout(3000),
+        });
         setAuth(meData.user, refreshData.accessToken);
       } catch {
-        // No valid session — user stays logged out, which is fine
+        // No session or backend down — continue as guest
       } finally {
         setIsInitializing(false);
       }

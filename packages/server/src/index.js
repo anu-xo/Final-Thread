@@ -1,17 +1,24 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+﻿import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import express from 'express';
+import http from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import compression from 'compression';
+import mongoose from 'mongoose';
+import { Redis } from 'ioredis';
+import cookieParser from 'cookie-parser';
+import authRoutes from './routes/auth.js';
+import communityRoutes from './routes/communities.js';
 
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
-const mongoose = require('mongoose');
-const { Redis } = require('ioredis');
-const cookieParser = require('cookie-parser');
-const authRoutes = require('./routes/auth');
+// __dirname equivalent for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,10 +27,7 @@ const PORT = process.env.PORT || 5000;
 const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: [
-      'http://localhost:5173',  // Vite dev server
-      'electron://'             // Electron renderer
-    ],
+    origin: ['http://localhost:5173', 'electron://'],
     credentials: true,
   },
 });
@@ -39,13 +43,7 @@ io.on('connection', (socket) => {
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'electron://'
-  ],
-  credentials: true,
-}));
+app.use(cors({ origin: ['http://localhost:5173', 'electron://'], credentials: true }));
 app.use(morgan('dev'));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
@@ -83,11 +81,9 @@ app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
-
+app.use('/api/communities', communityRoutes);
 app.get('/api/health', async (req, res) => {
-  const dbState = mongoose.connection.readyState;
-  const dbStatus = dbState === 1 ? 'connected' : 'disconnected';
-
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   let redisStatus = 'disconnected';
   try {
     await redis.ping();
@@ -95,21 +91,11 @@ app.get('/api/health', async (req, res) => {
   } catch {
     redisStatus = 'disconnected';
   }
-
-  res.json({
-    status: 'ok',
-    db: dbStatus,
-    redis: redisStatus,
-    timestamp: new Date().toISOString(),
-  });
+  res.json({ status: 'ok', db: dbStatus, redis: redisStatus, timestamp: new Date().toISOString() });
 });
 
 app.get('/api/desktop/version', (req, res) => {
-  res.json({
-    minimum: '1.0.0',
-    latest: '1.0.0',
-    downloadUrl: 'https://github.com/YOUR_USERNAME/threadverse/releases',
-  });
+  res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/YOUR_USERNAME/threadverse/releases' });
 });
 
 // ── 404 Handler ─────────────────────────────────────────────────────────────
@@ -120,22 +106,18 @@ app.use((req, res) => {
 // ── Global Error Handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error',
+  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+});
+
+// ── Start ────────────────────────────────────────────────────────────────────
+connectDB().then(async () => {
+  httpServer.listen(PORT, async () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
+    const { default: embeddingWorker } = await import('./jobs/embeddingWorker.js');
+    console.log('[Server] Embedding worker started');
   });
 });
 
-// ── Start (only when run directly, not when imported by tests) ───────────────
-if (require.main === module) {
-  connectDB().then(() => {
-    httpServer.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
-      require('./jobs/embeddingWorker.js');
-      console.log('[Server] Embedding worker started');
-    });
-  });
-}
-
-// ── Exports (app for Jest tests, httpServer for graceful shutdown etc.) ───────
-module.exports = { app, httpServer };
+// ── Exports (for Jest tests) ─────────────────────────────────────────────────
+export { app, httpServer };

@@ -26,4 +26,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App info
   getVersion: () => ipcRenderer.invoke('get-version'),
+
+  // Community subscription cache
+  setSubscribedCommunities: (communities) =>
+    ipcRenderer.invoke('set-subscribed-communities', communities),
+  getSubscribedCommunities: () =>
+    ipcRenderer.invoke('get-subscribed-communities'),
 });

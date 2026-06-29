@@ -52,7 +52,7 @@ ipcMain.handle('show-notification', (_, { title, body }) => {
   new Notification({ title, body }).show()
 })
 
-// 3. Settings (Merged the two styles using the safer object-iterator style)
+// 3. Settings & Storage (Includes Subscribed Communities Cache)
 ipcMain.handle('settings:get', () => store.store)
 ipcMain.handle('get-settings', () => store.store) // Alias helper
 
@@ -63,6 +63,16 @@ ipcMain.handle('settings:set', (_, key, value) => {
 ipcMain.handle('set-settings', (_, settings) => {
   Object.entries(settings).forEach(([key, value]) => store.set(key, value))
   return store.store
+})
+
+// Community subscription cache handlers
+ipcMain.handle('set-subscribed-communities', (_event, communities) => {
+  store.set('subscribedCommunities', communities)
+  return { ok: true }
+})
+
+ipcMain.handle('get-subscribed-communities', () => {
+  return store.get('subscribedCommunities', [])
 })
 
 // 4. Updates & Version Check (Wired for Day 16 hooks)

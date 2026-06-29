@@ -20,8 +20,8 @@ Available as a web app and native desktop app (Windows, macOS, Linux).
 
 ### 1. Clone and install
 ```bash
-git clone https://github.com/anu-xo/threadverse
-cd threadverse
+git clone https://github.com/anu-xo/Final-Thread.git
+cd Final-Thread
 pnpm install
 ```
 

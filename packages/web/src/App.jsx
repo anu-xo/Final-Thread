@@ -1,8 +1,8 @@
-// packages/web/src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
-import { useAuthInit } from './hooks/useAuthInit.js'; // ← Import the hook
+import { AuthProvider } from './context/AuthContext.jsx';
+import { useAuthInit } from './hooks/useAuthInit.js';
 
 // Layout & Route Guards
 import AppLayout from './components/AppLayout.jsx';
@@ -11,6 +11,9 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 // Pages
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
+import CreateCommunity from './pages/CreateCommunity.jsx';
+import CommunityBrowser from './pages/CommunityBrowser.jsx';
+import CommunityPage from './pages/CommunityPage.jsx';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center p-8">
@@ -22,11 +25,10 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30 * 1000 } },
 });
 
-export default function App() {
-  // Run the token re-hydration logic on mount
-  const { isInitializing } = useAuthInit(); 
+// Separate component so useAuthInit runs inside AuthProvider
+function AppRoutes() {
+  const { isInitializing } = useAuthInit();
 
-  // Show a clean loading state while checking credentials on page refresh
   if (isInitializing) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -36,23 +38,36 @@ export default function App() {
   }
 
   return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Protected routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Home />} />
+          
+          {/* Community Routes */}
+          <Route path="/communities" element={<CommunityBrowser />} />
+          <Route path="/communities/create" element={<CreateCommunity />} />
+          <Route path="/community/:slug" element={<CommunityPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<div>404 — Not Found</div>} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Home />} />
-              </Route>
-            </Route>
-
-            <Route path="*" element={<div>404 — Not Found</div>} />
-          </Routes>
+          <AuthProvider>
+            <AppRoutes />
+          </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </HelmetProvider>

@@ -1,7 +1,7 @@
 packages:
   - 'packages/*'
 allowBuilds:
-  bcrypt: set this to true or false
+  bcrypt: true
   electron: true
   esbuild: false
   msgpackr-extract: false
