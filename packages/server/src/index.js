@@ -55,7 +55,6 @@ const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 30000,
-      directConnection: true,
     });
     console.log('✅ MongoDB connected');
   } catch (err) {
