@@ -80,7 +80,7 @@ redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/communities', communityRoutes);
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
