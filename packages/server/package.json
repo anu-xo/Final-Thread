@@ -9,7 +9,7 @@
     "start": "node src/index.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "backfill:embeddings": "node src/scripts/backfillEmbeddings.js",
-    "seed:day4": "node src/script/seedDay4.js"
+    "seed:day4": "node src/scripts/seedDay4.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
