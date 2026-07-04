@@ -3,7 +3,7 @@
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import Community from "../models/Community.js"; // adjust path if different
-import embeddingQueue from "../queues/embeddingQueue.js";
+import { getEmbeddingQueue } from "../jobs/embeddingQueue.js";
 import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js";
 
 const SORT_FIELDS = {
@@ -34,14 +34,15 @@ async function resolveCommunityId(communityParam) {
 // POST /posts
 export async function createPost(req, res) {
   try {
-    const { title, content, community } = req.body;
+    const { title, content, body, community } = req.body;
     const authorId = req.user?.id || req.user?._id;
+    const postBody = body ?? content ?? "";
 
     if (!authorId) {
       return res.status(401).json({ error: "Authentication required" });
     }
-    if (!title || !content || !community) {
-      return res.status(400).json({ error: "title, content, and community are required" });
+    if (!title || !postBody || !community) {
+      return res.status(400).json({ error: "title, body/content, and community are required" });
     }
 
     const communityId = await resolveCommunityId(community);
@@ -60,7 +61,8 @@ export async function createPost(req, res) {
 
     const post = await Post.create({
       title,
-      content,
+      body: postBody,
+      content: postBody,
       author: authorId,
       community: communityId,
       upvotes: initialUpvotes,
@@ -73,8 +75,9 @@ export async function createPost(req, res) {
 
     // Dispatch embedding job — don't block the response on it.
     try {
+      const embeddingQueue = getEmbeddingQueue();
       await embeddingQueue.add(
-        { postId: post._id.toString(), title, content },
+        { postId: post._id.toString(), title, content: postBody },
         { attempts: 3, backoff: { type: "exponential", delay: 2000 } }
       );
     } catch (queueErr) {

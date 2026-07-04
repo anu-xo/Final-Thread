@@ -3,13 +3,13 @@
 import express from "express";
 import { createPost, getPosts, getPostById } from "../controllers/postController.js";
 import { votePost } from "../controllers/voteController.js";
-import { requireAuth } from "../middleware/authMiddleware.js"; // adjust to your existing middleware name
+import { authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/posts", requireAuth, createPost);
-router.get("/posts", getPosts); // public — no auth required to browse
-router.get("/posts/:id", getPostById); // public
-router.post("/posts/:id/vote", requireAuth, votePost);
+router.post("/", authMiddleware, createPost);
+router.get("/", getPosts); // public — no auth required to browse
+router.get("/:id", getPostById); // public
+router.post("/:id/vote", authMiddleware, votePost);
 
 export default router;

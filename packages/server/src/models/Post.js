@@ -1,5 +1,4 @@
 ﻿import mongoose from "mongoose";
-import CommunityMember from "../models/CommunityMember.js";
 
 const voteLogEntrySchema = new mongoose.Schema(
   {
@@ -34,6 +33,11 @@ const PostSchema = new mongoose.Schema(
       default: "",
     },
 
+    content: {
+      type: String,
+      default: "",
+    },
+
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -55,6 +59,21 @@ const PostSchema = new mongoose.Schema(
     url: {
       type: String,
       default: null,
+    },
+
+    media: {
+      type: [String],
+      default: [],
+    },
+
+    flair: {
+      type: String,
+      default: null,
+    },
+
+    isRemoved: {
+      type: Boolean,
+      default: false,
     },
 
     // Voting
