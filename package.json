@@ -9,7 +9,8 @@
     "dev:desktop": "pnpm --filter desktop dev",
     "build": "pnpm --filter web build && pnpm --filter server build",
     "electron:dev": "pnpm --filter desktop dev",
-    "electron:build": "pnpm --filter desktop build"
+    "electron:build": "pnpm --filter desktop build",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -40,8 +41,5 @@
     "onlyBuiltDependencies": [
       "bcrypt"
     ]
-  },
-  "scripts": {
-  "test:e2e": "playwright test"
   }
 }
