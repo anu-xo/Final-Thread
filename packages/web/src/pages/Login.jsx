@@ -3,8 +3,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
-import api from '../services/api';
-import { useAuth } from '../hooks/useAuth';
+import api from '../services/api.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const loginSchema = z.object({
   email:    z.string().email('Invalid email'),

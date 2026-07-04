@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore.js';
-import { api } from '../services/api.js';
+import api from '../services/api.js';
 
 export default function Header() {
   const { user, accessToken, clearAuth } = useAuthStore();

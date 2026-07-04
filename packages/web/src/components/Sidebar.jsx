@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../services/api.js';
+import api from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
 
 // Why fetch communities in the sidebar?

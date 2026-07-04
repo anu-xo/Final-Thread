@@ -1,7 +1,7 @@
 // packages/web/src/hooks/useAuthInit.js
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store/authStore.js';
-import { api } from '../services/api.js';
+import api from '../services/api.js';
 
 export function useAuthInit() {
   const { setAuth } = useAuthStore();
