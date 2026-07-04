@@ -1,0 +1,181 @@
+// controllers/postController.js
+
+import mongoose from "mongoose";
+import Post from "../models/Post.js";
+import Community from "../models/Community.js"; // adjust path if different
+import embeddingQueue from "../queues/embeddingQueue.js";
+import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js";
+
+const SORT_FIELDS = {
+  new: "createdAt",
+  top: "score",
+  hot: "hotScore",
+  rising: "risingScore",
+};
+
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
+
+/**
+ * Resolve a `community` query/body value that could be either a valid
+ * ObjectId or a slug, and return the Community's ObjectId.
+ */
+async function resolveCommunityId(communityParam) {
+  if (!communityParam) return null;
+
+  if (mongoose.isValidObjectId(communityParam)) {
+    return communityParam;
+  }
+
+  const community = await Community.findOne({ slug: communityParam }).select("_id");
+  return community ? community._id.toString() : null;
+}
+
+// POST /posts
+export async function createPost(req, res) {
+  try {
+    const { title, content, community } = req.body;
+    const authorId = req.user?.id || req.user?._id;
+
+    if (!authorId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    if (!title || !content || !community) {
+      return res.status(400).json({ error: "title, content, and community are required" });
+    }
+
+    const communityId = await resolveCommunityId(community);
+    if (!communityId) {
+      return res.status(404).json({ error: "Community not found" });
+    }
+
+    const now = new Date();
+
+    // Seed with a self-upvote (1, 0) so hotScore isn't 0 for every brand-new
+    // post — matches the common Reddit-style convention. Drop this if you'd
+    // rather start posts at 0/0.
+    const initialUpvotes = 1;
+    const initialDownvotes = 0;
+    const initialHotScore = computeHotScore(initialUpvotes, initialDownvotes, now);
+
+    const post = await Post.create({
+      title,
+      content,
+      author: authorId,
+      community: communityId,
+      upvotes: initialUpvotes,
+      downvotes: initialDownvotes,
+      score: initialUpvotes - initialDownvotes,
+      hotScore: initialHotScore,
+      risingScore: 0,
+      createdAt: now,
+    });
+
+    // Dispatch embedding job — don't block the response on it.
+    try {
+      await embeddingQueue.add(
+        { postId: post._id.toString(), title, content },
+        { attempts: 3, backoff: { type: "exponential", delay: 2000 } }
+      );
+    } catch (queueErr) {
+      // Log and continue — a failed enqueue shouldn't fail post creation.
+      console.error("Failed to enqueue embedding job:", queueErr.message);
+    }
+
+    const populated = await post.populate("author", "username avatarUrl");
+
+    return res.status(201).json({ post: populated });
+  } catch (err) {
+    console.error("createPost error:", err);
+    return res.status(500).json({ error: "Failed to create post" });
+  }
+}
+
+// GET /posts?community=&sort=&cursor=&limit=
+export async function getPosts(req, res) {
+  try {
+    const { community, sort = "new", cursor, limit } = req.query;
+
+    const sortField = SORT_FIELDS[sort];
+    if (!sortField) {
+      return res.status(400).json({ error: `sort must be one of: ${Object.keys(SORT_FIELDS).join(", ")}` });
+    }
+
+    const pageLimit = Math.min(parseInt(limit, 10) || DEFAULT_LIMIT, MAX_LIMIT);
+
+    const query = {};
+
+    if (community) {
+      const communityId = await resolveCommunityId(community);
+      if (!communityId) {
+        return res.status(404).json({ error: "Community not found" });
+      }
+      query.community = communityId;
+    }
+
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (!decoded || decoded.v === undefined || !decoded.id) {
+        return res.status(400).json({ error: "Invalid cursor" });
+      }
+
+      const sortValue = sortField === "createdAt" ? new Date(decoded.v) : decoded.v;
+
+      // Descending sort (newest / highest score / hottest / fastest-rising first),
+      // with _id as tiebreaker for equal sort-field values.
+      query.$or = [
+        { [sortField]: { $lt: sortValue } },
+        { [sortField]: sortValue, _id: { $lt: decoded.id } },
+      ];
+    }
+
+    const posts = await Post.find(query)
+      .sort({ [sortField]: -1, _id: -1 })
+      .limit(pageLimit + 1) // fetch one extra to know if there's a next page
+      .populate("author", "username avatarUrl")
+      .lean();
+
+    const hasMore = posts.length > pageLimit;
+    const pageItems = hasMore ? posts.slice(0, pageLimit) : posts;
+
+    let nextCursor = null;
+    if (hasMore) {
+      const last = pageItems[pageItems.length - 1];
+      nextCursor = encodeCursor(last[sortField], last._id);
+    }
+
+    return res.json({
+      posts: pageItems,
+      nextCursor,
+      hasMore,
+    });
+  } catch (err) {
+    console.error("getPosts error:", err);
+    return res.status(500).json({ error: "Failed to fetch posts" });
+  }
+}
+
+// GET /posts/:id
+export async function getPostById(req, res) {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid post id" });
+    }
+
+    const post = await Post.findById(id)
+      .populate("author", "username avatarUrl")
+      .populate("community", "name slug")
+      .lean();
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    return res.json({ post });
+  } catch (err) {
+    console.error("getPostById error:", err);
+    return res.status(500).json({ error: "Failed to fetch post" });
+  }
+}

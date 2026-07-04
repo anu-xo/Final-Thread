@@ -13,6 +13,7 @@ import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import communityRoutes from './routes/communities.js';
+import postRoutes from "./routes/postRoutes.js";
 
 // __dirname equivalent for ESM
 const __filename = fileURLToPath(import.meta.url);
