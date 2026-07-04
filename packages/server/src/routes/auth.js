@@ -16,6 +16,7 @@ const router = express.Router();
 const generateTokens = (userId) => {
   const accessToken = jwt.sign(
     { userId },
+    console.log('JWT_SECRET in use:', JSON.stringify(process.env.JWT_SECRET)),
     process.env.JWT_SECRET,
     { expiresIn: '15m' }
   );
