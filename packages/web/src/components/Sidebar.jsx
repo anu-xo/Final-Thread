@@ -42,6 +42,7 @@ export default function Sidebar() {
 
         <hr className="my-3 border-gray-100" />
         <SidebarLink to="/communities/create" label="+ Create Community" active={false} />
+        <SidebarLink to="/tiptap-smoke" label="🧪 Tiptap Smoke" active={location.pathname === '/tiptap-smoke'} />
       </nav>
     </aside>
   );
