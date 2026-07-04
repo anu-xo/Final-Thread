@@ -1,4 +1,4 @@
-import TiptapSmokeTest from '../../../../TiptapSmokeTest.jsx';
+import TiptapSmokeTest from '../components/TiptapSmokeTest.jsx';
 
 export default function TiptapSmokePage() {
   return (
