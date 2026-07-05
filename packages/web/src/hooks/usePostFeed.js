@@ -1,6 +1,6 @@
 // hooks/usePostFeed.js
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import api from '../services/api.js';
 
 export function usePostFeed({ communityId, sort = 'hot' } = {}) {
   return useInfiniteQuery({

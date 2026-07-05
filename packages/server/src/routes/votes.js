@@ -1,6 +1,9 @@
-// after successfully saving the vote and recalculating score
-const io = req.app.get('io'); // see note below on how io gets attached
-io.to(`post:${postId}`).emit('vote:updated', {
-  postId,
-  newScore
-});
+import express from 'express';
+import { authMiddleware } from '../middleware/auth.js';
+import { votePost } from '../controllers/voteController.js';
+
+const router = express.Router();
+
+router.post('/', authMiddleware, votePost);
+
+export default router;

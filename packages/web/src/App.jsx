@@ -15,6 +15,7 @@ import CreateCommunity from './pages/CreateCommunity.jsx';
 import CommunityBrowser from './pages/CommunityBrowser.jsx';
 import CommunityPage from './pages/CommunityPage.jsx';
 import TiptapSmokePage from './pages/TiptapSmokePage.jsx';
+import PostDetail from './components/PostDetail.jsx';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center p-8">
@@ -53,6 +54,7 @@ function AppRoutes() {
           <Route path="/communities" element={<CommunityBrowser />} />
           <Route path="/communities/create" element={<CreateCommunity />} />
           <Route path="/community/:slug" element={<CommunityPage />} />
+          <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
         </Route>
       </Route>

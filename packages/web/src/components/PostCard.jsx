@@ -1,4 +1,6 @@
 // components/PostCard.jsx
+import { Link } from 'react-router-dom';
+
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   const units = [
@@ -50,7 +52,11 @@ export default function PostCard({ post, onVote }) {
           <span>· {timeAgo(createdAt)}</span>
         </div>
 
-        <h3 className="font-medium text-gray-900 leading-snug">{title}</h3>
+        <h3 className="font-medium text-gray-900 leading-snug">
+          <Link to={`/posts/${_id}`} className="hover:text-orange-500 transition-colors">
+            {title}
+          </Link>
+        </h3>
 
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
           <span>💬 {commentCount} comments</span>

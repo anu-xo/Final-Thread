@@ -14,6 +14,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import communityRoutes from './routes/communities.js';
 import postRoutes from "./routes/postRoutes.js";
+import voteRoutes from './routes/votes.js';
 
 // __dirname equivalent for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -37,6 +38,18 @@ app.set('io', io);
 
 io.on('connection', (socket) => {
   console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
+
+  socket.on('join_post', ({ postId }) => {
+    if (!postId) return;
+    socket.join(`post:${postId}`);
+    console.log(`🧩 [Socket.io] ${socket.id} joined room post:${postId}`);
+  });
+
+  socket.on('leave_post', ({ postId }) => {
+    if (!postId) return;
+    socket.leave(`post:${postId}`);
+  });
+
   socket.on('disconnect', () => {
     console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
   });
@@ -82,7 +95,8 @@ app.set('redis', redis);
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/communities', communityRoutes);
-app.use("/api/posts", postRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/votes', voteRoutes);
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   let redisStatus = 'disconnected';

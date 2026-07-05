@@ -8,7 +8,7 @@ export function useVotePost({ communityId, sort } = {}) {
 
   return useMutation({
     mutationFn: ({ postId, direction }) =>
-      api.post(`/posts/${postId}/vote`, { direction }).then((r) => r.data),
+      api.post('/votes', { postId, value: direction }).then((r) => r.data),
 
     onMutate: async ({ postId, direction }) => {
       await queryClient.cancelQueries({ queryKey: feedKey });
