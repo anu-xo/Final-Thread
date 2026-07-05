@@ -15,6 +15,7 @@ const commentSchema = new mongoose.Schema(
 );
 
 commentSchema.index({ post: 1, parent: 1, score: -1 });
+commentSchema.index({ post: 1, isRemoved: 1, score: -1, createdAt: 1 });
 
 commentSchema.post('save', async function (doc) {
   try {
