@@ -27,13 +27,10 @@ export default function PostDetail() {
 
     socket.emit('join_post', { postId: id });
 
-    const handleVoteUpdated = ({ postId, newScore }) => {
+    const handleVoteUpdated = ({ postId }) => {
       if (postId !== id) return;
 
-      queryClient.setQueryData(['posts', id], (old) =>
-        old ? { ...old, score: newScore } : old
-      );
-      queryClient.invalidateQueries({ queryKey: ['posts', id], refetchType: 'none' });
+      queryClient.invalidateQueries({ queryKey: ['posts', id] });
     };
 
     socket.on('vote:updated', handleVoteUpdated);
