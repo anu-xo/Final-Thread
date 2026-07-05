@@ -7,6 +7,10 @@ const postEmbeddingSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    commentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      index: true,
+    },
     communityId: {
       type: mongoose.Schema.Types.ObjectId,
       index: true,

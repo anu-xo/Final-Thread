@@ -6,13 +6,14 @@ const embeddingQueue = getEmbeddingQueue();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 embeddingQueue.process(async (job) => {
-  const { postId, communityId, text, type = 'post' } = job.data;
-  console.log(`[EmbeddingWorker] Processing ${type} ${postId}`);
+  const { postId, commentId, communityId, text, type = 'post' } = job.data;
+  const targetId = commentId || postId;
+  console.log(`[EmbeddingWorker] Processing ${type} ${targetId}`);
   const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
   const result = await model.embedContent(text);
   const embedding = result.embedding.values;
-  await PostEmbedding.create({ postId, communityId, type, text, embedding });
-  console.log(`[EmbeddingWorker] Done: ${postId} (${embedding.length} dims)`);
+  await PostEmbedding.create({ postId, commentId, communityId, type, text, embedding });
+  console.log(`[EmbeddingWorker] Done: ${targetId} (${embedding.length} dims)`);
   return { success: true };
 });
 

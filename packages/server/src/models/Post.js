@@ -1,4 +1,5 @@
 ﻿import mongoose from "mongoose";
+import { buildEmbeddingPayload } from "../utils/embeddingPayloads.js";
 
 const voteLogEntrySchema = new mongoose.Schema(
   {
@@ -148,25 +149,21 @@ PostSchema.post("save", async function (doc) {
 
     const queue = getEmbeddingQueue();
 
-    const text = `${doc.title}\n\n${doc.body || ""}`.trim();
+    const payload = buildEmbeddingPayload({
+      type: "post",
+      document: doc,
+      communityId: doc.community,
+    });
 
-    await queue.add(
-      {
-        postId: doc._id.toString(),
-        communityId: doc.community.toString(),
-        type: "post",
-        text,
+    await queue.add(payload, {
+      attempts: 3,
+      backoff: {
+        type: "exponential",
+        delay: 2000,
       },
-      {
-        attempts: 3,
-        backoff: {
-          type: "exponential",
-          delay: 2000,
-        },
-        removeOnComplete: 100,
-        removeOnFail: 50,
-      }
-    );
+      removeOnComplete: 100,
+      removeOnFail: 50,
+    });
 
     console.log(`📨 Embedding job queued for post: ${doc._id}`);
   } catch (err) {
