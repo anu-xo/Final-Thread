@@ -1,5 +1,3 @@
-import Store from 'electron-store';
-const store = new Store();
 const { app, BrowserWindow, ipcMain, Tray, Menu, shell, Notification, dialog } = require('electron')
 const path = require('path')
 const Store = require('electron-store')
