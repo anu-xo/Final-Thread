@@ -22,7 +22,7 @@ commentSchema.post('save', async function (doc) {
     const { default: Post } = await import('./Post.js');
 
     const queue = getEmbeddingQueue();
-    const post = await Post.findById(doc.post).select('community').lean();
+    const post = await Post.findById(doc.post).select('community title').lean();
 
     if (!post) {
       return;
@@ -33,6 +33,7 @@ commentSchema.post('save', async function (doc) {
       document: {
         ...doc.toObject(),
         post: doc.post,
+        postTitle: post.title,
       },
       communityId: post.community,
     });

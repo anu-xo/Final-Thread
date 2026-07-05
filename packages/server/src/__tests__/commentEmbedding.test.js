@@ -1,13 +1,14 @@
 import { buildEmbeddingPayload } from '../utils/embeddingPayloads.js';
 
 describe('buildEmbeddingPayload', () => {
-  it('creates a comment embedding payload with the comment id and parent post id', () => {
+  it('creates a comment embedding payload with the comment id, parent post context, and prefixed text', () => {
     const payload = buildEmbeddingPayload({
       type: 'comment',
       document: {
         _id: 'comment-123',
         body: 'This is a great comment',
         post: 'post-456',
+        postTitle: 'My Thread',
       },
       communityId: 'community-789',
     });
@@ -15,7 +16,7 @@ describe('buildEmbeddingPayload', () => {
     expect(payload).toEqual(
       expect.objectContaining({
         type: 'comment',
-        text: 'This is a great comment',
+        text: 'Post: [My Thread] │ Comment: [This is a great comment]',
         postId: 'post-456',
         commentId: 'comment-123',
         communityId: 'community-789',

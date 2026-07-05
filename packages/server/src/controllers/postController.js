@@ -3,7 +3,6 @@
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import Community from "../models/Community.js"; // adjust path if different
-import { getEmbeddingQueue } from "../jobs/embeddingQueue.js";
 import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js";
 
 const SORT_FIELDS = {
@@ -72,18 +71,6 @@ export async function createPost(req, res) {
       risingScore: 0,
       createdAt: now,
     });
-
-    // Dispatch embedding job — don't block the response on it.
-    try {
-      const embeddingQueue = getEmbeddingQueue();
-      await embeddingQueue.add(
-        { postId: post._id.toString(), title, content: postBody },
-        { attempts: 3, backoff: { type: "exponential", delay: 2000 } }
-      );
-    } catch (queueErr) {
-      // Log and continue — a failed enqueue shouldn't fail post creation.
-      console.error("Failed to enqueue embedding job:", queueErr.message);
-    }
 
     const populated = await post.populate("author", "username avatarUrl");
 

@@ -1,11 +1,14 @@
 export function buildEmbeddingPayload({ type, document, communityId }) {
   if (type === 'comment') {
+    const title = document.postTitle ? String(document.postTitle).trim() : 'Untitled';
+    const body = document.body?.trim() || '';
+
     return {
       type,
       postId: document.post?.toString(),
       commentId: document._id?.toString(),
       communityId: communityId?.toString(),
-      text: document.body?.trim() || '',
+      text: `Post: [${title}] │ Comment: [${body}]`,
     };
   }
 

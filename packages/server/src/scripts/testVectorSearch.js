@@ -9,35 +9,22 @@ dotenv.config({ path: resolve(__dirname, '../../.env') });
 import mongoose from 'mongoose';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import PostEmbedding from '../models/PostEmbedding.js';
+import { buildVectorSearchPipeline } from '../utils/vectorSearch.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function testSearch(queryText, communityId) {
+async function testSearch(queryText, communityId, type) {
   const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
   const result = await model.embedContent(queryText);
   const queryVector = result.embedding.values;
 
-  const results = await PostEmbedding.aggregate([
-    {
-      $vectorSearch: {
-        index: 'postembeddings_vector_index',
-        path: 'embedding',
-        queryVector,
-        numCandidates: 50,
-        limit: 8,
-        filter: { communityId: new mongoose.Types.ObjectId(communityId) },
-      },
-    },
-    {
-      $project: {
-        postId: 1,
-        text: 1,
-        score: { $meta: 'vectorSearchScore' },
-      },
-    },
-  ]);
+  const results = await PostEmbedding.aggregate(buildVectorSearchPipeline({
+    queryVector,
+    communityId: new mongoose.Types.ObjectId(communityId),
+    type,
+  }));
 
-  console.log(`\n🔍 Query: "${queryText}"`);
+  console.log(`\n🔍 Query: "${queryText}" (${type})`);
   console.log(`📊 Top ${results.length} results:`);
   results.forEach((r, i) => {
     console.log(`  ${i + 1}. [${r.score.toFixed(4)}] ${r.text.slice(0, 80)}...`);
@@ -54,8 +41,9 @@ async function main() {
     process.exit(0);
   }
 
-  await testSearch('best practices for React hooks', sample.communityId.toString());
-  
+  await testSearch('best practices for React hooks', sample.communityId.toString(), 'post');
+  await testSearch('helpful feedback on the feature', sample.communityId.toString(), 'comment');
+
   await mongoose.disconnect();
 }
 
