@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { targetId, targetType, value } = req.body; // targetType: 'post' | 'comment', value: 1 | -1 | 0
+    const { targetId, targetType, value } = req.body;
 
     if (!['post', 'comment'].includes(targetType)) {
       return res.status(400).json({
@@ -53,23 +53,23 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
     const previousValue = existingVote ? existingVote.value : 0;
+    const nextValue = value === 0 ? 0 : value;
+    const normalizedValue = existingVote && existingVote.value === value ? 0 : nextValue;
+    const delta = normalizedValue - previousValue;
 
-    // Vote delta
-    const delta = value - previousValue;
-
-    if (value === 0) {
+    if (normalizedValue === 0) {
       if (existingVote) {
         await Vote.deleteOne({ _id: existingVote._id });
       }
     } else if (existingVote) {
-      existingVote.value = value;
+      existingVote.value = normalizedValue;
       await existingVote.save();
     } else {
       await Vote.create({
         user: req.user._id,
         target: targetId,
         targetType,
-        value,
+        value: normalizedValue,
       });
     }
 
@@ -82,12 +82,8 @@ router.post('/', authMiddleware, async (req, res) => {
         { new: true }
       );
 
-      // Recompute hot score for posts only
       if (targetType === 'post') {
-        const hotScore = calculateHotScore(
-          updatedTarget.score,
-          updatedTarget.createdAt
-        );
+        const hotScore = calculateHotScore(updatedTarget.score, updatedTarget.createdAt);
 
         updatedTarget = await Post.findByIdAndUpdate(
           targetId,
@@ -97,7 +93,6 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     }
 
-    // Broadcast updated score
     const io = req.app.get('io');
 
     if (io) {
@@ -107,7 +102,8 @@ router.post('/', authMiddleware, async (req, res) => {
           newScore: updatedTarget.score,
         });
       } else {
-        io.to(`post:${target.post}`).emit('vote:updated', {
+        const parentPostId = target.post;
+        io.to(`post:${parentPostId}`).emit('vote:updated', {
           commentId: targetId,
           newScore: updatedTarget.score,
         });
@@ -117,7 +113,7 @@ router.post('/', authMiddleware, async (req, res) => {
     return res.json({
       data: {
         score: updatedTarget.score,
-        userVote: value,
+        userVote: normalizedValue,
       },
       error: null,
       meta: {},
@@ -133,7 +129,6 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
-// Wilson score with time decay
 function calculateHotScore(score, createdAt) {
   const order = Math.log10(Math.max(Math.abs(score), 1));
   const sign = score > 0 ? 1 : score < 0 ? -1 : 0;
