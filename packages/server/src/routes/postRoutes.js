@@ -6,9 +6,9 @@ import { votePost } from "../controllers/voteController.js";
 import { authMiddleware } from "../middleware/auth.js";
 import commentsRouter from './comments.js';
 
-router.use('/', commentsRouter);
-
 const router = express.Router();
+
+router.use('/', commentsRouter);
 
 router.post("/", authMiddleware, createPost);
 router.get("/", getPosts); // public — no auth required to browse
