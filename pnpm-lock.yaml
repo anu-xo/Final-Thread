@@ -160,7 +160,7 @@ importers:
         version: 29.7.0(@types/node@26.0.0)
       mongodb-memory-server:
         specifier: ^11.2.0
-        version: 11.2.0
+        version: 11.2.0(supports-color@5.5.0)
       nodemon:
         specifier: ^3.0.2
         version: 3.1.14
@@ -175,6 +175,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.4.0
         version: 5.4.0(react-hook-form@7.80.0(react@19.2.7))
+      lucide-react:
+        specifier: ^1.23.0
+        version: 1.23.0(react@19.2.7)
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -3293,6 +3296,11 @@ packages:
     resolution: {integrity: sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==}
     engines: {node: '>=10'}
 
+  lucide-react@1.23.0:
+    resolution: {integrity: sha512-38BpJcD0JhFosxHApP/BYsBetLpQFRoTRzEzstM/XCc3jsAG7wqaY1lgVwxiUe3xqYE+lNxo2PkCmYwXWrwwIw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   luxon@3.7.2:
     resolution: {integrity: sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew==}
     engines: {node: '>=12'}
@@ -6109,7 +6117,7 @@ snapshots:
 
   axios@1.18.1(supports-color@5.5.0):
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@5.5.0))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1(supports-color@5.5.0)
       proxy-from-env: 2.1.0
@@ -7149,7 +7157,7 @@ snapshots:
 
   flatted@3.4.2: {}
 
-  follow-redirects@1.16.0(debug@4.4.3):
+  follow-redirects@1.16.0(debug@4.4.3(supports-color@5.5.0)):
     optionalDependencies:
       debug: 4.4.3(supports-color@5.5.0)
 
@@ -7363,7 +7371,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@7.0.6:
+  https-proxy-agent@7.0.6(supports-color@5.5.0):
     dependencies:
       agent-base: 7.1.4
       debug: 4.4.3(supports-color@5.5.0)
@@ -8122,6 +8130,10 @@ snapshots:
     dependencies:
       yallist: 4.0.0
 
+  lucide-react@1.23.0(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+
   luxon@3.7.2: {}
 
   magic-string@0.30.21:
@@ -8227,16 +8239,16 @@ snapshots:
       '@types/whatwg-url': 13.0.0
       whatwg-url: 14.2.0
 
-  mongodb-memory-server-core@11.2.0:
+  mongodb-memory-server-core@11.2.0(supports-color@5.5.0):
     dependencies:
       async-mutex: 0.5.0
       camelcase: 6.3.0
       debug: 4.4.3(supports-color@5.5.0)
       find-cache-dir: 3.3.2
-      follow-redirects: 1.16.0(debug@4.4.3)
-      https-proxy-agent: 7.0.6
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@5.5.0))
+      https-proxy-agent: 7.0.6(supports-color@5.5.0)
       mongodb: 7.4.0
-      new-find-package-json: 2.0.0
+      new-find-package-json: 2.0.0(supports-color@5.5.0)
       semver: 7.8.5
       tar-stream: 3.2.0
       tslib: 2.8.1
@@ -8254,9 +8266,9 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb-memory-server@11.2.0:
+  mongodb-memory-server@11.2.0(supports-color@5.5.0):
     dependencies:
-      mongodb-memory-server-core: 11.2.0
+      mongodb-memory-server-core: 11.2.0(supports-color@5.5.0)
       tslib: 2.8.1
     transitivePeerDependencies:
       - '@aws-sdk/credential-providers'
@@ -8348,7 +8360,7 @@ snapshots:
 
   negotiator@0.6.4: {}
 
-  new-find-package-json@2.0.0:
+  new-find-package-json@2.0.0(supports-color@5.5.0):
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
     transitivePeerDependencies:

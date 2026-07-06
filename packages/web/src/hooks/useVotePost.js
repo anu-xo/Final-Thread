@@ -1,6 +1,11 @@
 // hooks/useVotePost.js
+//
+// NOTE: PostFeed/PostCard used to call this hook and pass direction via onVote.
+// PostCard now uses <VoteButton> directly, which manages its own mutation.
+// This hook is kept for backward compatibility and can be removed if nothing
+// else imports it. Left intact so PostFeed doesn't need refactoring today.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../services/api';
+import api from '../services/api';
 
 export function useVotePost({ communityId, sort } = {}) {
   const queryClient = useQueryClient();
@@ -8,7 +13,9 @@ export function useVotePost({ communityId, sort } = {}) {
 
   return useMutation({
     mutationFn: ({ postId, direction }) =>
-      api.post('/votes', { postId, value: direction }).then((r) => r.data),
+      api
+        .post('/votes', { targetId: postId, targetType: 'post', value: direction })
+        .then((r) => r.data),
 
     onMutate: async ({ postId, direction }) => {
       await queryClient.cancelQueries({ queryKey: feedKey });
@@ -48,7 +55,7 @@ export function useVotePost({ communityId, sort } = {}) {
     },
 
     onSettled: () => {
-      // reconcile with server truth eventually (don't need to await)
+      // Reconcile with server truth eventually (don't need to await)
       queryClient.invalidateQueries({ queryKey: feedKey, refetchType: 'none' });
     },
   });

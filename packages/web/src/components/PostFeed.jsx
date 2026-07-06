@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { usePostFeed } from '../hooks/usePostFeed';
-import { useVotePost } from '../hooks/useVotePost';
 import { usePostRealtimeVotes } from '../hooks/usePostRealtimeVotes';
 import PostCard from './PostCard';
 
@@ -17,12 +16,8 @@ export default function PostFeed({ communityId, sort }) {
     error,
   } = usePostFeed({ communityId, sort });
 
-  const voteMutation = useVotePost({ communityId, sort });
+  // Keeps the feed in sync with votes cast by other users via Socket.io
   usePostRealtimeVotes();
-
-  const handleVote = (postId, direction) => {
-    voteMutation.mutate({ postId, direction });
-  };
 
   const sentinelRef = useRef(null);
 
@@ -56,12 +51,9 @@ export default function PostFeed({ communityId, sort }) {
 
   return (
     <div className="space-y-2">
+      {/* Each PostCard renders its own VoteButton which handles its own mutation */}
       {posts.map((post) => (
-        <PostCard
-          key={post._id}
-          post={post}
-          onVote={handleVote}
-        />
+        <PostCard key={post._id} post={post} />
       ))}
 
       <div ref={sentinelRef} className="h-4" />

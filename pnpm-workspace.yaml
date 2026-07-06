@@ -4,5 +4,5 @@ allowBuilds:
   bcrypt: true
   electron: true
   esbuild: false
-  mongodb-memory-server: set this to true or false
+  mongodb-memory-server: false
   msgpackr-extract: false

@@ -1,5 +1,6 @@
 // components/PostCard.jsx
 import { Link } from 'react-router-dom';
+import VoteButton from './VoteButton';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -14,7 +15,7 @@ function timeAgo(date) {
   return 'just now';
 }
 
-export default function PostCard({ post, onVote }) {
+export default function PostCard({ post }) {
   const {
     _id, title, author, community, score, commentCount,
     createdAt, userVote, flair,
@@ -22,20 +23,15 @@ export default function PostCard({ post, onVote }) {
 
   return (
     <div className="flex gap-3 border rounded-lg p-3 bg-white hover:border-gray-300 transition-colors">
-      <div className="flex flex-col items-center w-8 shrink-0">
-        <button
-          onClick={() => onVote?.(_id, userVote === 1 ? 0 : 1)}
-          className={`text-lg ${userVote === 1 ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'}`}
-        >
-          ▲
-        </button>
-        <span className="text-sm font-medium">{score}</span>
-        <button
-          onClick={() => onVote?.(_id, userVote === -1 ? 0 : -1)}
-          className={`text-lg ${userVote === -1 ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'}`}
-        >
-          ▼
-        </button>
+      {/* Vote column — uses the shared VoteButton with optimistic updates */}
+      <div className="shrink-0">
+        <VoteButton
+          targetId={_id}
+          targetType="post"
+          initialScore={score}
+          initialUserVote={userVote ?? 0}
+          size="sm"
+        />
       </div>
 
       <div className="flex-1 min-w-0">
@@ -59,7 +55,12 @@ export default function PostCard({ post, onVote }) {
         </h3>
 
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-          <span>💬 {commentCount} comments</span>
+          <Link
+            to={`/posts/${_id}`}
+            className="hover:text-gray-700 transition-colors"
+          >
+            💬 {commentCount} comments
+          </Link>
         </div>
       </div>
     </div>

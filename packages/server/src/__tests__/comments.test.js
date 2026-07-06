@@ -70,31 +70,56 @@ describe('POST/GET /api/posts/:id/comments', () => {
     jest.clearAllMocks();
   });
 
-  it('creates and returns a nested comment tree, and rejects deeper replies', async () => {
+  it('creates and returns a nested comment tree with correct depths', async () => {
     const createComment = async (parentId = null, body = 'comment') =>
       request(app)
         .post(`/api/posts/${testPost._id}/comments`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({ body, parentId });
 
+    // Create a 3-level chain
     const rootRes = await createComment(null, 'root comment');
     expect(rootRes.status).toBe(201);
     const rootComment = rootRes.body.data;
+    expect(rootComment.depth).toBe(0);
 
     const childRes = await createComment(rootComment._id, 'child comment');
     expect(childRes.status).toBe(201);
     const childComment = childRes.body.data;
+    expect(childComment.depth).toBe(1);
 
     const grandchildRes = await createComment(childComment._id, 'grandchild comment');
     expect(grandchildRes.status).toBe(201);
+    const grandchildComment = grandchildRes.body.data;
+    expect(grandchildComment.depth).toBe(2);
 
+    // Fetch the tree and verify structure
     const listRes = await request(app).get(`/api/posts/${testPost._id}/comments`);
     expect(listRes.status).toBe(200);
     expect(listRes.body.data).toHaveLength(1);
-    expect(listRes.body.data[0]._id).toBe(rootComment._id);
-    expect(listRes.body.data[0].depth).toBe(0);
-    expect(listRes.body.data[0].children[0].depth).toBe(1);
-    expect(listRes.body.data[0].children[0].children[0].depth).toBe(2);
+
+    const treeRoot = listRes.body.data[0];
+    expect(treeRoot._id).toBe(rootComment._id);
+    expect(treeRoot.depth).toBe(0);
+    expect(treeRoot.children).toHaveLength(1);
+
+    const treeChild = treeRoot.children[0];
+    expect(treeChild._id).toBe(childComment._id);
+    expect(treeChild.depth).toBe(1);
+    expect(treeChild.children).toHaveLength(1);
+
+    const treeGrandchild = treeChild.children[0];
+    expect(treeGrandchild._id).toBe(grandchildComment._id);
+    expect(treeGrandchild.depth).toBe(2);
+    expect(treeGrandchild.children).toHaveLength(0);
+  });
+
+  it('enforces depth cap of 5 levels', async () => {
+    const createComment = async (parentId = null, body = 'comment') =>
+      request(app)
+        .post(`/api/posts/${testPost._id}/comments`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ body, parentId });
 
     const buildChain = async (parentId, body) => {
       const res = await createComment(parentId, body);
@@ -102,13 +127,106 @@ describe('POST/GET /api/posts/:id/comments', () => {
       return res.body.data;
     };
 
-    let current = rootComment;
-    for (let i = 1; i <= 5; i += 1) {
+    // Build a chain up to depth 5 (which is the max)
+    let current = await buildChain(null, 'depth-0');
+    for (let i = 1; i <= 4; i += 1) {
       current = await buildChain(current._id, `depth-${i}`);
+      expect(current.depth).toBe(i);
     }
 
+    // Trying to add at depth 6 should fail
     const tooDeep = await createComment(current._id, 'too deep');
     expect(tooDeep.status).toBe(400);
-    expect(tooDeep.body.error).toMatch(/depth/);
+    expect(tooDeep.body.error).toMatch(/depth/i);
   });
-});
+
+  it('rejects empty or whitespace-only comment body', async () => {
+    const res1 = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: '', parentId: null });
+    expect(res1.status).toBe(400);
+    expect(res1.body.error).toMatch(/required/i);
+
+    const res2 = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: '   ', parentId: null });
+    expect(res2.status).toBe(400);
+    expect(res2.body.error).toMatch(/required/i);
+  });
+
+  it('rejects comment on non-existent post', async () => {
+    const fakePostId = '507f1f77bcf86cd799439011';
+
+    const res = await request(app)
+      .post(`/api/posts/${fakePostId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'test comment', parentId: null });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/not found/i);
+  });
+
+  it('rejects parent comment from a different post', async () => {
+    // Create another post and a comment on it
+    const otherPost = await Post.create({
+      title: 'Other Post',
+      body: 'Test body',
+      author: testUser._id,
+      community: testCommunity._id,
+    });
+
+    const parentRes = await request(app)
+      .post(`/api/posts/${otherPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'comment on other post', parentId: null });
+    expect(parentRes.status).toBe(201);
+    const parentComment = parentRes.body.data;
+
+    // Try to reply to it from a different post
+    const res = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'reply', parentId: parentComment._id });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/different post/i);
+  });
+
+  it('rejects invalid parent comment ID', async () => {
+    const res = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'test comment', parentId: 'not-a-valid-id' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/Invalid parent/i);
+  });
+
+  it('rejects reply to non-existent parent comment', async () => {
+    const fakeParentId = '507f1f77bcf86cd799439011';
+
+    const res = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'test comment', parentId: fakeParentId });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toMatch(/Parent comment not found/i);
+  });
+
+  it('increments post commentCount when comment is created', async () => {
+    const postBefore = await Post.findById(testPost._id);
+    const countBefore = postBefore.commentCount || 0;
+
+    const res = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'test comment for count', parentId: null });
+
+    expect(res.status).toBe(201);
+
+    const postAfter = await Post.findById(testPost._id);
+    expect(postAfter.commentCount).toBe(countBefore + 1);
+  });

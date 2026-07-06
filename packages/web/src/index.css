@@ -16,3 +16,18 @@ body {
   background-color: #dae0e6;
   color: #1c1c1c;
 }
+
+/* ── VoteButton score animation ─────────────────────────────────────────── */
+/* Re-triggers via key={score} on the <span>; fast pop so it doesn't feel
+   sluggish but still gives tactile feedback for every score change.         */
+@keyframes score-pop {
+  0%   { transform: scale(1);    opacity: 1; }
+  35%  { transform: scale(1.35); opacity: 1; }
+  70%  { transform: scale(0.9);  opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+.vote-score-pop {
+  animation: score-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-block; /* transform requires a block-level context */
+}
