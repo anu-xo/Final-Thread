@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 
+// 1. Module mocks must happen before dynamically importing modules that consume them
 const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: 'mock-job-uuid' }),
 };
@@ -8,6 +9,7 @@ jest.unstable_mockModule('../jobs/embeddingQueue.js', () => ({
   getEmbeddingQueue: () => mockQueue,
 }));
 
+// 2. Dynamic imports for modules dependent on the mock or app lifecycle
 const { default: request } = await import('supertest');
 const { default: mongoose } = await import('mongoose');
 const { default: jwt } = await import('jsonwebtoken');
@@ -58,10 +60,12 @@ describe('POST/GET /api/posts/:id/comments', () => {
   });
 
   afterAll(async () => {
-    await Comment.deleteMany({ post: testPost?._id });
-    await Post.deleteMany({ _id: testPost?._id });
+    // Clean up all data associated with the user to prevent cross-test DB leaks
+    await Comment.deleteMany({ author: testUser?._id });
+    await Post.deleteMany({ author: testUser?._id });
     await Community.deleteOne({ _id: testCommunity?._id });
     await User.deleteOne({ _id: testUser?._id });
+    
     await mongoose.connection.close();
     await redis.quit();
   });
@@ -127,14 +131,14 @@ describe('POST/GET /api/posts/:id/comments', () => {
       return res.body.data;
     };
 
-    // Build a chain up to depth 5 (which is the max)
+    // Build a chain up to depth 4 (which represents 5 layers: 0, 1, 2, 3, 4)
     let current = await buildChain(null, 'depth-0');
     for (let i = 1; i <= 4; i += 1) {
       current = await buildChain(current._id, `depth-${i}`);
       expect(current.depth).toBe(i);
     }
 
-    // Trying to add at depth 6 should fail
+    // Trying to add at depth 5 (6th level) should fail if max depth is capped at index 4 (5 levels)
     const tooDeep = await createComment(current._id, 'too deep');
     expect(tooDeep.status).toBe(400);
     expect(tooDeep.body.error).toMatch(/depth/i);
@@ -169,7 +173,6 @@ describe('POST/GET /api/posts/:id/comments', () => {
   });
 
   it('rejects parent comment from a different post', async () => {
-    // Create another post and a comment on it
     const otherPost = await Post.create({
       title: 'Other Post',
       body: 'Test body',
@@ -184,7 +187,6 @@ describe('POST/GET /api/posts/:id/comments', () => {
     expect(parentRes.status).toBe(201);
     const parentComment = parentRes.body.data;
 
-    // Try to reply to it from a different post
     const res = await request(app)
       .post(`/api/posts/${testPost._id}/comments`)
       .set('Authorization', `Bearer ${authToken}`)
@@ -230,3 +232,4 @@ describe('POST/GET /api/posts/:id/comments', () => {
     const postAfter = await Post.findById(testPost._id);
     expect(postAfter.commentCount).toBe(countBefore + 1);
   });
+});

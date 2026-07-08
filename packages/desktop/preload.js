@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // Notification
@@ -32,4 +32,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('set-subscribed-communities', communities),
   getSubscribedCommunities: () =>
     ipcRenderer.invoke('get-subscribed-communities'),
+
+  // Global Shortcut Listeners & Navigation Whitelist
+  onNavigate: (callback) => 
+    ipcRenderer.on('navigate', (_event, path) => callback(path)),
+  onFocusSearch: (callback) => 
+    ipcRenderer.on('focus-search', () => callback()),
+  onOpenAIChat: (callback) => 
+    ipcRenderer.on('open-ai-chat', () => callback()),
 });
