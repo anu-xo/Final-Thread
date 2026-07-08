@@ -57,7 +57,7 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
         });
       }
 
-      if (String(parent.post) !== String(postId)) {
+      if (String(parent.post) === String(postId)) {
         return res.status(400).json({
           data: null,
           error: 'Parent comment belongs to a different post',
