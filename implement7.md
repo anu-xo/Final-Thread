@@ -1,43 +1,19 @@
-7.3 GET /search?q=&type= — Atlas Search
-This needs an Atlas Search index (separate from your Day 4 Vector Search index) on Post, Community, and User collections — a text index, not a vector one.
-Index setup (Atlas UI or via mongosh), one per collection, e.g. for posts:
-{
-  "mappings": {
-    "dynamic": false,
-    "fields": {
-      "title": { "type": "string" },
-      "body": { "type": "string" }
-    }
-  }
-}
-router.get('/', authMiddleware, async (req, res) => {
-  const { q, type = 'all', limit = 10 } = req.query;
-  if (!q || q.trim().length < 2) {
-    return res.json({ data: { posts: [], communities: [], users: [] }, error: null, meta: null });
-  }
+7.4 Personalized Home feed
 
-  const searchStage = (indexName, path) => ([
-    {
-      $search: {
-        index: indexName,
-        text: { query: q, path }
-      }
-    },
-    { $limit: Number(limit) }
-  ]);
+Reuse the Day 5 useInfiniteQuery pattern, pointed at /feed instead of /posts.
+Sort tabs (Hot/New/Top/Rising) become a query-key parameter so React Query caches each tab separately — switching tabs should feel instant on repeat visits within a session.
+Empty state: if meta.noSubscriptions comes back true, show a "Join some communities to build your feed" prompt with a CTA into the community browser, not a bare "no posts" message — that's a much better first-run experience.
 
-  const results = { posts: [], communities: [], users: [] };
-
-  if (type === 'all' || type === 'posts') {
-    results.posts = await Post.aggregate(searchStage('default', ['title', 'body']));
-  }
-  if (type === 'all' || type === 'communities') {
-    results.communities = await Community.aggregate(searchStage('default', ['name', 'description']));
-  }
-  if (type === 'all' || type === 'users') {
-    results.users = await User.aggregate(searchStage('default', ['username']));
-  }
-
-  res.json({ data: results, error: null, meta: null });
+const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+  queryKey: ['feed', sort],
+  queryFn: ({ pageParam }) => api.get('/feed', { params: { sort, cursor: pageParam } }),
+  getNextPageParam: (lastPage) => lastPage.meta.cursor,
 });
-Reasoning on running three separate $search aggregations instead of one: Atlas Search doesn't let you $search across multiple collections in a single aggregation pipeline — each $search stage is bound to the collection it's run against. So a "search everything" experience is necessarily 1–3 parallel queries (fired with Promise.all in production, shown sequentially above for clarity) rather than one big query. This is a real MongoDB constraint, not a design choice you can optimize away.
+
+7.5 User profile page
+Tabs: Overview / Posts / Comments. Fetch posts/comments lazily per tab (enabled: activeTab === 'posts' in React Query) rather than all up front — profile pages for prolific users could otherwise pull a lot of unused data on first load.
+7.6 Global search (Cmd+K)
+
+Bind Cmd+K / Ctrl+K globally via a useEffect + keydown listener at the app-shell level (not per-page), matching how you already handle Electron's globalShortcut for the desktop build — the web shortcut and the Electron shortcut should open the same modal component so behavior is consistent across web and desktop.
+300ms debounce on the input before firing the query — use useDeferredValue or a small custom debounce hook, not a setTimeout scattered in the component.
+Modal shows three collapsible sections (Posts/Communities/Users) rather than hard tabs, so a query like "react" that matches all three types doesn't force the user to click between tabs to see everything.
