@@ -1,5 +1,5 @@
 // packages/web/src/components/VoteButton.jsx
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import api from '../services/api';
@@ -40,6 +40,11 @@ export default function VoteButton({
   const [score, setScore] = useState(initialScore);
   const [userVote, setUserVote] = useState(initialUserVote);
 
+  useEffect(() => {
+    setScore(initialScore);
+    setUserVote(initialUserVote);
+  }, [initialScore, initialUserVote, targetId]);
+
   // Snapshot refs used in onMutate so the closure always captures fresh values
   // (avoids the "stale score captured by closure" bug with useState)
   const scoreRef = useRef(initialScore);
@@ -78,8 +83,12 @@ export default function VoteButton({
       // Reconcile with server truth to correct any concurrent-voter drift.
       // The backend returns { data: { score } } in its standard envelope.
       const serverScore = response?.data?.data?.score;
+      const serverUserVote = response?.data?.data?.userVote;
       if (typeof serverScore === 'number') {
         setScore(serverScore);
+      }
+      if (typeof serverUserVote === 'number') {
+        setUserVote(serverUserVote);
       }
     },
   });
