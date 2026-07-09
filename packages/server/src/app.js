@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import communityRoutes from './routes/communities.js';
 import postRoutes from "./routes/postRoutes.js";
+import searchRoutes from './routes/search.js';
 import voteRoutes from './routes/votes.js';
 
 // __dirname equivalent for ESM
@@ -67,6 +68,7 @@ app.set('redis', redis);
 app.use('/api/auth', authRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api/votes', voteRoutes);
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
