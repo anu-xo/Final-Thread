@@ -1,19 +1,28 @@
-7.4 Personalized Home feed
+FS Track — Media Upload Pipeline
+Why Cloudinary and not storing files on your own server or in MongoDB: MongoDB Atlas M0 has a 512MB storage cap — images would eat that fast. A direct-to-Cloudinary upload also means your Express server never has to buffer large file payloads, which matters on a free-tier Render instance with limited memory.
 
-Reuse the Day 5 useInfiniteQuery pattern, pointed at /feed instead of /posts.
-Sort tabs (Hot/New/Top/Rising) become a query-key parameter so React Query caches each tab separately — switching tabs should feel instant on repeat visits within a session.
-Empty state: if meta.noSubscriptions comes back true, show a "Join some communities to build your feed" prompt with a CTA into the community browser, not a bare "no posts" message — that's a much better first-run experience.
+// packages/server/src/routes/upload.js
+const cloudinary = require('cloudinary').v2;
 
-const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
-  queryKey: ['feed', sort],
-  queryFn: ({ pageParam }) => api.get('/feed', { params: { sort, cursor: pageParam } }),
-  getNextPageParam: (lastPage) => lastPage.meta.cursor,
+router.post('/sign', authMiddleware, (req, res) => {
+  const timestamp = Math.round(Date.now() / 1000);
+  const signature = cloudinary.utils.api_sign_request(
+    { timestamp, folder: 'threadverse/posts' },
+    process.env.CLOUDINARY_API_SECRET
+  );
+
+  res.json({
+    data: {
+      signature,
+      timestamp,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      folder: 'threadverse/posts'
+    },
+    error: null,
+    meta: null
+  });
 });
 
-7.5 User profile page
-Tabs: Overview / Posts / Comments. Fetch posts/comments lazily per tab (enabled: activeTab === 'posts' in React Query) rather than all up front — profile pages for prolific users could otherwise pull a lot of unused data on first load.
-7.6 Global search (Cmd+K)
-
-Bind Cmd+K / Ctrl+K globally via a useEffect + keydown listener at the app-shell level (not per-page), matching how you already handle Electron's globalShortcut for the desktop build — the web shortcut and the Electron shortcut should open the same modal component so behavior is consistent across web and desktop.
-300ms debounce on the input before firing the query — use useDeferredValue or a small custom debounce hook, not a setTimeout scattered in the component.
-Modal shows three collapsible sections (Posts/Communities/Users) rather than hard tabs, so a query like "react" that matches all three types doesn't force the user to click between tabs to see everything.
+FE flow: request signature → POST the file directly to https://api.cloudinary.com/v1_1/{cloudName}/image/upload with the signed params → get back a CDN URL → save that URL onto Post.media. Your server never touches the raw file bytes.
+Desktop variant: instead of an <input type="file">, call window.electronAPI.selectFile() (already whitelisted in your Day 3 preload bridge) → main process runs dialog.showOpenDialog → returns a local file path → renderer reads it (fs isn't available in renderer with contextIsolation: true, so main process should read and return the buffer, or renderer uses a plain <input> under the hood — either works, just keep nodeIntegration: false) → same Cloudinary signed-upload call from there.

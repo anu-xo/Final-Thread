@@ -119,6 +119,16 @@ export default function PostDetail() {
             {post?.title}
           </h1>
 
+          {post?.media?.length > 0 && (
+            <div className="mb-3 overflow-hidden rounded-lg border bg-gray-50">
+              <img
+                src={post.media[0]}
+                alt={post.title}
+                className="max-h-[32rem] w-full object-contain bg-black/5"
+              />
+            </div>
+          )}
+
           {post?.body && (
             <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
               {post.body}

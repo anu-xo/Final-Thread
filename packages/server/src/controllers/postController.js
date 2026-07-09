@@ -35,15 +35,38 @@ async function resolveCommunityId(communityParam) {
 // POST /posts
 export async function createPost(req, res) {
   try {
-    const { title, content, body, community } = req.body;
+    const {
+      title,
+      content,
+      body,
+      community,
+      type,
+      media = [],
+      url,
+      flair,
+    } = req.body;
     const authorId = req.user?.id || req.user?._id;
     const postBody = body ?? content ?? "";
+    const postType = type ?? (Array.isArray(media) && media.length > 0 ? "image" : (url ? "link" : "text"));
+    const normalizedMedia = Array.isArray(media) ? media.filter(Boolean) : [];
 
     if (!authorId) {
       return res.status(401).json({ error: "Authentication required" });
     }
-    if (!title || !postBody || !community) {
-      return res.status(400).json({ error: "title, body/content, and community are required" });
+    if (!title || !community) {
+      return res.status(400).json({ error: "title and community are required" });
+    }
+
+    if (postType === "text" && !postBody.trim()) {
+      return res.status(400).json({ error: "body/content is required for text posts" });
+    }
+
+    if (postType === "link" && !url) {
+      return res.status(400).json({ error: "url is required for link posts" });
+    }
+
+    if (postType === "image" && normalizedMedia.length === 0) {
+      return res.status(400).json({ error: "media is required for image posts" });
     }
 
     const communityId = await resolveCommunityId(community);
@@ -66,6 +89,10 @@ export async function createPost(req, res) {
       content: postBody,
       author: authorId,
       community: communityId,
+      type: postType,
+      url: url ?? null,
+      media: normalizedMedia,
+      flair: flair ?? null,
       upvotes: initialUpvotes,
       downvotes: initialDownvotes,
       score: initialUpvotes - initialDownvotes,

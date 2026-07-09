@@ -9,6 +9,7 @@
     "start": "node src/index.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "backfill:embeddings": "node src/scripts/backfillEmbeddings.js",
+    "compare:hybrid": "node src/scripts/compareHybridSearch.js",
     "seed:day4": "node src/scripts/seedDay4.js",
     "seed": "node src/scripts/seed.js"
   },
@@ -17,6 +18,7 @@
     "@sentry/node": "^10.62.0",
     "bcrypt": "^6.0.0",
     "bull": "^4.16.5",
+    "cloudinary": "^2.7.0",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

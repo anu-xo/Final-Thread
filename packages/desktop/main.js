@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut } from 'electron';
 import path from 'path';
+import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 
@@ -148,7 +149,36 @@ ipcMain.handle('select-file', async (_, options = {}) => {
     properties: ['openFile'],
     filters: options.filters || [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
   });
-  return result.filePaths; // Returns array of selected file paths to renderer
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return options.readAs === 'dataUrl' ? { canceled: true, files: [] } : [];
+  }
+
+  if (options.readAs === 'dataUrl') {
+    const files = await Promise.all(result.filePaths.map(async (filePath) => {
+      const fileBuffer = await fs.readFile(filePath);
+      const extension = path.extname(filePath).slice(1).toLowerCase();
+      const mimeTypeMap = {
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        webp: 'image/webp',
+      };
+      const mimeType = mimeTypeMap[extension] || 'application/octet-stream';
+
+      return {
+        path: filePath,
+        name: path.basename(filePath),
+        mimeType,
+        dataUrl: `data:${mimeType};base64,${fileBuffer.toString('base64')}`,
+      };
+    }));
+
+    return { canceled: false, files };
+  }
+
+  return result.filePaths;
 });
 
 // 6. Navigation Helpers

@@ -16,6 +16,7 @@ import postRoutes from "./routes/postRoutes.js";
 import searchRoutes from './routes/search.js';
 import userRoutes from './routes/users.js';
 import voteRoutes from './routes/votes.js';
+import uploadRoutes from './routes/upload.js';
 
 // __dirname equivalent for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +75,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/votes', voteRoutes);
+app.use('/api/upload', uploadRoutes);
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   let redisStatus = 'disconnected';

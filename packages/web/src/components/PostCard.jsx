@@ -54,6 +54,17 @@ export default function PostCard({ post }) {
           </Link>
         </h3>
 
+        {post?.media?.length > 0 && (
+          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50">
+            <img
+              src={post.media[0]}
+              alt={title}
+              className="h-56 w-full object-cover"
+              loading="lazy"
+            />
+          </Link>
+        )}
+
         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
           <Link
             to={`/posts/${_id}`}

@@ -1,5 +1,5 @@
 // components/CreatePostForm.jsx
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -9,6 +9,46 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postSchema } from '../schemas/postSchema';
 import api from '../services/api';
+import { useIsDesktop } from '../hooks/useIsDesktop';
+
+async function getCloudinarySignature() {
+    const { data } = await api.post('/upload/sign');
+    return data.data;
+}
+
+async function uploadToCloudinary(selectedFile) {
+    const signatureData = await getCloudinarySignature();
+    const formData = new FormData();
+
+    formData.append('api_key', signatureData.apiKey);
+    formData.append('timestamp', String(signatureData.timestamp));
+    formData.append('signature', signatureData.signature);
+    formData.append('folder', signatureData.folder);
+
+    if (selectedFile.file instanceof File) {
+        formData.append('file', selectedFile.file);
+    } else if (selectedFile.dataUrl) {
+        formData.append('file', selectedFile.dataUrl);
+    } else {
+        throw new Error('Unsupported file selection');
+    }
+
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${signatureData.cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error('Cloudinary upload failed');
+    }
+
+    const payload = await response.json();
+    if (!payload.secure_url) {
+        throw new Error('Cloudinary did not return a secure URL');
+    }
+
+    return payload.secure_url;
+}
 
 function CommunityPicker({ value, onChange, error }) {
     const [query, setQuery] = useState('');
@@ -111,16 +151,37 @@ function TiptapField({ value, onChange }) {
 
 export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
     const queryClient = useQueryClient();
-    const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
+    const isDesktop = useIsDesktop();
+    const fileInputRef = useRef(null);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(postSchema),
         defaultValues: {
             postType: 'text',
             communityId: defaultCommunityId || '',
+            media: [],
         },
     });
 
     const postType = watch('postType');
     const communityId = watch('communityId');
+
+    useEffect(() => {
+        if (postType !== 'image') {
+            setSelectedFiles([]);
+            setValue('media', []);
+        }
+    }, [postType, setValue]);
+
+    useEffect(() => {
+        return () => {
+            selectedFiles.forEach((file) => {
+                if (file.previewUrl?.startsWith('blob:')) {
+                    URL.revokeObjectURL(file.previewUrl);
+                }
+            });
+        };
+    }, [selectedFiles]);
 
     const { mutate, isPending, error: submitError } = useMutation({
         mutationFn: (data) => api.post('/posts', data).then(r => r.data),
@@ -130,8 +191,82 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
         },
     });
 
+    const handleFileSelection = async () => {
+        if (postType !== 'image') return;
+
+        if (isDesktop) {
+            const selection = await window.electronAPI?.selectFile({
+                readAs: 'dataUrl',
+                multiple: true,
+                filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
+            });
+
+            const files = selection?.files?.map((item) => ({
+                name: item.name,
+                dataUrl: item.dataUrl,
+                previewUrl: item.dataUrl,
+            })) || [];
+
+            if (files.length > 0) {
+                setSelectedFiles((current) => [...current, ...files]);
+            }
+            return;
+        }
+
+        fileInputRef.current?.click();
+    };
+
+    const handleBrowserFileChange = (event) => {
+        const files = Array.from(event.target.files || []).map((file) => ({
+            file,
+            name: file.name,
+            previewUrl: URL.createObjectURL(file),
+        }));
+
+        if (files.length > 0) {
+            setSelectedFiles((current) => [...current, ...files]);
+        }
+
+        event.target.value = '';
+    };
+
+    const removeSelectedFile = (indexToRemove) => {
+        setSelectedFiles((current) => {
+            const next = current.filter((_, index) => index !== indexToRemove);
+            const removed = current[indexToRemove];
+            if (removed?.previewUrl?.startsWith('blob:')) {
+                URL.revokeObjectURL(removed.previewUrl);
+            }
+            return next;
+        });
+    };
+
     return (
-        <form onSubmit={handleSubmit((data) => mutate(data))} className="space-y-4 max-w-xl">
+        <form
+            onSubmit={handleSubmit(async (data) => {
+                const payload = {
+                    title: data.title,
+                    community: data.communityId,
+                    flair: data.flairId,
+                    type: data.postType,
+                    body: data.postType === 'text' ? (data.body || '') : '',
+                    content: data.postType === 'text' ? (data.body || '') : '',
+                    url: data.postType === 'link' ? (data.linkUrl || null) : null,
+                    media: [],
+                };
+
+                if (data.postType === 'image') {
+                    const mediaUrls = [];
+                    for (const file of selectedFiles) {
+                        mediaUrls.push(await uploadToCloudinary(file));
+                    }
+                    payload.media = mediaUrls;
+                }
+
+                mutate(payload);
+            })}
+            className="space-y-4 max-w-xl"
+        >
             <div>
                 <input
                     {...register('title')}
@@ -146,7 +281,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                 control={control}
                 render={({ field }) => (
                     <div className="flex gap-2">
-                        {['text', 'link'].map((t) => (
+                        {['text', 'link', 'image'].map((t) => (
                             <button
                                 key={t}
                                 type="button"
@@ -156,7 +291,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                                         : 'bg-white hover:bg-gray-50'
                                     }`}
                             >
-                                {t === 'text' ? 'Text post' : 'Link post'}
+                                {t === 'text' ? 'Text post' : t === 'link' ? 'Link post' : 'Image post'}
                             </button>
                         ))}
                     </div>
@@ -171,6 +306,49 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                         className="w-full border rounded-md px-3 py-2"
                     />
                     {errors.linkUrl && <p className="text-red-500 text-xs mt-1">{errors.linkUrl.message}</p>}
+                </div>
+            ) : postType === 'image' ? (
+                <div className="space-y-3">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleBrowserFileChange}
+                    />
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={handleFileSelection}
+                            className="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm"
+                        >
+                            {isDesktop ? 'Attach image(s)' : 'Choose image(s)'}
+                        </button>
+                        <span className="text-xs text-gray-500">
+                            Uploads go straight to Cloudinary; the server only receives CDN URLs.
+                        </span>
+                    </div>
+
+                    {selectedFiles.length > 0 && (
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {selectedFiles.map((file, index) => (
+                                <div key={`${file.name}-${index}`} className="relative rounded-lg border overflow-hidden bg-gray-50">
+                                    <img src={file.previewUrl} alt={file.name} className="h-32 w-full object-cover" />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeSelectedFile(index)}
+                                        className="absolute top-2 right-2 bg-black/70 text-white text-xs rounded-full px-2 py-1"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {errors.media && <p className="text-red-500 text-xs mt-1">{errors.media.message}</p>}
                 </div>
             ) : (
                 <Controller
