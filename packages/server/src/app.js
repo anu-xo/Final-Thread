@@ -11,8 +11,10 @@ import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.js';
 import communityRoutes from './routes/communities.js';
+import feedRoutes from './routes/feed.js';
 import postRoutes from "./routes/postRoutes.js";
 import searchRoutes from './routes/search.js';
+import userRoutes from './routes/users.js';
 import voteRoutes from './routes/votes.js';
 
 // __dirname equivalent for ESM
@@ -67,8 +69,10 @@ app.set('redis', redis);
 // ── Routes ──────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/communities', communityRoutes);
+app.use('/api/feed', feedRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/votes', voteRoutes);
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';

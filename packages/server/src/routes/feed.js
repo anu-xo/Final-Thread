@@ -3,8 +3,18 @@ import express from 'express';
 import Post from '../models/Post.js';
 import CommunityMember from '../models/CommunityMember.js';
 import Vote from '../models/Vote.js';
-import authMiddleware from '../middleware/auth.js';
-import { getSortStage } from '../services/sortService.js'; // Day 5 sort algorithms
+import { authMiddleware } from '../middleware/auth.js';
+
+const SORT_STAGES = {
+  hot: { hotScore: -1 },
+  new: { createdAt: -1 },
+  top: { score: -1 },
+  rising: { risingScore: -1 },
+};
+
+function getSortStage(sort) {
+  return SORT_STAGES[sort] || SORT_STAGES.hot;
+}
 
 const router = express.Router();
 
@@ -77,7 +87,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const userVotes = await Vote.find({
       user: userId,
       target: { $in: postIds },
-      targetType: 'Post' // Match target schema type definition casing
+      targetType: 'post'
     }).lean();
 
     const voteMap = new Map(userVotes.map(v => [v.target.toString(), v.value]));

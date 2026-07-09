@@ -2,11 +2,38 @@
 // React Router v6 supports "nested routes" where a parent route renders a layout
 // and child routes render inside it via <Outlet />.
 // Every authenticated page uses this layout — we define Header + Sidebar once here.
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
+import SearchModal from './SearchModal.jsx';
 
 export default function AppLayout() {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!window.electronAPI?.onFocusSearch) return undefined;
+
+    return window.electronAPI.onFocusSearch(() => setSearchOpen(true));
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -18,6 +45,7 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

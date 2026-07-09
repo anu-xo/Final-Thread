@@ -21,12 +21,8 @@ import PostDetail from './components/PostDetail.jsx';
 import SubmitPostPage from './pages/SubmitPostPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import AIChatPage from './pages/AIChatPage.jsx';
-
-const Home = () => (
-  <div className="flex flex-col items-center justify-center p-8">
-    <h1 className="text-4xl font-bold text-[#ff4500]">⚡ ThreadVerse</h1>
-  </div>
-);
+import HomePage from './pages/HomePage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30 * 1000 } },
@@ -53,7 +49,7 @@ function AppRoutes() {
       {/* Protected routes */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/submit" element={<SubmitPostPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/ai/chat" element={<AIChatPage />} />
@@ -62,6 +58,7 @@ function AppRoutes() {
           <Route path="/communities" element={<CommunityBrowser />} />
           <Route path="/communities/create" element={<CreateCommunity />} />
           <Route path="/community/:slug" element={<CommunityPage />} />
+          <Route path="/u/:username" element={<ProfilePage />} />
           <Route path="/posts/:id" element={<PostDetail />} />
           <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
         </Route>
