@@ -1,15 +1,30 @@
 import { jest } from '@jest/globals';
 
-// 1. Module mocks must happen before dynamically importing modules that consume them
 const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: 'mock-job-uuid' }),
+};
+
+const mockRedis = {
+  on: jest.fn().mockReturnThis(),
+  ping: jest.fn().mockResolvedValue('PONG'),
+  quit: jest.fn().mockResolvedValue(undefined),
 };
 
 jest.unstable_mockModule('../jobs/embeddingQueue.js', () => ({
   getEmbeddingQueue: () => mockQueue,
 }));
 
-// 2. Dynamic imports for modules dependent on the mock or app lifecycle
+jest.unstable_mockModule('ioredis', () => ({
+  Redis: jest.fn(() => mockRedis),
+}));
+
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+
+const { MongoMemoryServer } = await import('mongodb-memory-server');
+const mongoServer = await MongoMemoryServer.create();
+process.env.MONGODB_URI = mongoServer.getUri();
+process.env.REDIS_URL = 'redis://localhost:6379';
+
 const { default: request } = await import('supertest');
 const { default: mongoose } = await import('mongoose');
 const { default: jwt } = await import('jsonwebtoken');
@@ -60,14 +75,14 @@ describe('POST/GET /api/posts/:id/comments', () => {
   });
 
   afterAll(async () => {
-    // Clean up all data associated with the user to prevent cross-test DB leaks
     await Comment.deleteMany({ author: testUser?._id });
     await Post.deleteMany({ author: testUser?._id });
     await Community.deleteOne({ _id: testCommunity?._id });
     await User.deleteOne({ _id: testUser?._id });
-    
+
     await mongoose.connection.close();
     await redis.quit();
+    await mongoServer.stop();
   });
 
   beforeEach(() => {
@@ -81,7 +96,6 @@ describe('POST/GET /api/posts/:id/comments', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({ body, parentId });
 
-    // Create a 3-level chain
     const rootRes = await createComment(null, 'root comment');
     expect(rootRes.status).toBe(201);
     const rootComment = rootRes.body.data;
@@ -97,7 +111,6 @@ describe('POST/GET /api/posts/:id/comments', () => {
     const grandchildComment = grandchildRes.body.data;
     expect(grandchildComment.depth).toBe(2);
 
-    // Fetch the tree and verify structure
     const listRes = await request(app).get(`/api/posts/${testPost._id}/comments`);
     expect(listRes.status).toBe(200);
     expect(listRes.body.data).toHaveLength(1);
@@ -131,14 +144,12 @@ describe('POST/GET /api/posts/:id/comments', () => {
       return res.body.data;
     };
 
-    // Build a chain up to depth 4 (which represents 5 layers: 0, 1, 2, 3, 4)
     let current = await buildChain(null, 'depth-0');
-    for (let i = 1; i <= 4; i += 1) {
+    for (let i = 1; i <= 5; i += 1) {
       current = await buildChain(current._id, `depth-${i}`);
       expect(current.depth).toBe(i);
     }
 
-    // Trying to add at depth 5 (6th level) should fail if max depth is capped at index 4 (5 levels)
     const tooDeep = await createComment(current._id, 'too deep');
     expect(tooDeep.status).toBe(400);
     expect(tooDeep.body.error).toMatch(/depth/i);

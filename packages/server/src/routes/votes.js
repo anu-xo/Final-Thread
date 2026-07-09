@@ -4,19 +4,9 @@ import { authMiddleware } from '../middleware/auth.js';
 import Vote from '../models/Vote.js';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
+import { computeHotScore } from '../utils/scoring.js';
 
 const router = express.Router();
-
-/**
- * Helper function to calculate Reddit-style hot ranking score
- */
-function calculateHotScore(score, createdAt) {
-  const order = Math.log10(Math.max(Math.abs(score), 1));
-  const sign = score > 0 ? 1 : score < 0 ? -1 : 0;
-  const seconds = (createdAt.getTime() - new Date(2024, 0, 1).getTime()) / 1000;
-
-  return sign * order + seconds / 45000;
-}
 
 /**
  * POST / - Handle voting for posts and comments
@@ -54,7 +44,7 @@ router.post('/', authMiddleware, async (req, res) => {
     const Model = targetType === 'post' ? Post : Comment;
     const target = await Model.findById(targetId);
 
-    if (!target) {
+    if (!target || target.isRemoved || target.isDeleted) {
       return res.status(404).json({
         data: null,
         error: 'Target not found',
@@ -70,9 +60,10 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
     const previousValue = existingVote ? existingVote.value : 0;
-    const nextValue = value === 0 ? 0 : value;
-    const normalizedValue = existingVote && existingVote.value === value ? 0 : nextValue;
+    const normalizedValue = existingVote && existingVote.value === value ? 0 : value;
     const delta = normalizedValue - previousValue;
+    const upvoteDelta = (normalizedValue === 1 ? 1 : 0) - (previousValue === 1 ? 1 : 0);
+    const downvoteDelta = (normalizedValue === -1 ? 1 : 0) - (previousValue === -1 ? 1 : 0);
 
     // 4. Update or Delete Vote document
     if (normalizedValue === 0) {
@@ -95,14 +86,25 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // 5. Update Target score and ranking if changed
     if (delta !== 0) {
+      const updatePayload =
+        targetType === 'post'
+          ? {
+              $inc: {
+                score: delta,
+                upvotes: upvoteDelta,
+                downvotes: downvoteDelta,
+              },
+            }
+          : { $inc: { score: delta } };
+
       updatedTarget = await Model.findByIdAndUpdate(
         targetId,
-        { $inc: { score: delta } },
+        updatePayload,
         { new: true }
       );
 
       if (targetType === 'post') {
-        const hotScore = calculateHotScore(updatedTarget.score, updatedTarget.createdAt);
+        const hotScore = computeHotScore(updatedTarget.upvotes, updatedTarget.downvotes, updatedTarget.createdAt);
 
         updatedTarget = await Post.findByIdAndUpdate(
           targetId,
@@ -134,6 +136,7 @@ router.post('/', authMiddleware, async (req, res) => {
       data: {
         score: updatedTarget.score,
         userVote: normalizedValue,
+        ...(targetType === 'post' ? { hotScore: updatedTarget.hotScore } : {}),
       },
       error: null,
       meta: {},
