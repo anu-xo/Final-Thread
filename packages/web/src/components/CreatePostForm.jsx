@@ -8,7 +8,7 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postSchema } from '../schemas/postSchema';
-import { api } from '../lib/api'; // your axios/fetch wrapper
+import api from '../services/api';
 
 function CommunityPicker({ value, onChange, error }) {
     const [query, setQuery] = useState('');

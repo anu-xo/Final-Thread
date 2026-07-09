@@ -1,8 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
+import { useIsDesktop } from './hooks/useIsDesktop.js';
 
 // Layout & Route Guards
 import AppLayout from './components/AppLayout.jsx';
@@ -16,6 +18,9 @@ import CommunityBrowser from './pages/CommunityBrowser.jsx';
 import CommunityPage from './pages/CommunityPage.jsx';
 import TiptapSmokePage from './pages/TiptapSmokePage.jsx';
 import PostDetail from './components/PostDetail.jsx';
+import SubmitPostPage from './pages/SubmitPostPage.jsx';
+import SearchPage from './pages/SearchPage.jsx';
+import AIChatPage from './pages/AIChatPage.jsx';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center p-8">
@@ -49,6 +54,9 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/submit" element={<SubmitPostPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/ai/chat" element={<AIChatPage />} />
           
           {/* Community Routes */}
           <Route path="/communities" element={<CommunityBrowser />} />
@@ -64,12 +72,37 @@ function AppRoutes() {
   );
 }
 
+function DesktopShortcutBridge() {
+  const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
+
+  useEffect(() => {
+    if (!isDesktop || !window.electronAPI) return undefined;
+
+    const removeNavigate = window.electronAPI.onNavigate((path) => {
+      if (path) navigate(path);
+    });
+
+    const removeOpenAIChat = window.electronAPI.onOpenAIChat(() => {
+      navigate('/ai/chat');
+    });
+
+    return () => {
+      removeNavigate?.();
+      removeOpenAIChat?.();
+    };
+  }, [isDesktop, navigate]);
+
+  return null;
+}
+
 export default function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
+            <DesktopShortcutBridge />
             <AppRoutes />
           </AuthProvider>
         </BrowserRouter>

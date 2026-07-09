@@ -20,24 +20,32 @@ const __dirname = path.dirname(__filename);
 export function registerGlobalShortcuts(window) {
   if (!window) return;
 
-  // Ctrl+N (Cmd+N on mac) -> new post
-  globalShortcut.register('CommandOrControl+N', () => {
+  globalShortcut.unregisterAll();
+
+  const bringWindowToFront = () => {
+    if (!window || window.isDestroyed()) return false;
+    if (window.isMinimized()) window.restore();
     window.show();
     window.focus();
+    window.webContents.focus();
+    return true;
+  };
+
+  // Ctrl+N (Cmd+N on mac) -> new post
+  globalShortcut.register('CommandOrControl+N', () => {
+    if (!bringWindowToFront()) return;
     window.webContents.send('navigate', '/submit');
   });
 
   // Ctrl+K -> focus search
   globalShortcut.register('CommandOrControl+K', () => {
-    window.show();
-    window.focus();
+    if (!bringWindowToFront()) return;
     window.webContents.send('focus-search');
   });
 
   // Ctrl+Shift+A -> AI chat panel
   globalShortcut.register('CommandOrControl+Shift+A', () => {
-    window.show();
-    window.focus();
+    if (!bringWindowToFront()) return;
     window.webContents.send('open-ai-chat');
   });
 }
@@ -50,6 +58,8 @@ export function unregisterGlobalShortcuts() {
  * ── Window Management ────────────────────────────────────────────────────────
  */
 function createWindow() {
+  unregisterGlobalShortcuts();
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -77,6 +87,7 @@ function createWindow() {
   registerGlobalShortcuts(mainWindow);
 
   mainWindow.on('closed', () => { 
+    unregisterGlobalShortcuts();
     mainWindow = null; 
   });
 }

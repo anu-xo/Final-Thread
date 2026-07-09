@@ -1,13 +1,25 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../store/authStore.js';
 import api from '../services/api.js';
+import { useIsDesktop } from '../hooks/useIsDesktop.js';
 
 export default function Header() {
   const { user, accessToken, clearAuth } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
   const navigate = useNavigate();
+  const isDesktop = useIsDesktop();
+
+  useEffect(() => {
+    if (!isDesktop || !window.electronAPI?.onFocusSearch) return undefined;
+
+    return window.electronAPI.onFocusSearch(() => {
+      searchInputRef.current?.focus();
+      searchInputRef.current?.select?.();
+    });
+  }, [isDesktop]);
 
   const handleLogout = async () => {
     try {
@@ -36,6 +48,7 @@ export default function Header() {
           We'll add debounce logic when we build the full search on Day 7. */}
       <form onSubmit={handleSearch} className="flex-1 max-w-xl">
         <input
+          ref={searchInputRef}
           type="text"
           placeholder="Search ThreadVerse..."
           value={searchQuery}

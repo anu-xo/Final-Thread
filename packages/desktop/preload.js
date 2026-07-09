@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+const createListener = (channel, callback) => {
+  const handler = (_event, payload) => callback(payload);
+  ipcRenderer.on(channel, handler);
+  return () => ipcRenderer.removeListener(channel, handler);
+};
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // Notification
   showNotification: (title, body) =>
@@ -34,10 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-subscribed-communities'),
 
   // Global Shortcut Listeners & Navigation Whitelist
-  onNavigate: (callback) => 
-    ipcRenderer.on('navigate', (_event, path) => callback(path)),
-  onFocusSearch: (callback) => 
-    ipcRenderer.on('focus-search', () => callback()),
-  onOpenAIChat: (callback) => 
-    ipcRenderer.on('open-ai-chat', () => callback()),
+  onNavigate: (callback) => createListener('navigate', callback),
+  onFocusSearch: (callback) => createListener('focus-search', callback),
+  onOpenAIChat: (callback) => createListener('open-ai-chat', callback),
 });
