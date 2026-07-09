@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import { authMiddleware } from '../middleware/auth.js';
 import Comment from '../models/Comment.js';
 import Post from '../models/Post.js';
+import Vote from '../models/Vote.js';
+import { resolveViewerUserId } from '../utils/voteResponse.js';
 
 const router = express.Router({ mergeParams: true });
 
@@ -118,6 +120,7 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
 router.get('/:id/comments', async (req, res) => {
   try {
     const { id: postId } = req.params;
+    const viewerUserId = await resolveViewerUserId(req);
 
     // Single flat fetch, sorted by score desc (ties broken by createdAt asc
     // so older comments at the same score don't jump around)
@@ -133,9 +136,27 @@ router.get('/:id/comments', async (req, res) => {
       .lean();
 
     const tree = buildCommentTree(comments);
+    const commentIds = comments.map((comment) => comment._id);
+    let voteMap = new Map();
+
+    if (viewerUserId && commentIds.length > 0) {
+      const votes = await Vote.find({
+        user: viewerUserId,
+        target: { $in: commentIds },
+        targetType: 'comment',
+      }).lean();
+
+      voteMap = new Map(votes.map((vote) => [String(vote.target), vote.value]));
+    }
+
+    const enrichedTree = tree.map((comment) => ({
+      ...comment,
+      userVote: voteMap.get(String(comment._id)) || 0,
+      children: mergeCommentVotes(comment.children || [], voteMap),
+    }));
 
     return res.json({
-      data: tree,
+      data: enrichedTree,
       error: null,
       meta: {
         total: comments.length,
@@ -196,6 +217,14 @@ function buildCommentTree(flatComments) {
   }
 
   return roots;
+}
+
+function mergeCommentVotes(comments, voteMap) {
+  return comments.map((comment) => ({
+    ...comment,
+    userVote: voteMap.get(String(comment._id)) || 0,
+    children: mergeCommentVotes(comment.children || [], voteMap),
+  }));
 }
 
 export default router;

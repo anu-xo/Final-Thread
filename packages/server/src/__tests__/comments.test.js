@@ -33,6 +33,7 @@ const { default: User } = await import('../models/User.js');
 const { default: Community } = await import('../models/Community.js');
 const { default: Post } = await import('../models/Post.js');
 const { default: Comment } = await import('../models/Comment.js');
+const { default: Vote } = await import('../models/Vote.js');
 
 describe('POST/GET /api/posts/:id/comments', () => {
   let testUser;
@@ -118,17 +119,46 @@ describe('POST/GET /api/posts/:id/comments', () => {
     const treeRoot = listRes.body.data[0];
     expect(treeRoot._id).toBe(rootComment._id);
     expect(treeRoot.depth).toBe(0);
+    expect(treeRoot.userVote).toBe(0);
     expect(treeRoot.children).toHaveLength(1);
 
     const treeChild = treeRoot.children[0];
     expect(treeChild._id).toBe(childComment._id);
     expect(treeChild.depth).toBe(1);
+    expect(treeChild.userVote).toBe(0);
     expect(treeChild.children).toHaveLength(1);
 
     const treeGrandchild = treeChild.children[0];
     expect(treeGrandchild._id).toBe(grandchildComment._id);
     expect(treeGrandchild.depth).toBe(2);
+    expect(treeGrandchild.userVote).toBe(0);
     expect(treeGrandchild.children).toHaveLength(0);
+  });
+
+  it('includes the viewer vote when reading comments with an auth header', async () => {
+    const createRes = await request(app)
+      .post(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ body: 'voted comment', parentId: null });
+
+    expect(createRes.status).toBe(201);
+
+    const comment = createRes.body.data;
+    const votedCommentId = comment._id;
+    await Vote.create({
+      user: testUser._id,
+      target: votedCommentId,
+      targetType: 'comment',
+      value: 1,
+    });
+
+    const listRes = await request(app)
+      .get(`/api/posts/${testPost._id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`);
+
+    expect(listRes.status).toBe(200);
+    const votedRoot = listRes.body.data.find((item) => item._id === votedCommentId);
+    expect(votedRoot.userVote).toBe(1);
   });
 
   it('enforces depth cap of 5 levels', async () => {

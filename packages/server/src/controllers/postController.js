@@ -3,7 +3,9 @@
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import Community from "../models/Community.js"; // adjust path if different
+import Vote from "../models/Vote.js";
 import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js";
+import { resolveViewerUserId } from "../utils/voteResponse.js";
 
 const SORT_FIELDS = {
   new: "createdAt",
@@ -85,6 +87,7 @@ export async function createPost(req, res) {
 export async function getPosts(req, res) {
   try {
     const { community, sort = "new", cursor, limit } = req.query;
+    const viewerUserId = await resolveViewerUserId(req);
 
     const sortField = SORT_FIELDS[sort];
     if (!sortField) {
@@ -128,6 +131,23 @@ export async function getPosts(req, res) {
     const hasMore = posts.length > pageLimit;
     const pageItems = hasMore ? posts.slice(0, pageLimit) : posts;
 
+    const postIds = pageItems.map((post) => post._id);
+    let voteMap = new Map();
+    if (viewerUserId && postIds.length > 0) {
+      const votes = await Vote.find({
+        user: viewerUserId,
+        target: { $in: postIds },
+        targetType: "post",
+      }).lean();
+
+      voteMap = new Map(votes.map((vote) => [String(vote.target), vote.value]));
+    }
+
+    const enrichedPageItems = pageItems.map((post) => ({
+      ...post,
+      userVote: voteMap.get(String(post._id)) || 0,
+    }));
+
     let nextCursor = null;
     if (hasMore) {
       const last = pageItems[pageItems.length - 1];
@@ -135,7 +155,7 @@ export async function getPosts(req, res) {
     }
 
     return res.json({
-      posts: pageItems,
+      posts: enrichedPageItems,
       nextCursor,
       hasMore,
     });
@@ -149,6 +169,7 @@ export async function getPosts(req, res) {
 export async function getPostById(req, res) {
   try {
     const { id } = req.params;
+    const viewerUserId = await resolveViewerUserId(req);
 
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({ error: "Invalid post id" });
@@ -163,7 +184,20 @@ export async function getPostById(req, res) {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    return res.json({ post });
+    const votes = viewerUserId ? await Vote.find({
+        user: viewerUserId,
+        target: { $in: [id] },
+        targetType: "post",
+      }).lean() : [];
+
+    const voteMap = new Map(votes.map((vote) => [String(vote.target), vote.value]));
+
+    return res.json({
+      post: {
+        ...post,
+        userVote: voteMap.get(String(post._id)) || 0,
+      },
+    });
   } catch (err) {
     console.error("getPostById error:", err);
     return res.status(500).json({ error: "Failed to fetch post" });
