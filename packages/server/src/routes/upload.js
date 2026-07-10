@@ -1,5 +1,6 @@
+// packages/server/src/routes/upload.js
 import express from 'express';
-import cloudinary from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -11,16 +12,19 @@ router.post('/sign', authMiddleware, (req, res) => {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
     const folder = 'threadverse/posts';
 
+    // Guard clause to ensure Cloudinary credentials are set up
     if (!cloudName || !apiKey || !apiSecret) {
       return res.status(500).json({
         data: null,
-        error: 'Cloudinary is not configured',
+        error: 'Cloudinary is not configured on the server',
         meta: null,
       });
     }
 
     const timestamp = Math.round(Date.now() / 1000);
-    const signature = cloudinary.v2.utils.api_sign_request(
+    
+    // Generate the secure signature using the v2 SDK utility
+    const signature = cloudinary.utils.api_sign_request(
       { timestamp, folder },
       apiSecret
     );
