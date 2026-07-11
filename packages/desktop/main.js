@@ -25,6 +25,13 @@ const isDev = !app.isPackaged;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Embedding cache store
+const cacheStore = new Store({
+  name: 'embedding-cache',
+});
+
+const MAX_CACHE_ENTRIES = 200;
+
 /**
  * ── Global Shortcuts ─────────────────────────────────────────────────────────
  */
@@ -66,6 +73,31 @@ export function unregisterGlobalShortcuts() {
 }
 
 /**
+ * ── Embedding Cache ──────────────────────────────────────────────────────────
+ */
+
+export function getCachedEmbedding(communityId, postId) {
+  const key = `${communityId}:${postId}`;
+  const cache = cacheStore.get('entries', {});
+  return cache[key] || null;
+}
+
+export function setCachedEmbedding(communityId, postId, data) {
+  const key = `${communityId}:${postId}`;
+
+  const cache = cacheStore.get('entries', {});
+  const keys = Object.keys(cache);
+
+  // Simple FIFO eviction (true LRU can be added later)
+  if (keys.length >= MAX_CACHE_ENTRIES) {
+    delete cache[keys[0]];
+  }
+
+  cache[key] = data;
+  cacheStore.set('entries', cache);
+}
+
+/**
  * ── Window Management ────────────────────────────────────────────────────────
  */
 function createWindow() {
@@ -97,9 +129,9 @@ function createWindow() {
   // Register shortcuts once the main window is created
   registerGlobalShortcuts(mainWindow);
 
-  mainWindow.on('closed', () => { 
+  mainWindow.on('closed', () => {
     unregisterGlobalShortcuts();
-    mainWindow = null; 
+    mainWindow = null;
   });
 }
 

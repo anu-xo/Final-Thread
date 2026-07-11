@@ -18,8 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Updates (Refactored to use createListener for safer cleanup)
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
-  onUpdateAvailable: (callback) => createListener('update-available', callback),
-  onUpdateDownloaded: (callback) => createListener('update-downloaded', callback),
+  onUpdateAvailable: (callback) =>
+    createListener('update-available', callback),
+  onUpdateDownloaded: (callback) =>
+    createListener('update-downloaded', callback),
   installUpdate: () => ipcRenderer.invoke('install-update'),
 
   // File selection (for post image attachment — Day 7)
@@ -33,6 +35,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('set-subscribed-communities', communities),
   getSubscribedCommunities: () =>
     ipcRenderer.invoke('get-subscribed-communities'),
+
+  // Embedding cache
+  getCachedEmbedding: (communityId, postId) =>
+    ipcRenderer.invoke('get-cached-embedding', communityId, postId),
 
   // Global Shortcut Listeners & Navigation Whitelist
   onNavigate: (callback) => createListener('navigate', callback),
