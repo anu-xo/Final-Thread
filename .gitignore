@@ -1,14 +1,137 @@
+# ============================
+# Dependencies
+# ============================
 node_modules/
-dist/
+.pnpm-store/
+.pnp/
+.pnp.js
+
+# ============================
+# Environment variables (CRITICAL — contains secrets)
+# ============================
 .env
 .env.local
-*.log
-.DS_Store
-Thumbs.db
-coverage/
-.pnpm-store/
-packages/web/dist/
-packages/server/dist/
+.env.*.local
+.env.development
+.env.production
+.env.staging
+packages/*/.env
+packages/*/.env.*
+!.env.example
+!packages/*/.env.example
+
+# ============================
+# Build outputs
+# ============================
+dist/
+build/
+out/
+.vite/
+.cache/
+
+# Electron build artifacts
 packages/desktop/dist/
 packages/desktop/out/
-release/
+packages/desktop/release/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.snap
+*.msix
+*.blockmap
+
+# Electron-vite output
+packages/desktop/out/main/
+packages/desktop/out/preload/
+packages/desktop/out/renderer/
+
+# ============================
+# Logs
+# ============================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================
+# Testing
+# ============================
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+playwright/.cache/
+
+# ============================
+# TypeScript
+# ============================
+*.tsbuildinfo
+
+# ============================
+# OS-specific files
+# ============================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================
+# Editor / IDE
+# ============================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================
+# Docker
+# ============================
+docker-compose.override.yml
+
+# ============================
+# Redis / MongoDB local data (if using volume mounts)
+# ============================
+data/
+mongo-data/
+redis-data/
+
+# ============================
+# Sentry
+# ============================
+.sentryclirc
+
+# ============================
+# electron-builder signing certs (never commit these)
+# ============================
+*.p12
+*.pfx
+*.cer
+*.provisionprofile
+entitlements.mac.plist.local
+
+# ============================
+# Misc secrets / keys
+# ============================
+*.pem
+*.key
+!packages/desktop/build/entitlements.mac.plist
+
+# ============================
+# pnpm workspace
+# ============================
+.pnpm-debug.log
+
+# ============================
+# Husky (keep the hooks, ignore local overrides)
+# ============================
+.husky/_/
