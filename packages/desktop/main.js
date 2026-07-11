@@ -4,7 +4,17 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 
-const store = new Store();
+// Initialize store with default settings schema
+const store = new Store({
+  defaults: {
+    theme: 'system',
+    fontSize: 'medium',
+    sidebarCollapsed: false,
+    defaultCommunitySort: 'hot',
+    notificationSound: true,
+    aiChatAutoOpen: false,
+  },
+});
 
 let mainWindow = null;
 
@@ -110,14 +120,15 @@ ipcMain.handle('show-notification', (_, { title, body }) => {
 
 // 3. Settings & Storage (Includes Subscribed Communities Cache)
 ipcMain.handle('settings:get', () => store.store);
-ipcMain.handle('get-settings', () => store.store); // Alias helper
+ipcMain.handle('get-settings', () => store.store); // Legacy alias helper
 
-ipcMain.handle('settings:set', (_, key, value) => {
-  store.set(key, value);
-  return true;
+ipcMain.handle('settings:set', (_, partial) => {
+  store.set(partial);
+  return store.store;
 });
+
 ipcMain.handle('set-settings', (_, settings) => {
-  Object.entries(settings).forEach(([key, value]) => store.set(key, value));
+  store.set(settings);
   return store.store;
 });
 

@@ -9,6 +9,8 @@ import compression from 'compression';
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
+
+// Route Imports
 import authRoutes from './routes/auth.js';
 import communityRoutes from './routes/communities.js';
 import feedRoutes from './routes/feed.js';
@@ -17,8 +19,10 @@ import searchRoutes from './routes/search.js';
 import userRoutes from './routes/users.js';
 import voteRoutes from './routes/votes.js';
 import uploadRoutes from './routes/upload.js';
+import reportRoutes from './routes/reports.js'; // Added from update
+import modRoutes from './routes/mod.js';       // Added from update
 
-// __dirname equivalent for ESM
+// ── ESM Paths Configuration ──────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -27,9 +31,28 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 app.set('io', null);
 
-// ── Middleware ──────────────────────────────────────────────────────────────
-app.use(helmet());
-app.use(cors({ origin: ['http://localhost:5173', 'electron://'], credentials: true }));
+// ── Security & Logging Middleware ──────────────────────────────────────────
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", 'https://api.threadverse.app', 'wss://api.threadverse.app'],
+        imgSrc: ["'self'", 'https://res.cloudinary.com', 'data:'],
+        scriptSrc: ["'self'"],
+      },
+    },
+    frameguard: { action: 'deny' },
+  })
+);
+
+app.use(
+  cors({
+    origin: ['http://localhost:5173', 'electron://'],
+    credentials: true
+  })
+);
+
 app.use(morgan('dev'));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
@@ -76,6 +99,11 @@ app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/upload', uploadRoutes);
+
+// Base-level routes mapping the updated endpoints matching your scheme
+app.use('/api', reportRoutes);
+app.use('/api', modRoutes);
+
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   let redisStatus = 'disconnected';

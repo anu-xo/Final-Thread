@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
+// Helper to handle listener setup and returns a clean unsubscribe function
 const createListener = (channel, callback) => {
   const handler = (_event, payload) => callback(payload);
   ipcRenderer.on(channel, handler);
@@ -11,20 +12,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showNotification: (title, body) =>
     ipcRenderer.invoke('show-notification', { title, body }),
 
-  // Settings persistence
-  getSettings: () => ipcRenderer.invoke('get-settings'),
-  setSettings: (settings) => ipcRenderer.invoke('set-settings', settings),
+  // Settings persistence (Updated to use the new namespaced channels)
+  getSettings: () => ipcRenderer.invoke('settings:get'),
+  setSettings: (partial) => ipcRenderer.invoke('settings:set', partial),
 
-  // Updates
+  // Updates (Refactored to use createListener for safer cleanup)
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
-  onUpdateAvailable: (callback) => {
-    ipcRenderer.on('update-available', (_, info) => callback(info));
-    return () => ipcRenderer.removeAllListeners('update-available');
-  },
-  onUpdateDownloaded: (callback) => {
-    ipcRenderer.on('update-downloaded', (_, info) => callback(info));
-    return () => ipcRenderer.removeAllListeners('update-downloaded');
-  },
+  onUpdateAvailable: (callback) => createListener('update-available', callback),
+  onUpdateDownloaded: (callback) => createListener('update-downloaded', callback),
   installUpdate: () => ipcRenderer.invoke('install-update'),
 
   // File selection (for post image attachment — Day 7)
