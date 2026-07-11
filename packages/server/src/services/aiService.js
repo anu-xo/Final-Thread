@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import PostEmbedding from '../models/PostEmbedding.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
+import AIConversation from '../models/AIConversation.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const groq = new Groq({

@@ -1,5 +1,5 @@
 // server/src/middleware/aiRateLimit.js
-import redisClient from '../config/redis.js'; // your existing ioredis instance
+import {redisClient} from '../config/redis.js'; // your existing ioredis instance
 
 const AI_DAILY_LIMIT = 25;
 

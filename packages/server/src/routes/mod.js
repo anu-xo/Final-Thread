@@ -1,7 +1,7 @@
 // packages/server/src/routes/mod.js
 import express from 'express';
 import mongoose from 'mongoose';
-import authMiddleware from '../middleware/auth.js';
+import {authMiddleware} from '../middleware/auth.js';
 import modGuard from '../middleware/modGuard.js';
 import Report from '../models/Report.js';
 import Post from '../models/Post.js';
