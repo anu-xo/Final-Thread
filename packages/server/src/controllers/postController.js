@@ -2,10 +2,12 @@
 
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
-import Community from "../models/Community.js"; // adjust path if different
+import Community from "../models/Community.js"; 
 import Vote from "../models/Vote.js";
 import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js";
 import { resolveViewerUserId } from "../utils/voteResponse.js";
+import { classifyContent } from '../services/moderationService.js';
+import ModerationLog from '../models/ModerationLog.js';
 
 const SORT_FIELDS = {
   new: "createdAt",
@@ -45,6 +47,7 @@ export async function createPost(req, res) {
       url,
       flair,
     } = req.body;
+    
     const authorId = req.user?.id || req.user?._id;
     const postBody = body ?? content ?? "";
     const postType = type ?? (Array.isArray(media) && media.length > 0 ? "image" : (url ? "link" : "text"));
@@ -74,11 +77,30 @@ export async function createPost(req, res) {
       return res.status(404).json({ error: "Community not found" });
     }
 
+    // 1. Run the moderation check on title + the resolved text body
+    const label = await classifyContent(`${title || ''} ${postBody}`);
+
+    // 2. Log the decision
+    await ModerationLog.create({
+      targetType: 'post',
+      content: postBody.slice(0, 500),
+      label,
+      author: authorId,
+      community: communityId,
+    });
+
+    // 3. Block if unsafe
+    if (label !== 'SAFE') {
+      return res.status(422).json({
+        data: null,
+        error: `Content flagged as ${label} and was not published.`,
+        meta: null,
+      });
+    }
+
     const now = new Date();
 
-    // Seed with a self-upvote (1, 0) so hotScore isn't 0 for every brand-new
-    // post — matches the common Reddit-style convention. Drop this if you'd
-    // rather start posts at 0/0.
+    // Seed with a self-upvote (1, 0) so hotScore isn't 0 for every brand-new post
     const initialUpvotes = 1;
     const initialDownvotes = 0;
     const initialHotScore = computeHotScore(initialUpvotes, initialDownvotes, now);
@@ -141,8 +163,6 @@ export async function getPosts(req, res) {
 
       const sortValue = sortField === "createdAt" ? new Date(decoded.v) : decoded.v;
 
-      // Descending sort (newest / highest score / hottest / fastest-rising first),
-      // with _id as tiebreaker for equal sort-field values.
       query.$or = [
         { [sortField]: { $lt: sortValue } },
         { [sortField]: sortValue, _id: { $lt: decoded.id } },
@@ -151,7 +171,7 @@ export async function getPosts(req, res) {
 
     const posts = await Post.find(query)
       .sort({ [sortField]: -1, _id: -1 })
-      .limit(pageLimit + 1) // fetch one extra to know if there's a next page
+      .limit(pageLimit + 1)
       .populate("author", "username avatarUrl")
       .lean();
 
