@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-
 const { Schema } = mongoose;
 
 /**
@@ -55,6 +54,4 @@ const reportSchema = new Schema(
 // filter by {status: 'pending', community: {$in: [...]}}, sort by _id desc
 reportSchema.index({ community: 1, status: 1, _id: -1 });
 
-const Report = mongoose.model('Report', reportSchema);
-
-export default Report;
+export default mongoose.model('Report', reportSchema);

@@ -1,7 +1,7 @@
 // packages/server/src/routes/reports.js
 import express from 'express';
 import Report from '../models/Report.js';
-import authMiddleware from '../middleware/auth.js';
+import {authMiddleware} from '../middleware/auth.js';
 
 const router = express.Router();
 
