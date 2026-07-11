@@ -1,6 +1,8 @@
+// packages/server/src/routes/communities.js
 import express from 'express';
-import  { authMiddleware } from '../middleware/auth.js';
-import  CommunityMember  from '../models/CommunityMember.js'; // Ensure you import your model
+import { authMiddleware } from '../middleware/auth.js';
+import CommunityMember from '../models/CommunityMember.js';
+import Community from '../models/Community.js'; // Added since rules/flairs modify the Community document
 import {
   createCommunity,
   getCommunities,
@@ -11,11 +13,12 @@ import {
 
 const router = express.Router();
 
+// --- Static / Creation Routes ---
 router.post('/', authMiddleware, createCommunity);
 router.get('/', getCommunities);
 
 // GET /communities/me — subscribed communities 
-// (Placed above /:slug to avoid conflict)
+// (Placed above dynamic routes to avoid slug conflict)
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const memberships = await CommunityMember.find({
@@ -35,9 +38,58 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
-// Dynamic slug routes go below static routes
+// --- Dynamic Slug Routes ---
 router.get('/:slug', getCommunityBySlug);
 router.post('/:slug/join', authMiddleware, joinCommunity);
 router.post('/:slug/leave', authMiddleware, leaveCommunity);
+
+// PUT /communities/:slug/rules — mod only
+router.put('/:slug/rules', authMiddleware, async (req, res, next) => {
+  try {
+    const community = await Community.findOne({ slug: req.params.slug });
+    if (!community) return res.status(404).json({ data: null, error: 'Not found', meta: null });
+
+    const membership = await CommunityMember.findOne({
+      user: req.user.id,
+      community: community._id,
+    });
+    
+    const isMod = membership && ['mod', 'admin'].includes(membership.role);
+    if (!isMod && req.user.role !== 'admin') {
+      return res.status(403).json({ data: null, error: 'Forbidden', meta: null });
+    }
+
+    community.rules = req.body.rules; // array of { title, description }
+    await community.save();
+    res.json({ data: community, error: null, meta: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /communities/:slug/flairs — mod only
+router.post('/:slug/flairs', authMiddleware, async (req, res, next) => {
+  try {
+    const community = await Community.findOne({ slug: req.params.slug });
+    if (!community) return res.status(404).json({ data: null, error: 'Not found', meta: null });
+
+    const membership = await CommunityMember.findOne({
+      user: req.user.id,
+      community: community._id,
+    });
+
+    const isMod = membership && ['mod', 'admin'].includes(membership.role);
+    if (!isMod && req.user.role !== 'admin') {
+      return res.status(403).json({ data: null, error: 'Forbidden', meta: null });
+    }
+
+    // Expects req.body to contain flair properties (e.g., text, backgroundColor, textColor)
+    community.flairs.push(req.body); 
+    await community.save();
+    res.status(201).json({ data: community, error: null, meta: null });
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;
