@@ -17,7 +17,7 @@ router.post('/reports', authMiddleware, async (req, res, next) => {
     }
 
     const report = await Report.create({
-      reporter: req.user.id,
+      reporter: req.user._id,
       target,
       targetType,
       reason,
