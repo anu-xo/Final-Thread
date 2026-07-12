@@ -1,13 +1,45 @@
 // server/src/services/aiService.js
-
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
 
 import PostEmbedding from '../models/PostEmbedding.js';
-import AIMessage from '../models/AIMessage.js';
+import {AIMessage} from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import AIConversation from '../models/AIConversation.js';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+const MAX_CONTEXT_TOKENS = 5500;
+
+export async function buildPromptWithinBudget({ systemPrompt, contextChunks, history, userMessage }) {
+  let candidateHistory = [...history];
+
+  while (candidateHistory.length > 0) {
+    const promptParts = [
+      systemPrompt,
+      contextChunks.join('\n\n'),
+      ...candidateHistory.map((m) => `${m.role}: ${m.content}`),
+      `user: ${userMessage}`,
+    ];
+    const fullPrompt = promptParts.join('\n\n');
+
+    const { totalTokens } = await model.countTokens(fullPrompt);
+
+    if (totalTokens <= MAX_CONTEXT_TOKENS) {
+      return { prompt: fullPrompt, tokenCount: totalTokens, historyUsed: candidateHistory };
+    }
+
+    // Drop the oldest turn (2 messages: one user + one assistant) and retry
+    candidateHistory = candidateHistory.slice(2);
+  }
+
+  // Even with zero history, still return — context chunks + system prompt are non-negotiable
+  const minimalPrompt = [systemPrompt, contextChunks.join('\n\n'), `user: ${userMessage}`].join('\n\n');
+  const { totalTokens } = await model.countTokens(minimalPrompt);
+  return { prompt: minimalPrompt, tokenCount: totalTokens, historyUsed: [] };
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const groq = new Groq({
@@ -214,6 +246,16 @@ export async function handleChat({
   return {
     messageId: aiMessage._id,
   };
+}
+// packages/server/src/services/aiService.js
+export async function getRecentHistory(conversationId, turnLimit = 6) {
+  // "turn" = one user + one assistant message, so fetch turnLimit * 2 messages
+  const messages = await AIMessage.find({ conversation: conversationId })
+    .sort({ createdAt: -1 })
+    .limit(turnLimit * 2)
+    .lean();
+
+  return messages.reverse(); // chronological order for prompt assembly
 }
 
 export default {

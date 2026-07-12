@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
-
+import { Notification, ipcMain } from 'electron';
 // Initialize store with default settings schema
 const store = new Store({
   defaults: {
@@ -227,6 +227,24 @@ ipcMain.handle('select-file', async (_, options = {}) => {
 // 6. Navigation Helpers
 ipcMain.on('navigate', (_, path) => {
   mainWindow?.webContents.send('navigate', path);
+});
+
+// 7. AI Response Notification
+ipcMain.on('ai-response-ready', (event, communityName) => {
+  if (!mainWindow.isFocused()) {
+    const notification = new Notification({
+      title: 'AI answered',
+      body: `In r/${communityName}`,
+    });
+    
+    notification.on('click', () => {
+      mainWindow.show();
+      mainWindow.focus();
+      mainWindow.webContents.send('navigate', { view: 'ai-chat', scrollToLatest: true });
+    });
+    
+    notification.show();
+  }
 });
 
 // ── App Lifecycle ────────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Notification
   showNotification: (title, body) =>
     ipcRenderer.invoke('show-notification', { title, body }),
+  notifyAIResponse: (communityName) => ipcRenderer.send('ai-response-ready', communityName),
 
   // Settings persistence (Updated to use the new namespaced channels)
   getSettings: () => ipcRenderer.invoke('settings:get'),

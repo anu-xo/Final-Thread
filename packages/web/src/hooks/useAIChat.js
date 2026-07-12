@@ -1,7 +1,7 @@
 // web/src/hooks/useAIChat.js
 import { useState, useCallback } from 'react';
 
-export function useAIChat(communityId) {
+export function useAIChat(communityId, communityName) {
   const [messages, setMessages] = useState([]);
   const [streaming, setStreaming] = useState(false);
 
@@ -31,12 +31,18 @@ export function useAIChat(communityId) {
           return copy;
         });
       }
+      
       if (data.type === 'done' || data.type === 'error') {
         setStreaming(false);
         eventSource.close();
+
+        // Trigger Electron notification if running in the desktop environment
+        if (data.type === 'done' && window.electronAPI) {
+          window.electronAPI.notifyAIResponse(communityName);
+        }
       }
     };
-  }, [communityId]);
+  }, [communityId, communityName]);
 
   return { messages, streaming, sendMessage };
 }
