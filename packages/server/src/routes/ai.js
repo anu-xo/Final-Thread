@@ -1,6 +1,6 @@
 // server/src/routes/ai.js
 import express from 'express';
-import authMiddleware from '../middleware/auth.js';
+import {authMiddleware} from '../middleware/auth.js';
 import aiRateLimit from '../middleware/aiRateLimit.js';
 import aiService from '../services/aiService.js';
 import AIConversation from '../models/AIConversation.js';
