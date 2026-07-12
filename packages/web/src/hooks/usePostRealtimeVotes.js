@@ -1,14 +1,9 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { io } from 'socket.io-client';
+import { socket } from '../lib/socket.js';
 
 export function usePostRealtimeVotes() {
   const queryClient = useQueryClient();
-
-  const socket = useMemo(() => io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
-    withCredentials: true,
-    transports: ['websocket'],
-  }), []);
 
   useEffect(() => {
     const handleVoteUpdated = ({ postId, newScore }) => {
@@ -37,9 +32,6 @@ export function usePostRealtimeVotes() {
 
     return () => {
       socket.off('vote:updated', handleVoteUpdated);
-      socket.disconnect();
     };
-  }, [queryClient, socket]);
-
-  return socket;
+  }, [queryClient]);
 }

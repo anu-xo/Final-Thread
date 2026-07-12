@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { io } from 'socket.io-client';
+import { socket } from '../lib/socket.js';
 
 function updateFeedCaches(queryClient, updater) {
   queryClient.setQueriesData({ queryKey: ['feed'] }, updater);
@@ -10,16 +10,10 @@ function updateFeedCaches(queryClient, updater) {
 export function useFeedRealtimeVotes() {
   const queryClient = useQueryClient();
 
-  const socket = useMemo(() => io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000', {
-    withCredentials: true,
-    transports: ['websocket'],
-  }), []);
-
   useEffect(() => {
     const handleVoteUpdated = ({ postId, newScore }) => {
       updateFeedCaches(queryClient, (old) => {
         if (!old) return old;
-
         if ('pages' in old) {
           return {
             ...old,
@@ -28,28 +22,17 @@ export function useFeedRealtimeVotes() {
               posts: (page.posts || page.data || []).map((post) =>
                 post._id === postId ? { ...post, score: newScore } : post
               ),
-              data: (page.posts || page.data || []).map((post) =>
-                post._id === postId ? { ...post, score: newScore } : post
-              ),
             })),
           };
         }
-
         return old;
       });
-
-      updateFeedCaches(queryClient, (old) => old);
-      queryClient.invalidateQueries({ queryKey: ['feed'], refetchType: 'none' });
-      queryClient.invalidateQueries({ queryKey: ['posts', 'feed'], refetchType: 'none' });
     };
 
-    socket.on('vote:updated', handleVoteUpdated);
+    socket.on('voteUpdated', handleVoteUpdated);
 
     return () => {
-      socket.off('vote:updated', handleVoteUpdated);
-      socket.disconnect();
+      socket.off('voteUpdated', handleVoteUpdated);
     };
-  }, [queryClient, socket]);
-
-  return socket;
+  }, [queryClient]);
 }
