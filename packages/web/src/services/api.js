@@ -1,19 +1,19 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
-  withCredentials: true,   // sends httpOnly cookie for refresh token
+  baseURL: API_URL,
+  withCredentials: true,
 });
 
-// Attach Bearer token to every request
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Silent token refresh on 401
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -26,6 +26,15 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Guard: never attempt to "refresh" a failed refresh request itself.
+    // Without this, a 401 on /auth/refresh triggers another /auth/refresh
+    // call, which will fail the same way, then redirect — and if this
+    // code runs on app boot, the redirect reloads the page and restarts
+    // the whole cycle.
+    if (originalRequest?.url?.includes('/auth/refresh')) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -42,7 +51,7 @@ api.interceptors.response.use(
 
       try {
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/auth/refresh`,
+          `${API_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );

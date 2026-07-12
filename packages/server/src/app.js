@@ -117,12 +117,12 @@ app.get('/api/health', async (req, res) => {
 });
 
 app.get('/api/desktop/version', (req, res) => {
-  res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/YOUR_USERNAME/threadverse/releases' });
+  res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/anu-xo/Final-Thread.git/releases' });
 });
 
 // ── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ status: 'ok', message: 'ThreadVerse API is running', docs: '/api/health' });
 });
 
 // ── Global Error Handler ─────────────────────────────────────────────────────
