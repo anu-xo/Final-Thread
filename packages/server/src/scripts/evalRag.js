@@ -1,6 +1,6 @@
 // packages/server/scripts/evalRag.js
 import mongoose from 'mongoose';
-import questionsByCommunity from './evalQuestions.json' assert { type: 'json' };
+import questionsByCommunity from './evalQuestions.json' with { type: 'json' };
 import * as aiService from '../src/services/aiService.js';
 import { judgeResponse } from '../src/services/evalJudge.js';
 import EvalResult from '../src/models/EvalResult.js';
