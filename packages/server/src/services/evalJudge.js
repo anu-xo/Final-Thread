@@ -6,7 +6,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const JUDGE_PROMPT = `You are grading an AI assistant's answer. You will be given a QUESTION, the ANSWER the assistant gave, and the SOURCE SNIPPETS it was allowed to use.
 
 Score on two dimensions, 1-5 each:
-- relevance: does the answer actually address the question asked, on-topic and useful?
+- relevance: does the answer actually address the question asked, on-topic and useful?/
 - faithfulness: is every factual claim in the answer directly supported by the source snippets? An answer that says "I don't have enough information" when sources are thin should score 5 for faithfulness, not be penalized.
 
 Also return:
