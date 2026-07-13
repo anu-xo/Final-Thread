@@ -21,6 +21,9 @@ import voteRoutes from './routes/votes.js';
 import uploadRoutes from './routes/upload.js';
 import reportRoutes from './routes/reports.js'; // Added from update
 import modRoutes from './routes/mod.js';       // Added from update
+import aiRoutes from './routes/ai.js';
+
+console.log("script start");
 
 // ── ESM Paths Configuration ──────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +68,7 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 30000,
     });
+    console.log("after connect");
     console.log('✅ MongoDB connected');
   } catch (err) {
     console.error('❌ MongoDB connection failed:', err.message);

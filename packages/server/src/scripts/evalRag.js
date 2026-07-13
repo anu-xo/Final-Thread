@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
+import { pathToFileURL } from 'url';
 import mongoose from 'mongoose';
 import questionsByCommunity from './evalQuestions.json' with { type: 'json' };
 import * as aiService from '../services/aiService.js';
@@ -53,7 +53,7 @@ async function runEval(communityId, promptVersion = 'v1.0') {
 }
 
 // Run directly: node scripts/evalRag.js <communityId>
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await mongoose.connect(process.env.MONGO_URI);
   const communityId = process.argv[2];
   await runEval(communityId);

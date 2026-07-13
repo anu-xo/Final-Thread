@@ -15,16 +15,4 @@ const evalResultSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const trend = await EvalResult.aggregate([
-  { $match: { community: communityId } },
-  {
-    $group: {
-      _id: { promptVersion: '$promptVersion', day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } },
-      avgRelevance: { $avg: '$relevance' },
-      avgFaithfulness: { $avg: '$faithfulness' },
-    },
-  },
-  { $sort: { '_id.day': 1 } },
-]);
-
 export default mongoose.model('EvalResult', evalResultSchema);
