@@ -4,7 +4,7 @@ import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
 
 import PostEmbedding from '../models/PostEmbedding.js';
-import {AIMessage} from '../models/AIMessage.js';
+import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import AIConversation from '../models/AIConversation.js';
 
@@ -41,7 +41,7 @@ export async function buildPromptWithinBudget({ systemPrompt, contextChunks, his
   return { prompt: minimalPrompt, tokenCount: totalTokens, historyUsed: [] };
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -229,18 +229,17 @@ export async function handleChat({
 
   const responseText = await streamResponse(prompt, onToken);
 
+    await AIMessage.create({
+    conversation: conversationId,
+    role: 'user',
+    content: message,
+  });
   const aiMessage = await AIMessage.create({
     conversation: conversationId,
     role: 'assistant',
     content: responseText,
     sources,
     tokensUsed: null, // tighten on Day 10 with countTokens()
-  });
-
-  await AIMessage.create({
-    conversation: conversationId,
-    role: 'user',
-    content: message,
   });
 
   return {
