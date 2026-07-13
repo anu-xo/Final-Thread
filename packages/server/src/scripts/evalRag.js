@@ -1,9 +1,9 @@
 // packages/server/scripts/evalRag.js
 import mongoose from 'mongoose';
 import questionsByCommunity from './evalQuestions.json' with { type: 'json' };
-import * as aiService from '../src/services/aiService.js';
-import { judgeResponse } from '../src/services/evalJudge.js';
-import EvalResult from '../src/models/EvalResult.js';
+import * as aiService from '../services/aiService.js';
+import { judgeResponse } from '../services/evalJudge.js';
+import EvalResult from '../models/EvalResult.js';
 
 async function runEval(communityId, promptVersion = 'v1.0') {
   const questions = questionsByCommunity[communityId];
