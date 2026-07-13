@@ -11,7 +11,8 @@
     "backfill:embeddings": "node src/scripts/backfillEmbeddings.js",
     "compare:hybrid": "node src/scripts/compareHybridSearch.js",
     "seed:day4": "node src/scripts/seedDay4.js",
-    "seed": "node src/scripts/seed.js"
+    "seed": "node src/scripts/seed.js",
+    "eval": "node --env-file=.env src/scripts/evalRag.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
