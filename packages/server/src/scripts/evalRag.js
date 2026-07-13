@@ -54,7 +54,7 @@ async function runEval(communityId, promptVersion = 'v1.0') {
 
 // Run directly: node scripts/evalRag.js <communityId>
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGODB_URI);
   const communityId = process.argv[2];
   await runEval(communityId);
   await mongoose.disconnect();

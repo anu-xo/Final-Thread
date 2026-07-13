@@ -8,6 +8,63 @@ import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import AIConversation from '../models/AIConversation.js';
 
+const TIMEOUT_MS = 15000;
+
+export async function streamResponse(
+  prompt,
+  res,
+  { onChunk, onError } = {}
+) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const result = await model.generateContentStream(
+      { contents: prompt },
+      { signal: controller.signal }
+    );
+
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+
+      if (text) {
+        res.write(`data: ${JSON.stringify({ type: 'chunk', text })}\n\n`);
+
+        if (onChunk) {
+          onChunk(text);
+        }
+      }
+    }
+
+    clearTimeout(timeout);
+
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+  } catch (err) {
+    clearTimeout(timeout);
+
+    const isAbort =
+      err.name === 'AbortError' || controller.signal.aborted;
+
+    res.write(
+      `data: ${JSON.stringify({
+        type: 'error',
+        message: isAbort
+          ? 'AI response timed out'
+          : 'AI is temporarily unavailable',
+      })}\n\n`
+    );
+
+    res.end();
+
+    if (onError) {
+      onError(err);
+    }
+
+    throw err; // let the route handler's try/catch forward to Sentry
+  }
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
