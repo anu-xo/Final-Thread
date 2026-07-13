@@ -1,11 +1,7 @@
 // packages/server/src/services/evalJudge.js
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const judgeModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash',
-  generationConfig: { responseMimeType: 'application/json' }, // forces valid JSON back
-});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const JUDGE_PROMPT = `You are grading an AI assistant's answer. You will be given a QUESTION, the ANSWER the assistant gave, and the SOURCE SNIPPETS it was allowed to use.
 
@@ -25,20 +21,27 @@ export async function judgeResponse({ question, answer, sources }) {
     ? sources.map((s) => `- ${s.title}`).join('\n')
     : '(no sources were retrieved)';
 
-  const prompt = `${JUDGE_PROMPT}
-
-QUESTION: ${question}
+  const userContent = `QUESTION: ${question}
 
 ANSWER: ${answer}
 
 SOURCE SNIPPETS:
 ${sourceText}`;
 
-  const result = await judgeModel.generateContent(prompt);
-  const text = result.response.text();
-
   try {
+    const completion = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: JUDGE_PROMPT },
+        { role: 'user', content: userContent },
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0, // grading should be deterministic, not creative
+    });
+
+    const text = completion.choices[0].message.content;
     const parsed = JSON.parse(text);
+
     return {
       relevance: parsed.relevance,
       faithfulness: parsed.faithfulness,
@@ -46,8 +49,9 @@ ${sourceText}`;
       reasoning: parsed.reasoning,
     };
   } catch (err) {
-    // Judge model returned malformed JSON — don't crash the whole eval run over one bad grade
-    console.error('Judge parse failure:', text);
-    return { relevance: null, faithfulness: null, groundedness: null, reasoning: 'PARSE_ERROR' };
+    // Either the Groq call failed (rate limit, network) or the model returned malformed JSON —
+    // either way, don't crash the whole 20-question eval run over one bad grade
+    console.error('Judge failure:', err.message);
+    return { relevance: null, faithfulness: null, groundedness: null, reasoning: 'JUDGE_ERROR' };
   }
 }
