@@ -1,7 +1,11 @@
 // server/src/services/aiService.js
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { pipeline, env } from '@xenova/transformers';
 import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
+
+// Use local model cache; disable remote model checks for speed after first download
+env.allowLocalModels = true;
 
 import PostEmbedding from '../models/PostEmbedding.js';
 import AIMessage from '../models/AIMessage.js';
@@ -84,15 +88,21 @@ REFUSAL TEMPLATE:
 Context:
 {context}`;
 
+// Singleton embedding pipeline — lazily initialized on first call
+let _embedPipeline = null;
+async function getEmbedPipeline() {
+  if (!_embedPipeline) {
+    // all-MiniLM-L6-v2 produces 768-dimensional embeddings, matching the stored vectors
+    _embedPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  }
+  return _embedPipeline;
+}
+
 // 1. Embed the incoming user message
 export async function embedQuery(text) {
-  const embeddingModel = genAI.getGenerativeModel({
-    model: 'text-embedding-004',
-  });
-
-  const result = await embeddingModel.embedContent(text);
-
-  return result.embedding.values; // 768-dimensional embedding
+  const extractor = await getEmbedPipeline();
+  const output = await extractor(text, { pooling: 'mean', normalize: true });
+  return Array.from(output.data); // 768-dimensional embedding
 }
 
 // 2. Retrieve top-8 relevant chunks via Atlas Vector Search
@@ -257,11 +267,53 @@ export async function getRecentHistory(conversationId, turnLimit = 6) {
   return messages.reverse(); // chronological order for prompt assembly
 }
 
+// 6. RAG prompt builder used by eval scripts
+// Returns { prompt: string, sources: Array<{ postId }> }
+export async function buildRagPrompt({ message, communityId }) {
+  const community = await Community.findById(communityId).select('name');
+  if (!community) throw new Error(`Community not found: ${communityId}`);
+
+  const queryEmbedding = await embedQuery(message);
+  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+
+  const prompt = buildPrompt({
+    communityName: community.name,
+    contextChunks,
+    history: [],
+    message,
+  });
+
+  const sources = contextChunks.map((chunk) => ({ postId: chunk.postId }));
+
+  return { prompt, sources };
+}
+
+// 7. Non-streaming response (used by eval scripts)
+export async function getNonStreamingResponse(prompt) {
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (err) {
+    if (err.status === 429) {
+      console.warn('Gemini rate-limited, falling back to Groq (non-streaming)');
+      const completion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: prompt }],
+        model: 'llama-3.1-70b-versatile',
+        stream: false,
+      });
+      return completion.choices[0]?.message?.content ?? '';
+    }
+    throw err;
+  }
+}
+
 export default {
   embedQuery,
   retrieveContext,
   buildPrompt,
   buildPromptWithinBudget,
+  buildRagPrompt,
+  getNonStreamingResponse,
   streamResponse,
   handleChat,
   getRecentHistory,
