@@ -89,22 +89,6 @@ router.put('/:slug', authMiddleware, modGuard, async (req, res, next) => {
       });
     }
 
-    const membership = await CommunityMember.findOne({
-      user: req.user.id,
-      community: community._id,
-    });
-
-    const isMod =
-      membership && ['mod', 'admin'].includes(membership.role);
-
-    if (!isMod && req.user.role !== 'admin') {
-      return res.status(403).json({
-        data: null,
-        error: 'Forbidden',
-        meta: null,
-      });
-    }
-
     res.json({
       data: community,
       error: null,
@@ -114,7 +98,6 @@ router.put('/:slug', authMiddleware, modGuard, async (req, res, next) => {
     next(err);
   }
 });
-
 // POST /communities/:slug/flairs — mod only
 router.post('/:slug/flairs', authMiddleware, async (req, res, next) => {
   try {
