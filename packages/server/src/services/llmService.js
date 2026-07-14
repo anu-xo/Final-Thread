@@ -18,7 +18,7 @@ export async function generateCompletion(prompt) {
       console.warn('[LLM] Gemini rate limited, falling back to Groq');
       const chat = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'llama3-8b-8192',
+        model: 'llama-3.1-8b-instant',
       });
       return chat.choices[0].message.content;
     }

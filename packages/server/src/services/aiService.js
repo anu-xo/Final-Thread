@@ -15,7 +15,7 @@ import AIConversation from '../models/AIConversation.js';
 const TIMEOUT_MS = 15000;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -181,7 +181,7 @@ export async function streamResponse(prompt, onToken) {
             content: prompt,
           },
         ],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.3-70b-versatile',
         stream: true,
       });
 
@@ -298,7 +298,7 @@ export async function getNonStreamingResponse(prompt) {
       console.warn('Gemini rate-limited, falling back to Groq (non-streaming)');
       const completion = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'llama-3.1-70b-versatile',
+        model: 'llama-3.3-70b-versatile',
         stream: false,
       });
       return completion.choices[0]?.message?.content ?? '';
