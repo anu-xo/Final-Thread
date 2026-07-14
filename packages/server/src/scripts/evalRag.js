@@ -8,6 +8,7 @@ import questionsByCommunity from './evalQuestions.json' with { type: 'json' };
 import * as aiService from '../services/aiService.js';
 import { judgeResponse } from '../services/evalJudge.js';
 import EvalResult from '../models/EvalResult.js';
+console.log(Object.keys(aiService));
 
 async function runEval(communityId, promptVersion = 'v1.0') {
   const questions = questionsByCommunity[communityId];
