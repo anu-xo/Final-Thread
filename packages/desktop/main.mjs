@@ -3,7 +3,6 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
-import { Notification, ipcMain } from 'electron';
 // Initialize store with default settings schema
 const store = new Store({
   defaults: {

@@ -10,67 +10,21 @@ import AIConversation from '../models/AIConversation.js';
 
 const TIMEOUT_MS = 15000;
 
-export async function streamResponse(
-  prompt,
-  res,
-  { onChunk, onError } = {}
-) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const result = await model.generateContentStream(
-      { contents: prompt },
-      { signal: controller.signal }
-    );
-
-    for await (const chunk of result.stream) {
-      const text = chunk.text();
-
-      if (text) {
-        res.write(`data: ${JSON.stringify({ type: 'chunk', text })}\n\n`);
-
-        if (onChunk) {
-          onChunk(text);
-        }
-      }
-    }
-
-    clearTimeout(timeout);
-
-    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-    res.end();
-  } catch (err) {
-    clearTimeout(timeout);
-
-    const isAbort =
-      err.name === 'AbortError' || controller.signal.aborted;
-
-    res.write(
-      `data: ${JSON.stringify({
-        type: 'error',
-        message: isAbort
-          ? 'AI response timed out'
-          : 'AI is temporarily unavailable',
-      })}\n\n`
-    );
-
-    res.end();
-
-    if (onError) {
-      onError(err);
-    }
-
-    throw err; // let the route handler's try/catch forward to Sentry
-  }
-}
-
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
 const MAX_CONTEXT_TOKENS = 5500;
 
-export async function buildPromptWithinBudget({ systemPrompt, contextChunks, history, userMessage }) {
+export async function buildPromptWithinBudget({
+  systemPrompt,
+  contextChunks,
+  history,
+  userMessage,
+}) {
   let candidateHistory = [...history];
 
   while (candidateHistory.length > 0) {
@@ -85,7 +39,11 @@ export async function buildPromptWithinBudget({ systemPrompt, contextChunks, his
     const { totalTokens } = await model.countTokens(fullPrompt);
 
     if (totalTokens <= MAX_CONTEXT_TOKENS) {
-      return { prompt: fullPrompt, tokenCount: totalTokens, historyUsed: candidateHistory };
+      return {
+        prompt: fullPrompt,
+        tokenCount: totalTokens,
+        historyUsed: candidateHistory,
+      };
     }
 
     // Drop the oldest turn (2 messages: one user + one assistant) and retry
@@ -93,15 +51,14 @@ export async function buildPromptWithinBudget({ systemPrompt, contextChunks, his
   }
 
   // Even with zero history, still return — context chunks + system prompt are non-negotiable
-  const minimalPrompt = [systemPrompt, contextChunks.join('\n\n'), `user: ${userMessage}`].join('\n\n');
+  const minimalPrompt = [
+    systemPrompt,
+    contextChunks.join('\n\n'),
+    `user: ${userMessage}`,
+  ].join('\n\n');
   const { totalTokens } = await model.countTokens(minimalPrompt);
   return { prompt: minimalPrompt, tokenCount: totalTokens, historyUsed: [] };
 }
-
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 const SYSTEM_PROMPT_V1 = `You are the ThreadVerse AI assistant for r/{community}.
 
@@ -127,14 +84,13 @@ REFUSAL TEMPLATE:
 Context:
 {context}`;
 
-
 // 1. Embed the incoming user message
 export async function embedQuery(text) {
-  const model = genAI.getGenerativeModel({
+  const embeddingModel = genAI.getGenerativeModel({
     model: 'text-embedding-004',
   });
 
-  const result = await model.embedContent(text);
+  const result = await embeddingModel.embedContent(text);
 
   return result.embedding.values; // 768-dimensional embedding
 }
@@ -170,21 +126,13 @@ export async function retrieveContext(queryEmbedding, communityId) {
 }
 
 // 3. Build the final prompt
-export function buildPrompt({
-  communityName,
-  contextChunks,
-  history,
-  message,
-}) {
+export function buildPrompt({ communityName, contextChunks, history, message }) {
   const contextStr = contextChunks
     .map((chunk, index) => `[${index + 1}] ${chunk.text}`)
     .join('\n\n');
 
   const historyStr = history
-    .map(
-      (msg) =>
-        `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-    )
+    .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
     .join('\n');
 
   return `${SYSTEM_PROMPT_V1.replace('{community}', communityName)}
@@ -201,10 +149,6 @@ User: ${message}`;
 // 4. Stream response with Groq fallback
 export async function streamResponse(prompt, onToken) {
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-    });
-
     const result = await model.generateContentStream(prompt);
 
     let fullText = '';
@@ -259,10 +203,7 @@ export async function handleChat({
 
   const queryEmbedding = await embedQuery(message);
 
-  const contextChunks = await retrieveContext(
-    queryEmbedding,
-    communityId
-  );
+  const contextChunks = await retrieveContext(queryEmbedding, communityId);
 
   const history = await AIMessage.find({
     conversation: conversationId,
@@ -286,11 +227,12 @@ export async function handleChat({
 
   const responseText = await streamResponse(prompt, onToken);
 
-    await AIMessage.create({
+  await AIMessage.create({
     conversation: conversationId,
     role: 'user',
     content: message,
   });
+
   const aiMessage = await AIMessage.create({
     conversation: conversationId,
     role: 'assistant',
@@ -303,6 +245,7 @@ export async function handleChat({
     messageId: aiMessage._id,
   };
 }
+
 // packages/server/src/services/aiService.js
 export async function getRecentHistory(conversationId, turnLimit = 6) {
   // "turn" = one user + one assistant message, so fetch turnLimit * 2 messages
@@ -318,6 +261,8 @@ export default {
   embedQuery,
   retrieveContext,
   buildPrompt,
+  buildPromptWithinBudget,
   streamResponse,
   handleChat,
+  getRecentHistory,
 };

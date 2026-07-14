@@ -3,7 +3,7 @@ import express from 'express';
 import { authMiddleware } from '../middleware/auth.js';
 import CommunityMember from '../models/CommunityMember.js';
 import Community from '../models/Community.js'; // Added since rules/flairs modify the Community document
-import { modGuard } from '../middleware/modGuard.js';
+import modGuard from '../middleware/modGuard.js';
 import {
   createCommunity,
   getCommunities,
