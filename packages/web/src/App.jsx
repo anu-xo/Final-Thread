@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
+
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
 import { useIsDesktop } from './hooks/useIsDesktop.js';
@@ -25,41 +26,52 @@ import HomePage from './pages/HomePage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 1, staleTime: 30 * 1000 } },
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30 * 1000,
+    },
+  },
 });
 
-// Separate component so useAuthInit runs inside AuthProvider
+// Runs after AuthProvider is mounted
 function AppRoutes() {
   const { isInitializing } = useAuthInit();
 
   if (isInitializing) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-gray-500 font-medium animate-pulse">Loading session...</div>
+      <div className="flex h-screen items-center justify-center">
+        Loading session...
       </div>
     );
   }
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected routes */}
+      {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/submit" element={<SubmitPostPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/ai/chat" element={<AIChatPage />} />
-          
-          {/* Community Routes */}
+
+          {/* Community */}
           <Route path="/communities" element={<CommunityBrowser />} />
           <Route path="/communities/create" element={<CreateCommunity />} />
           <Route path="/community/:slug" element={<CommunityPage />} />
+
+          {/* User */}
           <Route path="/u/:username" element={<ProfilePage />} />
+
+          {/* Posts */}
           <Route path="/posts/:id" element={<PostDetail />} />
+
+          {/* Dev */}
           <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
         </Route>
       </Route>
@@ -69,15 +81,21 @@ function AppRoutes() {
   );
 }
 
+/**
+ * Handles Electron global shortcuts.
+ * Ctrl/Cmd + Shift + A → /ai/chat
+ */
 function DesktopShortcutBridge() {
   const navigate = useNavigate();
   const isDesktop = useIsDesktop();
 
   useEffect(() => {
-    if (!isDesktop || !window.electronAPI) return undefined;
+    if (!isDesktop || !window.electronAPI) return;
 
     const removeNavigate = window.electronAPI.onNavigate((path) => {
-      if (path) navigate(path);
+      if (path) {
+        navigate(path);
+      }
     });
 
     const removeOpenAIChat = window.electronAPI.onOpenAIChat(() => {
@@ -97,12 +115,12 @@ export default function App() {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
+        <AuthProvider>
+          <BrowserRouter>
             <DesktopShortcutBridge />
             <AppRoutes />
-          </AuthProvider>
-        </BrowserRouter>
+          </BrowserRouter>
+        </AuthProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );
