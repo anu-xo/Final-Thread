@@ -14,8 +14,11 @@ import { buildVectorSearchPipeline } from '../utils/vectorSearch.js';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function testSearch(queryText, communityId, type) {
-  const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });
-  const result = await model.embedContent(queryText);
+  const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
+  const result = await model.embedContent({
+    content: { parts: [{ text: queryText }] },
+    outputDimensionality: 768,
+  });
   const queryVector = result.embedding.values;
 
   const results = await PostEmbedding.aggregate(buildVectorSearchPipeline({

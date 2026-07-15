@@ -18,9 +18,12 @@ async function runEval(communityId, promptVersion = 'v1.0') {
 
   for (const { question } of questions) {
     const { prompt, sources } = await aiService.buildRagPrompt({ message: question, communityId });
+    console.log('--- RETRIEVED SOURCES ---', JSON.stringify(sources, null, 2));
     const answer = await aiService.getNonStreamingResponse(prompt);
+    console.log('--- ANSWER ---', answer);
 
     const grade = await judgeResponse({ question, answer, sources });
+    console.log('--- GRADE ---', JSON.stringify(grade, null, 2));
 
     const saved = await EvalResult.create({
       community: communityId,

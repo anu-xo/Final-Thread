@@ -1,13 +1,10 @@
 // server/src/services/aiService.js
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { pipeline, env } from '@xenova/transformers';
 import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
 
-// Use local model cache; disable remote model checks for speed after first download
-env.allowLocalModels = true;
-
 import PostEmbedding from '../models/PostEmbedding.js';
+import Post from '../models/Post.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import AIConversation from '../models/AIConversation.js';
@@ -16,6 +13,7 @@ const TIMEOUT_MS = 15000;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
@@ -88,21 +86,13 @@ REFUSAL TEMPLATE:
 Context:
 {context}`;
 
-// Singleton embedding pipeline — lazily initialized on first call
-let _embedPipeline = null;
-async function getEmbedPipeline() {
-  if (!_embedPipeline) {
-    // all-MiniLM-L6-v2 produces 768-dimensional embeddings, matching the stored vectors
-    _embedPipeline = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-  }
-  return _embedPipeline;
-}
-
-// 1. Embed the incoming user message
+// 1. Embed the incoming user message using gemini-embedding-001 (768-dim)
 export async function embedQuery(text) {
-  const extractor = await getEmbedPipeline();
-  const output = await extractor(text, { pooling: 'mean', normalize: true });
-  return Array.from(output.data); // 768-dimensional embedding
+  const result = await embeddingModel.embedContent({
+    content: { parts: [{ text }] },
+    outputDimensionality: 768,
+  });
+  return result.embedding.values;
 }
 
 // 2. Retrieve top-8 relevant chunks via Atlas Vector Search
@@ -229,9 +219,20 @@ export async function handleChat({
     message,
   });
 
-  const sources = contextChunks.map((chunk) => ({
-    postId: chunk.postId,
-  }));
+  const postIds = [...new Set(contextChunks.map((chunk) => chunk.postId.toString()))];
+  const posts = await Post.find({ _id: { $in: postIds } }).select('title').lean();
+  const postTitleMap = posts.reduce((map, post) => {
+    map[post._id.toString()] = post.title;
+    return map;
+  }, {});
+
+  const sources = contextChunks.map((chunk) => {
+    const postIdStr = chunk.postId.toString();
+    return {
+      postId: chunk.postId,
+      title: postTitleMap[postIdStr] || 'Untitled',
+    };
+  });
 
   onSources(sources);
 
@@ -283,7 +284,20 @@ export async function buildRagPrompt({ message, communityId }) {
     message,
   });
 
-  const sources = contextChunks.map((chunk) => ({ postId: chunk.postId }));
+  const postIds = [...new Set(contextChunks.map((chunk) => chunk.postId.toString()))];
+  const posts = await Post.find({ _id: { $in: postIds } }).select('title').lean();
+  const postTitleMap = posts.reduce((map, post) => {
+    map[post._id.toString()] = post.title;
+    return map;
+  }, {});
+
+  const sources = contextChunks.map((chunk) => {
+    const postIdStr = chunk.postId.toString();
+    return {
+      postId: chunk.postId,
+      title: postTitleMap[postIdStr] || 'Untitled',
+    };
+  });
 
   return { prompt, sources };
 }

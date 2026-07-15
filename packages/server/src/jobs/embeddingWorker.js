@@ -1,4 +1,4 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getEmbeddingQueue } from './embeddingQueue.js';
 import { PostEmbedding } from '../models/index.js';
@@ -16,10 +16,13 @@ let flushing = false;
 
 async function embedText(text) {
   const model = genAI.getGenerativeModel({
-    model: 'text-embedding-004',
+    model: 'gemini-embedding-001',
   });
 
-  const result = await model.embedContent(text);
+  const result = await model.embedContent({
+    content: { parts: [{ text }] },
+    outputDimensionality: 768,
+  });
   return result.embedding.values;
 }
 

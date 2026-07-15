@@ -15,10 +15,13 @@ import { hybridSearch, pureVectorSearch } from '../services/hybridSearchService.
 import { HYBRID_SEARCH_QUERIES } from './fixtures/hybridSearchQueries.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const embeddingModel = genAI.getGenerativeModel({ model: 'text-embedding-004' });
+const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' });
 
 async function embedQuery(queryText) {
-  const result = await embeddingModel.embedContent(queryText);
+  const result = await embeddingModel.embedContent({
+    content: { parts: [{ text: queryText }] },
+    outputDimensionality: 768,
+  });
   return result.embedding.values;
 }
 
