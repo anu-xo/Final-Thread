@@ -235,13 +235,13 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
       title: 'AI answered',
       body: `In r/${communityName}`,
     });
-    
+
     notification.on('click', () => {
       mainWindow.show();
       mainWindow.focus();
       mainWindow.webContents.send('navigate', { view: 'ai-chat', scrollToLatest: true });
     });
-    
+
     notification.show();
   }
 });
@@ -279,4 +279,10 @@ app.on('open-url', (event, url) => {
   } catch (err) {
     console.error('Failed to parse deep link URL:', err);
   }
+  // packages/desktop/main.js (already has other globalShortcuts from Day 6)
+  globalShortcut.register('CommandOrControl+Shift+A', () => {
+    mainWindow.show();
+    mainWindow.focus();
+    mainWindow.webContents.send('open-ai-chat');
+  });
 });
