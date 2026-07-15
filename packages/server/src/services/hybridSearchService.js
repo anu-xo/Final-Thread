@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import PostEmbedding from '../models/PostEmbedding.js';
 
-const VECTOR_INDEX = process.env.POST_EMBEDDINGS_VECTOR_INDEX || 'postembeddings_vector_index';
+const VECTOR_INDEX = process.env.POST_EMBEDDINGS_VECTOR_INDEX || 'post_embedding_vector_index';
 const TEXT_INDEX = process.env.POST_EMBEDDINGS_TEXT_INDEX || 'postembeddings_text_index';
 
 function normalizeCommunityId(communityId) {

@@ -38,7 +38,7 @@ async function shouldSkipEmbedding(text, communityId, embedding) {
   const similar = await PostEmbedding.aggregate([
     {
       $vectorSearch: {
-        index: 'vector_index',
+        index: 'post_embedding_vector_index',
         path: 'embedding',
         queryVector: embedding,
         numCandidates: 20,

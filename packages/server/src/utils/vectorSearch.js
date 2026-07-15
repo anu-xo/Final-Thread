@@ -2,7 +2,7 @@ export function buildVectorSearchPipeline({ queryVector, communityId, type, limi
   return [
     {
       $vectorSearch: {
-        index: 'postembeddings_vector_index',
+        index: 'post_embedding_vector_index',
         path: 'embedding',
         queryVector,
         numCandidates,
