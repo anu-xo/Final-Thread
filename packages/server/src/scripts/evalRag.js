@@ -5,10 +5,9 @@ import { fileURLToPath } from 'url';
 import { pathToFileURL } from 'url';
 import mongoose from 'mongoose';
 import questionsByCommunity from './evalQuestions.json' with { type: 'json' };
-import * as aiService from '../services/aiService.js';
 import { judgeResponse } from '../services/evalJudge.js';
 import EvalResult from '../models/EvalResult.js';
-console.log(Object.keys(aiService));
+import * as aiService from '../services/aiService.js';
 
 async function runEval(communityId, promptVersion = 'v1.0') {
   const questions = questionsByCommunity[communityId];
@@ -18,12 +17,9 @@ async function runEval(communityId, promptVersion = 'v1.0') {
 
   for (const { question } of questions) {
     const { prompt, sources } = await aiService.buildRagPrompt({ message: question, communityId });
-    console.log('--- RETRIEVED SOURCES ---', JSON.stringify(sources, null, 2));
     const answer = await aiService.getNonStreamingResponse(prompt);
-    console.log('--- ANSWER ---', answer);
 
     const grade = await judgeResponse({ question, answer, sources });
-    console.log('--- GRADE ---', JSON.stringify(grade, null, 2));
 
     const saved = await EvalResult.create({
       community: communityId,
@@ -49,7 +45,8 @@ async function runEval(communityId, promptVersion = 'v1.0') {
     avgRelevance: avg('relevance'),
     avgFaithfulness: avg('faithfulness'),
     avgGroundedness: avg('groundedness'),
-    overallAvg: (avg('relevance') + avg('faithfulness') + avg('groundedness') * 5) / 3, // groundedness scaled to 1-5
+    overallAvg: (avg('relevance') + avg('faithfulness')) / 2,
+pctGrounded: avg('groundedness') * 100, // "% of answers that cited a source"
   };
 
   console.log(summary);
