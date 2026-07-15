@@ -3,6 +3,11 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
+import * as Sentry from '@sentry/electron/main';
+
+Sentry.init({
+  dsn: process.env.SENTRY_DSN_DESKTOP,
+});
 // Initialize store with default settings schema
 const store = new Store({
   defaults: {
