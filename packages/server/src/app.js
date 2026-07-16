@@ -103,6 +103,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/votes', voteRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/ai', aiRoutes); 
 
 // Base-level routes mapping the updated endpoints matching your scheme
 app.use('/api', reportRoutes);

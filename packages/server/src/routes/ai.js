@@ -3,7 +3,7 @@ import express from 'express';
 import * as Sentry from '@sentry/node';
 import { authMiddleware } from '../middleware/auth.js';
 import aiRateLimiter from '../middleware/aiRateLimit.js';
-import aiService from '../services/aiService.js';
+// import aiService from '../services/aiService.js';
 import AIConversation from '../models/AIConversation.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
@@ -12,6 +12,37 @@ import * as aiService from '../services/aiService.js'; // adjust the path if dif
 
 const router = express.Router();
 
+// GET /ai/health
+// Verifies Gemini connectivity independent of user auth.
+// Useful for uptime monitoring and quick manual checks.
+router.get('/health', async (req, res) => {
+  try {
+    const testEmbedding = await aiService.embedQuery('health check');
+
+    if (Array.isArray(testEmbedding) && testEmbedding.length > 0) {
+      return res.status(200).json({
+        status: 'ok',
+        gemini: 'connected',
+        embeddingDims: testEmbedding.length,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return res.status(503).json({
+      status: 'error',
+      gemini: 'unexpected response',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('AI health check failed:', err);
+
+    return res.status(503).json({
+      status: 'error',
+      gemini: 'unreachable',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 // POST /ai/chat — Handle interactive streaming sessions via SSE
 router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
   const { message, communityId, conversationId } = req.body;
@@ -125,41 +156,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     res.end();
   }
 });
- 
-// GET /ai/health
-// ... your existing routes ...
 
-// GET /ai/health
-// Verifies Gemini connectivity independent of user auth.
-// Useful for uptime monitoring and quick manual checks.
-router.get('/health', async (req, res) => {
-  try {
-    const testEmbedding = await aiService.embedQuery('health check');
-
-    if (Array.isArray(testEmbedding) && testEmbedding.length > 0) {
-      return res.status(200).json({
-        status: 'ok',
-        gemini: 'connected',
-        embeddingDims: testEmbedding.length,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    return res.status(503).json({
-      status: 'error',
-      gemini: 'unexpected response',
-      timestamp: new Date().toISOString(),
-    });
-  } catch (err) {
-    console.error('AI health check failed:', err);
-
-    return res.status(503).json({
-      status: 'error',
-      gemini: 'unreachable',
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
 // ... your /conversations, /messages/:id/feedback routes stay exactly as they are ...
 
 export default router;
