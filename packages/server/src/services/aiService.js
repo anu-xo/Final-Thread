@@ -2,7 +2,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
-
 import PostEmbedding from '../models/PostEmbedding.js';
 import Post from '../models/Post.js';
 import AIMessage from '../models/AIMessage.js';
@@ -96,6 +95,62 @@ export async function embedQuery(text) {
 }
 
 // 2. Retrieve top-8 relevant chunks via Atlas Vector Search
+export async function retrieveContext(queryEmbedding, communityId) {
+  const results = await PostEmbedding.aggregate([
+    {
+      $vectorSearch: {
+        index: 'post_embedding_vector_index',
+        path: 'embedding',
+        queryVector: queryEmbedding,
+        numCandidates: 100,
+        limit: 8,
+        filter: {
+          communityId: new mongoose.Types.ObjectId(communityId),
+        },
+      },
+    },
+    {
+      $project: {
+        postId: 1,
+        type: 1,
+        text: 1,
+        score: {
+          $meta: 'vectorSearchScore',
+        },
+      },
+    },
+  ]);
+
+  return results;
+}
+
+// 3. Build the final prompt
+export function buildPrompt({
+  communityName,
+  contextChunks,
+  history,
+  message,
+}) {
+  const contextStr = contextChunks
+    .map((chunk, index) => `[${index + 1}] ${chunk.text}`)
+    .join('\n\n');
+
+  const historyStr = history
+    .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+    .join('\n');
+
+  return `${SYSTEM_PROMPT_V1.replace('{community}', communityName)}
+
+Context posts:
+${contextStr || '(no relevant posts found)'}
+
+Conversation so far:
+${historyStr}
+
+User: ${message}`;
+}
+
+// 4. Stream response from Gemini or Groq, with fallback
 export async function geminiGenerateStream(prompt, onToken) {
   const result = await model.generateContentStream(prompt);
 
@@ -110,6 +165,7 @@ export async function geminiGenerateStream(prompt, onToken) {
   return fullText;
 }
 
+// 5. Stream response from Groq
 export async function groqGenerateStream(prompt, onToken) {
   const completion = await groq.chat.completions.create({
     messages: [
@@ -133,6 +189,7 @@ export async function groqGenerateStream(prompt, onToken) {
   return fullText;
 }
 
+// 6. Fallback logic: try Gemini first, then Groq if rate-limited
 export async function generateWithFallback(prompt, onToken) {
   try {
     return await geminiGenerateStream(prompt, onToken);
@@ -150,7 +207,12 @@ export async function generateWithFallback(prompt, onToken) {
   }
 }
 
-// 5. Main orchestrator
+// 7. Stream response orchestrator
+export async function streamResponse(prompt, onToken) {
+  return generateWithFallback(prompt, onToken);
+}
+
+// 8. Handle chat request: embed, retrieve context, build prompt, stream response, save messages
 export async function handleChat({
   userId,
   message,
@@ -217,7 +279,7 @@ export async function handleChat({
   };
 }
 
-// packages/server/src/services/aiService.js
+// 9. Get recent conversation history for a given conversationId
 export async function getRecentHistory(conversationId, turnLimit = 6) {
   // "turn" = one user + one assistant message, so fetch turnLimit * 2 messages
   const messages = await AIMessage.find({ conversation: conversationId })
@@ -228,7 +290,7 @@ export async function getRecentHistory(conversationId, turnLimit = 6) {
   return messages.reverse(); // chronological order for prompt assembly
 }
 
-// 6. RAG prompt builder used by eval scripts
+// 10. Build RAG prompt: embed, retrieve context, build prompt, return sources
 // Returns { prompt: string, sources: Array<{ postId }> }
 export async function buildRagPrompt({ message, communityId }) {
   const community = await Community.findById(communityId).select('name');
@@ -262,7 +324,7 @@ export async function buildRagPrompt({ message, communityId }) {
   return { prompt, sources };
 }
 
-// 7. Non-streaming response (used by eval scripts)
+// 11. Get non-streaming response (fallback to Groq if Gemini rate-limited)
 export async function getNonStreamingResponse(prompt) {
   try {
     const result = await model.generateContent(prompt);
