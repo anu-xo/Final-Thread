@@ -22,9 +22,9 @@ import uploadRoutes from './routes/upload.js';
 import reportRoutes from './routes/reports.js'; // Added from update
 import modRoutes from './routes/mod.js';       // Added from update
 import aiRoutes from './routes/ai.js';
+import notificationsRouter from './routes/notifications.js';
 
 console.log("script start");
-
 // ── ESM Paths Configuration ──────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +108,7 @@ app.use('/api/ai', aiRoutes);
 // Base-level routes mapping the updated endpoints matching your scheme
 app.use('/api', reportRoutes);
 app.use('/api', modRoutes);
+app.use('/api/notifications', notificationsRouter);
 
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
