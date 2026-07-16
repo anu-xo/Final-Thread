@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
-import api from '../api/axios';
+import api from "../services/api.js";
 import { useAuthStore } from '../store/authStore.js';
 
 const registerSchema = z.object({
