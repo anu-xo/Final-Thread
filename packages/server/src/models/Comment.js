@@ -55,4 +55,80 @@ commentSchema.post('save', async function (doc) {
   }
 });
 
+// --- Day 12: notification trigger ---
+commentSchema.pre('save', function (next) {
+  this.wasNew = this.isNew;
+  next();
+});
+
+commentSchema.post('save', async function (doc, next) {
+  try {
+    if (!doc.wasNew) return next();
+
+    const { default: Notification } = await import('./Notification.js');
+    const { default: User } = await import('./User.js');
+    const { getIO } = await import('../socket.js');
+
+    const notifications = [];
+
+    // Case 1: reply to a parent comment
+    if (doc.parent) {
+      const parentComment = await mongoose
+        .model('Comment')
+        .findById(doc.parent)
+        .select('author');
+      if (parentComment && String(parentComment.author) !== String(doc.author)) {
+        notifications.push({
+          user: parentComment.author,
+          type: 'reply',
+          actor: doc.author,
+          target: doc._id,
+          targetType: 'Comment',
+        });
+      }
+    }
+
+    // Case 2: @mention in body — simple regex extraction, then resolve usernames
+    const mentionMatches = [...doc.body.matchAll(/@(\w+)/g)].map((m) => m[1]);
+    if (mentionMatches.length) {
+      const mentionedUsers = await User.find({
+        username: { $in: mentionMatches },
+      }).select('_id');
+      for (const u of mentionedUsers) {
+        if (String(u._id) !== String(doc.author)) {
+          notifications.push({
+            user: u._id,
+            type: 'mention',
+            actor: doc.author,
+            target: doc._id,
+            targetType: 'Comment',
+          });
+        }
+      }
+    }
+
+    if (notifications.length === 0) return next();
+
+    const created = await Notification.insertMany(notifications);
+
+    // Push to each recipient's personal socket room
+    const io = getIO();
+    for (const n of created) {
+      io.to('user:' + n.user).emit('notification:new', {
+        _id: n._id,
+        type: n.type,
+        actor: doc.author,
+        target: n.target,
+        targetType: n.targetType,
+        createdAt: n.createdAt,
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('[notification hook] failed:', err.message);
+    next();
+  }
+});
+
 export default mongoose.model('Comment', commentSchema);

@@ -2,6 +2,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import app from './app.js';
 import aiRoutes from './routes/ai.js';
+import { setIO } from './socket.js';
 
 app.use('/api/ai', aiRoutes);
 
@@ -17,6 +18,7 @@ const io = new Server(httpServer, {
 });
 
 app.set('io', io);
+setIO(io);
 
 io.on('connection', (socket) => {
   console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
