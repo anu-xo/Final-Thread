@@ -96,94 +96,54 @@ export async function embedQuery(text) {
 }
 
 // 2. Retrieve top-8 relevant chunks via Atlas Vector Search
-export async function retrieveContext(queryEmbedding, communityId) {
-  const results = await PostEmbedding.aggregate([
-    {
-      $vectorSearch: {
-        index: 'post_embedding_vector_index',
-        path: 'embedding',
-        queryVector: queryEmbedding,
-        numCandidates: 100,
-        limit: 8,
-        filter: {
-          communityId: new mongoose.Types.ObjectId(communityId),
-        },
-      },
-    },
-    {
-      $project: {
-        postId: 1,
-        type: 1,
-        text: 1,
-        score: {
-          $meta: 'vectorSearchScore',
-        },
-      },
-    },
-  ]);
+export async function geminiGenerateStream(prompt, onToken) {
+  const result = await model.generateContentStream(prompt);
 
-  return results;
+  let fullText = '';
+
+  for await (const chunk of result.stream) {
+    const token = chunk.text();
+    fullText += token;
+    onToken(token);
+  }
+
+  return fullText;
 }
 
-// 3. Build the final prompt
-export function buildPrompt({ communityName, contextChunks, history, message }) {
-  const contextStr = contextChunks
-    .map((chunk, index) => `[${index + 1}] ${chunk.text}`)
-    .join('\n\n');
+export async function groqGenerateStream(prompt, onToken) {
+  const completion = await groq.chat.completions.create({
+    messages: [
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ],
+    model: 'llama-3.3-70b-versatile',
+    stream: true,
+  });
 
-  const historyStr = history
-    .map((msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
-    .join('\n');
+  let fullText = '';
 
-  return `${SYSTEM_PROMPT_V1.replace('{community}', communityName)}
+  for await (const chunk of completion) {
+    const token = chunk.choices[0]?.delta?.content || '';
+    fullText += token;
+    onToken(token);
+  }
 
-Context posts:
-${contextStr || '(no relevant posts found)'}
-
-Conversation so far:
-${historyStr}
-
-User: ${message}`;
+  return fullText;
 }
 
-// 4. Stream response with Groq fallback
-export async function streamResponse(prompt, onToken) {
+export async function generateWithFallback(prompt, onToken) {
   try {
-    const result = await model.generateContentStream(prompt);
-
-    let fullText = '';
-
-    for await (const chunk of result.stream) {
-      const token = chunk.text();
-      fullText += token;
-      onToken(token);
-    }
-
-    return fullText;
+    return await geminiGenerateStream(prompt, onToken);
   } catch (err) {
-    if (err.status === 429) {
-      console.warn('Gemini rate-limited, falling back to Groq');
+    if (
+      err.status === 429 ||
+      err.message?.toLowerCase().includes('rate limit')
+    ) {
+      console.warn('Gemini rate-limited — falling back to Groq');
 
-      const completion = await groq.chat.completions.create({
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        model: 'llama-3.3-70b-versatile',
-        stream: true,
-      });
-
-      let fullText = '';
-
-      for await (const chunk of completion) {
-        const token = chunk.choices[0]?.delta?.content || '';
-        fullText += token;
-        onToken(token);
-      }
-
-      return fullText;
+      return await groqGenerateStream(prompt, onToken);
     }
 
     throw err;
@@ -329,6 +289,9 @@ export default {
   buildRagPrompt,
   getNonStreamingResponse,
   streamResponse,
+  generateWithFallback,
+  geminiGenerateStream,
+  groqGenerateStream,
   handleChat,
   getRecentHistory,
 };
