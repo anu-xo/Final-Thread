@@ -7,6 +7,8 @@ import aiService from '../services/aiService.js';
 import AIConversation from '../models/AIConversation.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
+import * as aiService from '../services/aiService.js'; // adjust the path if different
+
 
 const router = express.Router();
 
@@ -123,7 +125,41 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     res.end();
   }
 });
+ 
+// GET /ai/health
+// ... your existing routes ...
 
+// GET /ai/health
+// Verifies Gemini connectivity independent of user auth.
+// Useful for uptime monitoring and quick manual checks.
+router.get('/health', async (req, res) => {
+  try {
+    const testEmbedding = await aiService.embedQuery('health check');
+
+    if (Array.isArray(testEmbedding) && testEmbedding.length > 0) {
+      return res.status(200).json({
+        status: 'ok',
+        gemini: 'connected',
+        embeddingDims: testEmbedding.length,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return res.status(503).json({
+      status: 'error',
+      gemini: 'unexpected response',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('AI health check failed:', err);
+
+    return res.status(503).json({
+      status: 'error',
+      gemini: 'unreachable',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
 // ... your /conversations, /messages/:id/feedback routes stay exactly as they are ...
 
 export default router;
