@@ -1,12 +1,13 @@
-let io = null;
+let ioInstance = null;
 
-export function setIO(instance) {
-  io = instance;
+export function initIO(io) {
+  ioInstance = io;
+  return io;
 }
 
 export function getIO() {
-  if (!io) {
-    throw new Error('Socket.io instance not initialized — call setIO() first');
+  if (!ioInstance) {
+    throw new Error('Socket.io not initialized yet');
   }
-  return io;
+  return ioInstance;
 }

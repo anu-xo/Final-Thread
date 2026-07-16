@@ -2,7 +2,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import app from './app.js';
 import aiRoutes from './routes/ai.js';
-import { setIO } from './socket.js';
+import { initIO } from './socket.js';
 
 app.use('/api/ai', aiRoutes);
 
@@ -18,10 +18,15 @@ const io = new Server(httpServer, {
 });
 
 app.set('io', io);
-setIO(io);
+initIO(io);
 
 io.on('connection', (socket) => {
   console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
+
+  // Auto-join personal notification room if socket auth middleware set socket.user
+  if (socket.user?.id) {
+    socket.join('user:' + socket.user.id);
+  }
 
   socket.on('join_post', ({ postId }) => {
     if (!postId) return;
