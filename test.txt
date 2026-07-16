@@ -1,0 +1,4 @@
+Invoke-RestMethod -Uri "http://localhost:5000/api/communities/test-community" `
+     -Method Put -ContentType "application/json" `
+     -Body '{"aiEnabled": false}' `
+     -Headers @{ Authorization = "Bearer $modToken" }
