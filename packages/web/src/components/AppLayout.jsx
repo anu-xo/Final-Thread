@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import SearchModal from './SearchModal.jsx';
+import { useNotificationSocket } from '../hooks/useNotifications.js';
 
 export default function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
+  useNotificationSocket();
 
   useEffect(() => {
     setSearchOpen(false);

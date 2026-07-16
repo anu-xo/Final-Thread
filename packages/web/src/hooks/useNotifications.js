@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import api from '../services/api';
-import { getSocket } from '../services/socket';
+import { socket } from '../lib/socket.js';
 import { useAuthStore } from '../store/authStore';
 
 export function useUnreadCount() {
@@ -28,22 +28,26 @@ export function useMarkAllRead() {
   });
 }
 
-// Mount once near the app root (e.g. inside AppLayout) — NOT per-component,
-// same lesson as the post vote sockets: one listener, lifted up, or you'll
-// get duplicate badge increments per notification.
+// Mount once inside AppLayout — NOT inside NotificationBell, to avoid
+// re-subscribing on every open/close. Handles both the socket room join
+// and the real-time notification listener.
 export function useNotificationSocket() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?._id);
 
   useEffect(() => {
     if (!userId) return;
-    const socket = getSocket();
+
+    socket.emit('join_user', { userId });
 
     const handler = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     };
-
     socket.on('notification:new', handler);
-    return () => socket.off('notification:new', handler);
+
+    return () => {
+      socket.off('notification:new', handler);
+      socket.emit('leave_user', { userId });
+    };
   }, [userId, queryClient]);
 }

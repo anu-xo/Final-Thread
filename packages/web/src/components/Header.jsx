@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../store/authStore.js';
 import api from '../services/api.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
+import NotificationBell from './NotificationBell.jsx';
 
 export default function Header() {
   const { user, accessToken, clearAuth } = useAuthStore();
@@ -60,34 +61,37 @@ export default function Header() {
       {/* Right side: auth-aware controls */}
       <div className="flex items-center gap-3 ml-auto shrink-0">
         {accessToken && user ? (
-          <div className="relative">
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-orange-500"
-            >
-              {/* Avatar placeholder — real avatar on Day 7 */}
-              <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">
-                {user.username?.[0]?.toUpperCase()}
-              </div>
-              <span className="hidden sm:block">{user.username}</span>
-              <span className="text-xs text-gray-400">▾</span>
-            </button>
-
-            {/* Dropdown */}
-            {menuOpen && (
-              <div
-                className="absolute right-0 top-10 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
-                onMouseLeave={() => setMenuOpen(false)}
+          <>
+            <NotificationBell />
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-orange-500"
               >
-                <Link to={`/u/${user.username}`} className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Profile</Link>
-                <Link to="/settings" className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Settings</Link>
-                <hr className="my-1" />
-                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-                  Log Out
-                </button>
-              </div>
-            )}
-          </div>
+                {/* Avatar placeholder — real avatar on Day 7 */}
+                <div className="w-7 h-7 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">
+                  {user.username?.[0]?.toUpperCase()}
+                </div>
+                <span className="hidden sm:block">{user.username}</span>
+                <span className="text-xs text-gray-400">▾</span>
+              </button>
+
+              {/* Dropdown */}
+              {menuOpen && (
+                <div
+                  className="absolute right-0 top-10 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
+                  onMouseLeave={() => setMenuOpen(false)}
+                >
+                  <Link to={`/u/${user.username}`} className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Profile</Link>
+                  <Link to="/settings" className="block px-4 py-2 text-sm hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Settings</Link>
+                  <hr className="my-1" />
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         ) : (
           <div className="flex gap-2">
             <Link to="/login" className="px-3 py-1.5 text-sm border border-orange-500 text-orange-500 rounded-full hover:bg-orange-50">Log In</Link>
