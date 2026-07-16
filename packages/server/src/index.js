@@ -34,6 +34,17 @@ io.on('connection', (socket) => {
     socket.leave(`post:${postId}`);
   });
 
+  socket.on('join_user', ({ userId }) => {
+    if (!userId) return;
+    socket.join(`user:${userId}`);
+    console.log(`🔔 [Socket.io] ${socket.id} joined room user:${userId}`);
+  });
+
+  socket.on('leave_user', ({ userId }) => {
+    if (!userId) return;
+    socket.leave(`user:${userId}`);
+  });
+
   socket.on('disconnect', () => {
     console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
   });

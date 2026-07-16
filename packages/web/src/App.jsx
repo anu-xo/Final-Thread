@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
+import { useNotificationRoom } from './hooks/useNotificationRoom.js';
 import { useIsDesktop } from './hooks/useIsDesktop.js';
 
 // Layout & Route Guards
@@ -37,6 +38,7 @@ const queryClient = new QueryClient({
 // Runs after AuthProvider is mounted
 function AppRoutes() {
   const { isInitializing } = useAuthInit();
+  useNotificationRoom();
 
   if (isInitializing) {
     return (
