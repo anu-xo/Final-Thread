@@ -13,6 +13,15 @@ const createListener = (channel, callback) => {
   };
 };
 
+// Badge helpers
+export const setBadgeCount = (count) => {
+  ipcRenderer.send('badge:set', count);
+};
+
+export const clearBadge = () => {
+  ipcRenderer.send('badge:clear');
+};
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // Notifications
   showNotification: (title, body) =>
@@ -22,7 +31,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('ai-response-ready', communityName),
 
   // Settings
-  getSettings: () => ipcRenderer.invoke('settings:get'),
+  getSettings: () =>
+    ipcRenderer.invoke('settings:get'),
 
   setSettings: (partial) =>
     ipcRenderer.invoke('settings:set', partial),
@@ -73,4 +83,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Ctrl/Cmd + Shift + A
   onOpenAIChat: (callback) =>
     createListener('open-ai-chat', callback),
+
+  // Badge
+  setBadgeCount,
+  clearBadge,
 });

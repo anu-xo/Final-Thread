@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 import * as Sentry from '@sentry/electron/main';
+import { app, ipcMain, BrowserWindow } from 'electron';
 
 // Initialize store with default settings schema
 const store = new Store({
@@ -218,6 +219,7 @@ ipcMain.handle('select-file', async (_, options = {}) => {
         dataUrl: `data:${mimeType};base64,${fileBuffer.toString('base64')}`,
       };
     }));
+  
 
     return { canceled: false, files };
   }
@@ -247,6 +249,33 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
     notification.show();
   }
 });
+// 8. Badge Count (Dock on macOS, Flash on Windows)
+import { app, ipcMain, BrowserWindow } from 'electron';
+
+ipcMain.on('badge:set', (_event, count) => {
+  if (process.platform === 'darwin') {
+    app.dock.setBadge(String(count));
+  } else if (process.platform === 'win32') {
+    const win =
+      BrowserWindow.getFocusedWindow() ||
+      BrowserWindow.getAllWindows()[0];
+
+    win?.flashFrame(true);
+  }
+});
+// 9. Clear Badge Count
+ipcMain.on('badge:clear', () => {
+  if (process.platform === 'darwin') {
+    app.dock.setBadge('');
+  } else if (process.platform === 'win32') {
+    const win =
+      BrowserWindow.getFocusedWindow() ||
+      BrowserWindow.getAllWindows()[0];
+
+    win?.flashFrame(false);
+  }
+});
+
 
 // ── App Lifecycle ────────────────────────────────────────────────────────────
 
