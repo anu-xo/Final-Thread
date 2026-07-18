@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showNotification: (title, body) =>
     ipcRenderer.invoke('show-notification', { title, body }),
 
+  showOSNotification: (payload) =>
+    ipcRenderer.send('notification:show', payload),
+
   notifyAIResponse: (communityName) =>
     ipcRenderer.send('ai-response-ready', communityName),
 

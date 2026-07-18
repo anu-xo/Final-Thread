@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useUnreadCount, useNotifications, useMarkAllRead } from '../hooks/useNotifications';
+import { useUnreadCount, useNotifications, useMarkAllRead, notificationText, buildNotificationLink } from '../hooks/useNotifications';
 import { useIsDesktop } from '../hooks/useIsDesktop';
 
 const ICONS = {
@@ -72,21 +72,6 @@ export default function NotificationBell() {
       )}
     </div>
   );
-}
-
-function notificationText(type) {
-  switch (type) {
-    case 'reply': return 'replied to your comment';
-    case 'mention': return 'mentioned you';
-    case 'mod_action': return 'took a moderator action on your content';
-    case 'ai_response': return 'AI responded in your conversation';
-    default: return 'sent a notification';
-  }
-}
-
-function buildNotificationLink(n) {
-  if (n.targetType === 'Comment') return `/post/${n.postId || ''}#comment-${n.target}`;
-  return '#';
 }
 
 function timeAgo(date) {

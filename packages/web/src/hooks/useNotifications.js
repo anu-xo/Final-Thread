@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import api from '../services/api';
 import { socket } from '../lib/socket.js';
 import { useAuthStore } from '../store/authStore';
+import { useIsDesktop } from './useIsDesktop.js';
 
 export function useUnreadCount() {
   return useQuery({
@@ -34,14 +35,23 @@ export function useMarkAllRead() {
 export function useNotificationSocket() {
   const queryClient = useQueryClient();
   const userId = useAuthStore((s) => s.user?._id);
+  const isDesktop = useIsDesktop();
 
   useEffect(() => {
     if (!userId) return;
 
     socket.emit('join_user', { userId });
 
-    const handler = () => {
+    const handler = (notif) => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+      if (isDesktop && window.electronAPI?.showOSNotification) {
+        window.electronAPI.showOSNotification({
+          title: 'ThreadVerse',
+          body: notificationText(notif.type),
+          targetUrl: buildNotificationLink(notif),
+        });
+      }
     };
     socket.on('notification:new', handler);
 
@@ -49,5 +59,20 @@ export function useNotificationSocket() {
       socket.off('notification:new', handler);
       socket.emit('leave_user', { userId });
     };
-  }, [userId, queryClient]);
+  }, [userId, isDesktop, queryClient]);
+}
+
+export function notificationText(type) {
+  switch (type) {
+    case 'reply': return 'replied to your comment';
+    case 'mention': return 'mentioned you';
+    case 'mod_action': return 'took a moderator action on your content';
+    case 'ai_response': return 'AI responded in your conversation';
+    default: return 'sent a notification';
+  }
+}
+
+export function buildNotificationLink(n) {
+  if (n.targetType === 'Comment') return `/post/${n.postId || ''}#comment-${n.target}`;
+  return '#';
 }
