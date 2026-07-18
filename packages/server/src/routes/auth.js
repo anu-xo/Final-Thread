@@ -110,6 +110,10 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
 
+    if (user.isBanned) {
+      return res.status(403).json({ error: 'This account has been suspended.' });
+    }
+
     const { accessToken, refreshToken } = generateTokens(user._id);
     await User.findByIdAndUpdate(user._id, {
       $push: { refreshTokens: refreshToken }
