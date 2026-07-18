@@ -1,14 +1,14 @@
-const cron = require('node-cron');
-const axios = require('axios');
-const EvalResult = require('../models/EvalResult'); // new schema, see below
-const { runEvalQuestion } = require('../services/aiService');
+import cron from 'node-cron';
+import axios from 'axios';
+import EvalResult from '../models/EvalResult.js';
+import { runEvalQuestion } from '../services/aiService.js';
 
 const TEST_QUESTIONS = [
   // 30 questions across 3 communities — 10 each, mix of factual + edge-case
   // load these from a JSON fixture rather than hardcoding here:
 ];
 
-function scheduleNightlyEval() {
+export function scheduleNightlyEval() {
   // Runs at 2:00 AM server time every day
   cron.schedule('0 2 * * *', async () => {
     console.log('[evalCron] starting nightly AI eval run');
@@ -55,5 +55,3 @@ async function notifyDiscord(avgScore, results) {
       `${lowScoring.length} of ${results.length} questions scored low.`,
   });
 }
-
-module.exports = { scheduleNightlyEval };
