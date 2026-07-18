@@ -61,6 +61,14 @@ httpServer.listen(PORT, async () => {
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
   const { default: embeddingWorker } = await import('./jobs/embeddingWorker.js');
   console.log('[Server] Embedding worker started');
+
+  if (process.env.NODE_ENV !== 'test' && !global.__evalCronScheduled) {
+    global.__evalCronScheduled = true;
+    const evalCron = await import('./jobs/evalCron.js');
+    evalCron.scheduleNightlyEval();
+
+    console.log('[Server] Nightly eval cron scheduled');
+  }
 });
 
 export { app, httpServer };
