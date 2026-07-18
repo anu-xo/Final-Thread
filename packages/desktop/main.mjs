@@ -4,7 +4,6 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 import * as Sentry from '@sentry/electron/main';
-import { app, ipcMain, BrowserWindow } from 'electron';
 
 // Initialize store with default settings schema
 const store = new Store({

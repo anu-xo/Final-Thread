@@ -10,6 +10,17 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
+  projects: [
+    {
+      name: 'web',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'electron',
+      testDir: './e2e/tests',
+      testMatch: '**/*desktop*.spec.js',
+    },
+  ],
   webServer: {
     command: 'pnpm --filter web dev',
     url: 'http://localhost:5173',
