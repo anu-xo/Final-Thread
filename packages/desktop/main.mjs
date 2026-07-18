@@ -275,6 +275,23 @@ ipcMain.on('badge:clear', () => {
   }
 });
 
+// 10. Clickable Notifications
+ipcMain.on('notification:show', (_event, { title, body, targetUrl }) => {
+  const notification = new Notification({ title, body });
+
+  notification.on('click', () => {
+    const win = BrowserWindow.getAllWindows()[0];
+
+    if (win) {
+      win.show();
+      win.focus();
+      win.webContents.send('navigate', targetUrl);
+    }
+  });
+
+  notification.show();
+});
+
 
 // ── App Lifecycle ────────────────────────────────────────────────────────────
 
