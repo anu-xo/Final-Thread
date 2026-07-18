@@ -37,11 +37,23 @@ const userSchema = new mongoose.Schema(
       default: [],
       select: false,
     },
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+    bannedAt: {
+      type: Date,
+    },
+    banReason: {
+      type: String,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.index({ username: 'text', email: 'text' });
 
 const User = mongoose.model('User', userSchema);
 

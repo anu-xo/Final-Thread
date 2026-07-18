@@ -23,6 +23,7 @@ import reportRoutes from './routes/reports.js'; // Added from update
 import modRoutes from './routes/mod.js';       // Added from update
 import aiRoutes from './routes/ai.js';
 import notificationsRouter from './routes/notifications.js';
+import adminRoutes from './routes/admin.js';
 import { adminRouter } from './middleware/adminGuard.js';
 
 console.log("script start");
@@ -112,10 +113,7 @@ app.use('/api', modRoutes);
 app.use('/api/notifications', notificationsRouter);
 
 // Admin routes — auth + role check applied once via adminRouter
-// Mount your admin route files under this prefix:
-//   import adminFooRoutes from './routes/admin/foo.js';
-//   app.use('/api/admin/foo', adminRouter, adminFooRoutes);
-app.use('/api/admin', adminRouter);
+app.use('/api/admin', adminRouter, adminRoutes);
 
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';

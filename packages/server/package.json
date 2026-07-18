@@ -12,6 +12,7 @@
     "compare:hybrid": "node src/scripts/compareHybridSearch.js",
     "seed:day4": "node src/scripts/seedDay4.js",
     "seed": "node src/scripts/seed.js",
+    "migrate:indexes": "node src/scripts/createIndexes.js",
     "eval": "node --env-file=.env src/scripts/evalRag.js"
   },
   "dependencies": {
