@@ -250,7 +250,6 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
   }
 });
 // 8. Badge Count (Dock on macOS, Flash on Windows)
-import { app, ipcMain, BrowserWindow } from 'electron';
 
 ipcMain.on('badge:set', (_event, count) => {
   if (process.platform === 'darwin') {
