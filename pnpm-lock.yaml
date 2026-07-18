@@ -103,6 +103,9 @@ importers:
       '@xenova/transformers':
         specifier: ^2.17.2
         version: 2.17.2
+      axios:
+        specifier: ^1.18.1
+        version: 1.18.1(supports-color@5.5.0)
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -148,6 +151,9 @@ importers:
       morgan:
         specifier: ^1.10.0
         version: 1.11.0
+      node-cron:
+        specifier: ^4.6.0
+        version: 4.6.0
       socket.io:
         specifier: ^4.8.3
         version: 4.8.3(supports-color@5.5.0)
@@ -3679,6 +3685,10 @@ packages:
   node-addon-api@8.9.0:
     resolution: {integrity: sha512-ekZMeaaIzSQTSpr7X2X3iJM7lTzgnx8ahAG9pJfT/7+14mlEM8ZYQ9cgCDvSSRbReFK0oHli3WrZdCiRsgAT9Q==}
     engines: {node: ^18 || ^20 || >= 21}
+
+  node-cron@4.6.0:
+    resolution: {integrity: sha512-Si/bzYiKRHOB8/a99T2+SDGN582ONDMSTlJr5oCkT6GtnqPjZ2s10eoQRYkW9ZHwjVxONL+W8Fb+qR0AHMQsdg==}
+    engines: {node: '>=20'}
 
   node-gyp-build-optional-packages@5.2.2:
     resolution: {integrity: sha512-s+w+rBWnpTMwSFbaE0UXsRlg7hU4FjekKU4eyAih5T8nJuNZT1nNsskXpxmeqSK9UzkBl6UgRlnKc8hz8IEqOw==}
@@ -8652,6 +8662,8 @@ snapshots:
   node-addon-api@6.1.0: {}
 
   node-addon-api@8.9.0: {}
+
+  node-cron@4.6.0: {}
 
   node-gyp-build-optional-packages@5.2.2:
     dependencies:

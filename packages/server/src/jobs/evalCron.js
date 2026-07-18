@@ -1,12 +1,20 @@
 import cron from 'node-cron';
 import axios from 'axios';
 import EvalResult from '../models/EvalResult.js';
-import { runEvalQuestion } from '../services/aiService.js';
+import { buildRagPrompt, getNonStreamingResponse } from '../services/aiService.js';
+import { judgeResponse } from '../services/evalJudge.js';
 
 const TEST_QUESTIONS = [
   // 30 questions across 3 communities — 10 each, mix of factual + edge-case
   // load these from a JSON fixture rather than hardcoding here:
 ];
+
+async function runEvalQuestion(q) {
+  const { prompt, sources } = await buildRagPrompt({ message: q.text, communityId: q.communityId });
+  const answer = await getNonStreamingResponse(prompt);
+  const grade = await judgeResponse({ question: q.text, answer, sources });
+  return { answer, sources, ...grade };
+}
 
 export function scheduleNightlyEval() {
   // Runs at 2:00 AM server time every day
@@ -16,7 +24,7 @@ export function scheduleNightlyEval() {
 
     for (const q of TEST_QUESTIONS) {
       try {
-        const { response, sources, groundedness, relevance } = await runEvalQuestion(q);
+        const { sources, groundedness, relevance } = await runEvalQuestion(q);
         results.push({
           question: q.text,
           communityId: q.communityId,
