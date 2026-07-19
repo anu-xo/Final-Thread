@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import api from '../services/api.js';
 import { useAuthStore } from '../store/authStore.js';
+import { useIsDesktop } from '../hooks/useIsDesktop.js';
 
 // Why fetch communities in the sidebar?
 // Reddit-style: the sidebar shows the communities you've joined so you can quickly jump
@@ -10,6 +12,14 @@ import { useAuthStore } from '../store/authStore.js';
 export default function Sidebar() {
   const { accessToken } = useAuthStore();
   const location = useLocation();
+  const isDesktop = useIsDesktop();
+  const [appVersion, setAppVersion] = useState(null);
+
+  useEffect(() => {
+    if (isDesktop) {
+      window.electronAPI.getAppVersion().then(setAppVersion);
+    }
+  }, [isDesktop]);
 
   const { data } = useQuery({
     queryKey: ['sidebar-communities'],
@@ -43,6 +53,21 @@ export default function Sidebar() {
         <hr className="my-3 border-gray-100" />
         <SidebarLink to="/communities/create" label="+ Create Community" active={false} />
         <SidebarLink to="/tiptap-smoke" label="🧪 Tiptap Smoke" active={location.pathname === '/tiptap-smoke'} />
+
+        {isDesktop && (
+          <>
+            <hr className="my-3 border-gray-100" />
+            <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Desktop</p>
+            <SidebarLink
+              to="/settings#desktop"
+              label="⚙️ Desktop Settings"
+              active={location.pathname === '/settings' && location.hash === '#desktop'}
+            />
+            {appVersion && (
+              <span className="block px-3 py-1.5 text-xs text-gray-400">v{appVersion}</span>
+            )}
+          </>
+        )}
       </nav>
     </aside>
   );
