@@ -137,6 +137,13 @@ function createWindow() {
     mainWindow?.webContents.send('window:state-changed', false);
   });
 
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
   mainWindow.on('closed', () => {
     unregisterGlobalShortcuts();
     mainWindow = null;
