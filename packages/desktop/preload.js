@@ -64,6 +64,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFile: (options) =>
     ipcRenderer.invoke('select-file', options),
 
+  readFileForUpload: (filePath) =>
+    ipcRenderer.invoke('read-file-for-upload', filePath),
+
   // App Info
   getVersion: () =>
     ipcRenderer.invoke('get-version'),

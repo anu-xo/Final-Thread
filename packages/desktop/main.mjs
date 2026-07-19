@@ -283,6 +283,24 @@ ipcMain.handle('select-file', async (_, options = {}) => {
   return result.filePaths;
 });
 
+// 5b. Read file for upload (returns base64 — renderer converts to Blob)
+ipcMain.handle('read-file-for-upload', async (_, filePath) => {
+  const fileBuffer = await fs.readFile(filePath);
+  const extension = path.extname(filePath).slice(1).toLowerCase();
+  const mimeTypeMap = {
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    webp: 'image/webp',
+  };
+  return {
+    base64: fileBuffer.toString('base64'),
+    mimeType: mimeTypeMap[extension] || 'application/octet-stream',
+    fileName: path.basename(filePath),
+  };
+});
+
 // 6. Navigation Helpers
 ipcMain.on('navigate', (_, path) => {
   mainWindow?.webContents.send('navigate', path);
