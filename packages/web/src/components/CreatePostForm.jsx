@@ -50,6 +50,23 @@ async function uploadToCloudinary(selectedFile) {
     return payload.secure_url;
 }
 
+function base64ToBlob(base64, mimeType) {
+    const byteString = atob(base64);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+    }
+    return new Blob([ab], { type: mimeType });
+}
+
+async function uploadFromPath(filePath) {
+    const { base64, mimeType, fileName } = await window.electronAPI.readFileForUpload(filePath);
+    const blob = base64ToBlob(base64, mimeType);
+    const file = new File([blob], fileName, { type: mimeType });
+    return uploadToCloudinary(file);
+}
+
 function CommunityPicker({ value, onChange, error }) {
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
@@ -154,6 +171,8 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
     const isDesktop = useIsDesktop();
     const fileInputRef = useRef(null);
     const [selectedFiles, setSelectedFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
     const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm({
         resolver: zodResolver(postSchema),
         defaultValues: {
@@ -193,17 +212,17 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
 
     const handleFileSelection = async () => {
         if (postType !== 'image') return;
+        setUploadError(null);
 
         if (isDesktop) {
             const selection = await window.electronAPI?.selectFile({
                 readAs: 'dataUrl',
-                multiple: true,
                 filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
             });
 
             const files = selection?.files?.map((item) => ({
+                filePath: item.path,
                 name: item.name,
-                dataUrl: item.dataUrl,
                 previewUrl: item.dataUrl,
             })) || [];
 
@@ -256,11 +275,24 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                 };
 
                 if (data.postType === 'image') {
-                    const mediaUrls = [];
-                    for (const file of selectedFiles) {
-                        mediaUrls.push(await uploadToCloudinary(file));
+                    setUploading(true);
+                    setUploadError(null);
+                    try {
+                        const mediaUrls = [];
+                        for (const file of selectedFiles) {
+                            if (isDesktop && file.filePath) {
+                                mediaUrls.push(await uploadFromPath(file.filePath));
+                            } else {
+                                mediaUrls.push(await uploadToCloudinary(file));
+                            }
+                        }
+                        payload.media = mediaUrls;
+                    } catch (err) {
+                        setUploadError(err.message || 'Image upload failed');
+                        return;
+                    } finally {
+                        setUploading(false);
                     }
-                    payload.media = mediaUrls;
                 }
 
                 mutate(payload);
@@ -322,14 +354,23 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                         <button
                             type="button"
                             onClick={handleFileSelection}
-                            className="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm"
+                            disabled={uploading}
+                            className="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                            {isDesktop ? 'Attach image(s)' : 'Choose image(s)'}
+                            {uploading && (
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                            )}
+                            {uploading ? 'Uploading...' : 'Attach image(s)'}
                         </button>
                         <span className="text-xs text-gray-500">
                             Uploads go straight to Cloudinary; the server only receives CDN URLs.
                         </span>
                     </div>
+
+                    {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
 
                     {selectedFiles.length > 0 && (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
