@@ -136,6 +136,7 @@ router.post('/', authMiddleware, async (req, res) => {
     logActivity('vote.cast', req, { targetId, targetType, value: normalizedValue });
 
     return res.json({
+      data: {
         userVote: normalizedValue,
         ...(targetType === 'post' ? { hotScore: updatedTarget.hotScore } : {}),
       },
