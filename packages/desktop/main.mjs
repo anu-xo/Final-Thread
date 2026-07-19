@@ -130,6 +130,13 @@ function createWindow() {
   // Register shortcuts once the main window is created
   registerGlobalShortcuts(mainWindow);
 
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window:state-changed', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window:state-changed', false);
+  });
+
   mainWindow.on('closed', () => {
     unregisterGlobalShortcuts();
     mainWindow = null;
@@ -196,6 +203,7 @@ ipcMain.handle('install-update', () => {
   // autoUpdater.quitAndInstall() — Day 16
 });
 ipcMain.handle('get-version', () => app.getVersion());
+ipcMain.handle('app:get-version', () => app.getVersion());
 
 // 5. File Selection Native Dialogs
 ipcMain.handle('select-file', async (_, options = {}) => {

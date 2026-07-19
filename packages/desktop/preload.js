@@ -23,6 +23,13 @@ export const clearBadge = () => {
 };
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Window Controls (frameless title bar)
+  minimizeWindow: () => ipcRenderer.send('window:minimize'),
+  maximizeWindow: () => ipcRenderer.send('window:maximize'),
+  closeWindow: () => ipcRenderer.send('window:close'),
+  onWindowStateChange: (callback) =>
+    ipcRenderer.on('window:state-changed', (_event, isMaximized) => callback(isMaximized)),
+
   // Notifications
   showNotification: (title, body) =>
     ipcRenderer.invoke('show-notification', { title, body }),
@@ -60,6 +67,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // App Info
   getVersion: () =>
     ipcRenderer.invoke('get-version'),
+  getAppVersion: () =>
+    ipcRenderer.invoke('app:get-version'),
 
   // Community Cache
   setSubscribedCommunities: (communities) =>
