@@ -77,13 +77,8 @@ export default function SettingsPage() {
   const notifPrefs = serverPrefs?.notifPrefs ?? { digest: true, replies: true, mentions: true };
 
   const handleTheme = async (val) => {
-    if (desktop) {
-      await updateDesktop({ theme: val });
-      await pushSharedToServer({ theme: val });
-    } else {
-      setUiTheme(val);
-      await pushSharedToServer({ theme: val });
-    }
+    setUiTheme(val);
+    await pushSharedToServer({ theme: val });
   };
 
   const handleNotifPref = async (key, val) => {
