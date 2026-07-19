@@ -52,10 +52,23 @@ app.use(
   })
 );
 
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'electron://.',
+  'file://',
+];
+
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'electron://'],
-    credentials: true
+    origin(origin, callback) {
+      console.log('[CORS] incoming origin:', origin);
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    credentials: true,
   })
 );
 

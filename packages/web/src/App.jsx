@@ -75,12 +75,14 @@ function AppRoutes() {
             <Route path="/communities" element={<CommunityBrowser />} />
             <Route path="/communities/create" element={<CreateCommunity />} />
             <Route path="/community/:slug" element={<CommunityPage />} />
+            <Route path="/r/:slug" element={<CommunityPage />} />
 
             {/* User */}
             <Route path="/u/:username" element={<ProfilePage />} />
 
             {/* Posts */}
             <Route path="/posts/:id" element={<PostDetail />} />
+            <Route path="/post/:id" element={<PostDetail />} />
 
             {/* Dev */}
             <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />

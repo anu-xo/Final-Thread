@@ -8,6 +8,17 @@ import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import SearchModal from './SearchModal.jsx';
 import { useNotificationSocket } from '../hooks/useNotifications.js';
+import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
+
+function OfflineBanner() {
+  const isOnline = useOnlineStatus();
+  if (isOnline) return null;
+  return (
+    <div className="fixed inset-x-0 top-14 z-50 bg-yellow-500 text-yellow-950 text-center text-sm font-medium py-1.5">
+      You are offline — some features may be unavailable
+    </div>
+  );
+}
 
 export default function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -39,6 +50,7 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
+      <OfflineBanner />
       {/* pt-14 pushes content below the fixed header */}
       <div className="pt-14 max-w-6xl mx-auto px-4 flex gap-6">
         <Sidebar />

@@ -10,9 +10,22 @@ const PORT = process.env.PORT || 5000;
 
 // ── HTTP & Socket.io Server Setup ───────────────────────────────────────────
 const httpServer = http.createServer(app);
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'electron://.',
+  'file://',
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:5173', 'electron://'],
+    origin(origin, callback) {
+      console.log('[Socket CORS] incoming origin:', origin);
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
     credentials: true,
   },
 });

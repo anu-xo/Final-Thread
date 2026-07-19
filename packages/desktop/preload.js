@@ -103,6 +103,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Theme (sync — used by inline <script> in index.html to prevent flash)
   getThemeSync: () => ipcRenderer.sendSync('theme:get-sync'),
 
+  // Connectivity
+  checkConnectivity: () => ipcRenderer.invoke('connectivity:check'),
+  onConnectivityChange: (callback) =>
+    createListener('connectivity:changed', callback),
+
   // Badge
   setBadgeCount,
   clearBadge,

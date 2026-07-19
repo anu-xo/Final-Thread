@@ -1,10 +1,8 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
-import * as Sentry from '@sentry/electron/main';
-
 // Initialize store with default settings schema
 const store = new Store({
   defaults: {
@@ -18,6 +16,8 @@ const store = new Store({
 });
 
 let mainWindow = null;
+let tray = null;
+let isQuitting = false;
 
 const DEV_SERVER_URL = 'http://localhost:5173';
 const isDev = !app.isPackaged;
@@ -143,6 +143,33 @@ function createWindow() {
   });
 }
 
+/**
+ * ── System Tray ───────────────────────────────────────────────────────────────
+ */
+function createTray() {
+  const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
+  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
+  tray = new Tray(icon);
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: 'Open ThreadVerse', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
+    { label: 'Open AI Chat', click: () => {
+      mainWindow?.show();
+      mainWindow?.focus();
+      mainWindow?.webContents.send('tray:open-ai-chat');
+    }},
+    { label: 'Check for Updates', click: () => {
+      mainWindow?.webContents.send('tray:check-updates'); // wired fully on Day 16
+    }},
+    { type: 'separator' },
+    { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
+  ]);
+
+  tray.setToolTip('ThreadVerse');
+  tray.setContextMenu(contextMenu);
+  tray.on('click', () => { mainWindow?.show(); mainWindow?.focus(); });
+}
+
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 // 1. Window controls (Frameless windows require synchronous `.on` events)
@@ -151,7 +178,11 @@ ipcMain.on('window:maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize();
   else mainWindow?.maximize();
 });
-ipcMain.on('window:close', () => mainWindow?.close());
+ipcMain.on('window:close', () => {
+  if (mainWindow) {
+    mainWindow.hide(); // minimize to tray instead of closing
+  }
+});
 
 // 2. Notifications
 ipcMain.handle('show-notification', (_, { title, body }) => {
@@ -266,7 +297,11 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
     notification.show();
   }
 });
-// 8. Badge Count (Dock on macOS, Flash on Windows)
+
+// 8. Connectivity (renderer can query on demand)
+ipcMain.handle('connectivity:check', () => checkConnectivity());
+
+// 9. Badge Count (Dock on macOS, Flash on Windows)
 
 ipcMain.on('badge:set', (_event, count) => {
   if (process.platform === 'darwin') {
@@ -310,10 +345,46 @@ ipcMain.on('notification:show', (_event, { title, body, targetUrl }) => {
 });
 
 
+// ── Connectivity Detection ──────────────────────────────────────────────────
+const API_BASE = isDev ? 'http://localhost:5000' : 'https://your-production-api.com';
+const CONNECTIVITY_INTERVAL = 10_000;
+
+let lastOnlineState = null;
+
+function checkConnectivity() {
+  return new Promise((resolve) => {
+    const req = net.request(`${API_BASE}/api/health`);
+    req.on('response', (res) => {
+      resolve(res.statusCode >= 200 && res.statusCode < 400);
+    });
+    req.on('error', () => resolve(false));
+    req.on('abort', () => resolve(false));
+    req.setTimeout(5000, () => { req.abort(); resolve(false); });
+    req.end();
+  });
+}
+
+async function emitConnectivity() {
+  const online = net.isOnline() && await checkConnectivity();
+  if (online !== lastOnlineState) {
+    lastOnlineState = online;
+    mainWindow?.webContents.send('connectivity:changed', online);
+  }
+}
+
 // ── App Lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  createTray();
   createWindow();
+
+  // Connectivity polling
+  emitConnectivity(); // immediate first check
+  setInterval(emitConnectivity, CONNECTIVITY_INTERVAL);
+
+  // Cold-start deep link (Windows/Linux): URL lands in argv when no prior instance exists
+  const deepLinkArg = extractDeepLinkUrl(process.argv);
+  if (deepLinkArg) handleDeepLink(deepLinkArg);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -331,6 +402,13 @@ app.on('will-quit', () => {
 
 // Handle custom deep links: threadverse://community/reactjs
 const PROTOCOL = 'threadverse';
+
+function extractDeepLinkUrl(argv) {
+  return argv.find((arg) =>
+    arg.startsWith(`${PROTOCOL}://`) ||
+    arg.startsWith(`--protocol-url=${PROTOCOL}://`)
+  )?.replace(/^--protocol-url=/, '');
+}
 
 function handleDeepLink(url) {
   // threadverse://community/reactjs -> { type: 'community', param: 'reactjs' }
@@ -352,7 +430,7 @@ if (!gotLock) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
     }
-    const url = argv.find((arg) => arg.startsWith(`${PROTOCOL}://`));
+    const url = extractDeepLinkUrl(argv);
     if (url) handleDeepLink(url);
   });
 }
