@@ -112,7 +112,8 @@ function DesktopShortcutBridge() {
       }
     });
 
-    const removeOpenAIChat = window.electronAPI.onOpenAIChat(() => {
+    const removeOpenAIChat = window.electronAPI.onOpenAIChat(({ communitySlug } = {}) => {
+      if (communitySlug) navigate(`/r/${communitySlug}`);
       navigate('/ai/chat');
     });
 
@@ -122,15 +123,10 @@ function DesktopShortcutBridge() {
       if (type === 'user') navigate(`/u/${param}`);
     });
 
-    const removeTrayAIChat = window.electronAPI.onTrayOpenAIChat?.(() => {
-      navigate('/ai/chat');
-    });
-
     return () => {
       removeNavigate?.();
       removeOpenAIChat?.();
       removeDeepLink?.();
-      removeTrayAIChat?.();
     };
   }, [isDesktop, navigate]);
 

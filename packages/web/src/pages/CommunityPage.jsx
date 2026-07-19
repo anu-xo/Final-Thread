@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -66,6 +67,16 @@ function CommunityHeader({ community }) {
 
 export default function CommunityPage() {
   const { slug } = useParams();
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      window.electronAPI?.setLastCommunity(slug);
+    }, 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [slug]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['community', slug],

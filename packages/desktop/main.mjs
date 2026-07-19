@@ -175,10 +175,11 @@ function createTray() {
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Open ThreadVerse', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
-    { label: 'Open AI Chat', click: () => {
+    { label: 'Ask AI', click: () => {
       mainWindow?.show();
       mainWindow?.focus();
-      mainWindow?.webContents.send('tray:open-ai-chat');
+      const lastCommunity = store.get('lastViewedCommunity', null);
+      mainWindow?.webContents.send('open-ai-chat', { communitySlug: lastCommunity });
     }},
     { label: 'Check for Updates', click: () => {
       mainWindow?.webContents.send('tray:check-updates'); // wired fully on Day 16
@@ -233,6 +234,11 @@ ipcMain.on('theme:get-sync', (event) => {
   } else {
     event.returnValue = theme;
   }
+});
+
+// Last viewed community
+ipcMain.on('set-last-community', (_event, slug) => {
+  store.set('lastViewedCommunity', slug);
 });
 
 // Community subscription cache handlers
