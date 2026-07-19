@@ -22,7 +22,7 @@ export default function Sidebar() {
     <aside className="w-56 shrink-0 pt-2">
       <nav className="space-y-0.5">
         <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Feeds</p>
-        <SidebarLink to="/" label="🏠 Home" active={location.pathname === '/'} />
+        <SidebarLink to="/home" label="🏠 Home" active={location.pathname === '/home'} />
         <SidebarLink to="/popular" label="🔥 Popular" active={location.pathname === '/popular'} />
         <SidebarLink to="/all" label="🌐 All" active={location.pathname === '/all'} />
 

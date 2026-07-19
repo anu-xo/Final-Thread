@@ -23,7 +23,7 @@ export default function Login() {
     mutationFn: (data) => api.post('/auth/login', data).then(r => r.data),
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
-      navigate('/');
+      navigate('/home');
     },
   });
 

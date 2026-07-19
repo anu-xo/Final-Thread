@@ -29,7 +29,6 @@ function ProfileCommentCard({ comment }) {
         </span>
       </div>
     </div>
-    </>
   );
 }
 
@@ -205,5 +204,6 @@ export default function ProfilePage() {
         </div>
       )}
     </div>
+    </>
   );
 }

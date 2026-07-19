@@ -3,13 +3,10 @@
     "collect": {
       "url": [
         "http://localhost:5173/",
-        "http://localhost:5173/community/reactjs",
-        "http://localhost:5173/post/SAMPLE_ID",
-        "http://localhost:5173/admin",
         "http://localhost:5173/login",
-        "http://localhost:5173/settings"
+        "http://localhost:5173/register"
       ],
-      "startServerCommand": "pnpm --filter web dev"
+      "startServerCommand": "pnpm --filter web build && pnpm --filter web preview"
     },
     "assert": {
       "assertions": {

@@ -63,7 +63,6 @@ function CommunityHeader({ community }) {
         </button>
       </div>
     </div>
-    </>
   );
 }
 
@@ -82,10 +81,11 @@ export default function CommunityPage() {
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="h-6 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-2" />
           <div className="h-4 w-64 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse" />
-        </div>
       </div>
-    );
-  }
+    </div>
+    </>
+  );
+}
 
   if (error) {
     return (

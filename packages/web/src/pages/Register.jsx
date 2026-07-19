@@ -40,7 +40,7 @@ export default function Register() {
 
       setAuth(user, accessToken);
 
-      navigate('/');
+      navigate('/home');
     } catch (err) {
       const message =
         err?.response?.data?.message ||

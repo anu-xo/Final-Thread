@@ -12,6 +12,7 @@ import AppLayout from './components/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 // Lazy-loaded Pages
+const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity.jsx'));
@@ -58,13 +59,14 @@ function AppRoutes() {
     <Suspense fallback={<PageSkeleton />}>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/submit" element={<SubmitPostPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/ai/chat" element={<AIChatPage />} />
