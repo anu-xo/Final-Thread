@@ -1,9 +1,13 @@
 // components/PostFeed.jsx
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
+import { VariableSizeList } from 'react-window';
 import { usePostFeed } from '../hooks/usePostFeed';
 import { usePostRealtimeVotes } from '../hooks/usePostRealtimeVotes';
 import PostCard from './PostCard';
+
+const ESTIMATED_ITEM_SIZE = 100;
+const OVERSCAN = 5;
 
 export default function PostFeed({ communityId, sort }) {
   const {
@@ -16,59 +20,77 @@ export default function PostFeed({ communityId, sort }) {
     error,
   } = usePostFeed({ communityId, sort });
 
-  // Keeps the feed in sync with votes cast by other users via Socket.io
   usePostRealtimeVotes();
 
-  const sentinelRef = useRef(null);
+  const listRef = useRef(null);
+  const itemSizeCache = useRef({});
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
+  const posts = data ? data.pages.flatMap((page) => page.posts) : [];
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasNextPage &&
-          !isFetchingNextPage
-        ) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: '400px' }
-    );
+  const getItemSize = useCallback(
+    (index) => itemSizeCache.current[index] ?? ESTIMATED_ITEM_SIZE,
+    []
+  );
 
-    observer.observe(el);
+  const setItemSize = useCallback((index, size) => {
+    if (itemSizeCache.current[index] !== size) {
+      itemSizeCache.current[index] = size;
+      listRef.current?.resetAfterIndex(index);
+    }
+  }, []);
 
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+  const handleItemsRendered = useCallback(
+    ({ visibleStopIndex }) => {
+      if (
+        visibleStopIndex >= posts.length - 5 &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
+      }
+    },
+    [posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
 
   if (isLoading) return <>Loading...</>;
 
   if (isError) return <>{error.message}</>;
 
-  const posts = data.pages.flatMap((page) => page.posts);
+  return (
+    <VariableSizeList
+      ref={listRef}
+      height={typeof window !== 'undefined' ? window.innerHeight - 64 : 800}
+      itemCount={posts.length}
+      itemSize={getItemSize}
+      width="100%"
+      overscanCount={OVERSCAN}
+      onItemsRendered={handleItemsRendered}
+    >
+      {({ index, style }) => (
+        <MeasuredItem index={index} style={style} onSize={setItemSize}>
+          <PostCard post={posts[index]} />
+        </MeasuredItem>
+      )}
+    </VariableSizeList>
+  );
+}
+
+function MeasuredItem({ index, style, onSize, children }) {
+  const ref = useCallback(
+    (node) => {
+      if (!node) return;
+      const ro = new ResizeObserver(([entry]) => {
+        onSize(index, entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height);
+      });
+      ro.observe(node);
+      return () => ro.disconnect();
+    },
+    [index, onSize]
+  );
 
   return (
-    <div className="space-y-2">
-      {/* Each PostCard renders its own VoteButton which handles its own mutation */}
-      {posts.map((post) => (
-        <PostCard key={post._id} post={post} />
-      ))}
-
-      <div ref={sentinelRef} className="h-4" />
-
-      {isFetchingNextPage && (
-        <div className="p-4 text-center text-gray-500 text-sm">
-          Loading more...
-        </div>
-      )}
-
-      {!hasNextPage && posts.length > 0 && (
-        <div className="p-4 text-center text-gray-400 text-sm">
-          You've reached the end
-        </div>
-      )}
+    <div style={style}>
+      <div ref={ref}>{children}</div>
     </div>
   );
 }
