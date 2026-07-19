@@ -330,23 +330,44 @@ app.on('will-quit', () => {
 });
 
 // Handle custom deep links: threadverse://community/reactjs
-app.setAsDefaultProtocolClient('threadverse');
+const PROTOCOL = 'threadverse';
 
+function handleDeepLink(url) {
+  // threadverse://community/reactjs -> { type: 'community', param: 'reactjs' }
+  const parsed = new URL(url);
+  const type = parsed.hostname;      // 'community', 'post', 'user'
+  const param = parsed.pathname.replace(/^\//, '');
+  mainWindow?.webContents.send('deep-link:navigate', { type, param });
+  mainWindow?.show();
+  mainWindow?.focus();
+}
+
+// Windows/Linux: single-instance lock — second instance passes URL via argv
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, argv) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+    const url = argv.find((arg) => arg.startsWith(`${PROTOCOL}://`));
+    if (url) handleDeepLink(url);
+  });
+}
+
+// macOS: open-url event
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  try {
-    const parsed = new URL(url);
-    const deepPath = `/${parsed.host}${parsed.pathname}`;
-    mainWindow?.webContents.send('navigate', deepPath);
-    mainWindow?.show();
-    mainWindow?.focus();
-  } catch (err) {
-    console.error('Failed to parse deep link URL:', err);
-  }
-  // packages/desktop/main.js (already has other globalShortcuts from Day 6)
-  globalShortcut.register('CommandOrControl+Shift+A', () => {
-    mainWindow.show();
-    mainWindow.focus();
-    mainWindow.webContents.send('open-ai-chat');
-  });
+  handleDeepLink(url);
 });
+
+if (process.defaultApp) {
+  // dev mode: electron.exe needs explicit args
+  if (process.argv.length >= 2) {
+    app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [path.resolve(process.argv[1])]);
+  }
+} else {
+  app.setAsDefaultProtocolClient(PROTOCOL);
+}

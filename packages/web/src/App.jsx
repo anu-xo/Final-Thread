@@ -114,9 +114,16 @@ function DesktopShortcutBridge() {
       navigate('/ai/chat');
     });
 
+    const removeDeepLink = window.electronAPI.onDeepLink?.(({ type, param }) => {
+      if (type === 'community') navigate(`/r/${param}`);
+      if (type === 'post') navigate(`/post/${param}`);
+      if (type === 'user') navigate(`/u/${param}`);
+    });
+
     return () => {
       removeNavigate?.();
       removeOpenAIChat?.();
+      removeDeepLink?.();
     };
   }, [isDesktop, navigate]);
 
