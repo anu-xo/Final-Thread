@@ -1,0 +1,1 @@
+{"throttlingMethod":"provided","throttling":{"cpuSlowdownMultiplier":1},"chromeFlags":" --headless=new"}
