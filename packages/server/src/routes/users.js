@@ -182,15 +182,39 @@ router.get('/:username/comments', async (req, res) => {
   }
 });
 
-router.put('/me', authMiddleware, async (req, res) => {
-  const { bio, avatar, notifPrefs } = req.body;
-  const updated = await User.findByIdAndUpdate(
-    req.user._id,
-    { $set: { bio, avatar, notifPrefs } },
-    { new: true, runValidators: true }
-  ).select('-passwordHash -refreshTokens');
+// GET /users/me — returns the authenticated user's profile + preferences
+router.get('/me', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .select('-passwordHash -refreshTokens')
+      .lean();
+    if (!user) return res.status(404).json({ data: null, error: 'User not found', meta: null });
+    res.json({ data: user, error: null, meta: null });
+  } catch (err) {
+    res.status(500).json({ data: null, error: 'Failed to fetch user', meta: null });
+  }
+});
 
-  res.json({ data: updated, error: null, meta: null });
+// PUT /users/me — update profile + shared preferences
+router.put('/me', authMiddleware, async (req, res) => {
+  try {
+    const { bio, avatar, theme, notifPrefs } = req.body;
+    const update = {};
+    if (bio !== undefined) update.bio = bio;
+    if (avatar !== undefined) update.avatar = avatar;
+    if (theme !== undefined) update.theme = theme;
+    if (notifPrefs !== undefined) update.notifPrefs = notifPrefs;
+
+    const updated = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: update },
+      { new: true, runValidators: true }
+    ).select('-passwordHash -refreshTokens');
+
+    res.json({ data: updated, error: null, meta: null });
+  } catch (err) {
+    res.status(500).json({ data: null, error: 'Failed to update user', meta: null });
+  }
 });
 
 export default router;

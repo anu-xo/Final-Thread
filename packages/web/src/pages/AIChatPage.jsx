@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useCommunityStore } from '../store/communityStore.js';
 import ChatPanel from '../components/ChatPanel.jsx';
@@ -7,8 +8,15 @@ export default function AIChatPage() {
   const isOnline = useOnlineStatus();
   const subscribed = useCommunityStore((s) => s.subscribed);
   const communityList = Object.values(subscribed);
+  const [searchParams] = useSearchParams();
 
-  const [selectedSlug, setSelectedSlug] = useState(communityList[0]?.slug ?? null);
+  const initialSlug = useMemo(() => {
+    const querySlug = searchParams.get('community');
+    if (querySlug && subscribed[querySlug]) return querySlug;
+    return communityList[0]?.slug ?? null;
+  }, [searchParams, subscribed, communityList]);
+
+  const [selectedSlug, setSelectedSlug] = useState(initialSlug);
   const selected = selectedSlug ? subscribed[selectedSlug] : null;
 
   return (

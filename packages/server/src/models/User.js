@@ -47,6 +47,16 @@ const userSchema = new mongoose.Schema(
     banReason: {
       type: String,
     },
+    theme: {
+      type: String,
+      enum: ['light', 'dark', 'system'],
+      default: 'system',
+    },
+    notifPrefs: {
+      digest: { type: Boolean, default: true },
+      replies: { type: Boolean, default: true },
+      mentions: { type: Boolean, default: true },
+    },
   },
   {
     timestamps: true,

@@ -6,6 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
 import { useIsDesktop } from './hooks/useIsDesktop.js';
+import { useSettingsSync } from './hooks/useSettingsSync.js';
 
 // Layout & Route Guards
 import AppLayout from './components/AppLayout.jsx';
@@ -25,6 +26,7 @@ const SearchPage = lazy(() => import('./pages/SearchPage.jsx'));
 const AIChatPage = lazy(() => import('./pages/AIChatPage.jsx'));
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
 
 function PageSkeleton() {
   return (
@@ -46,6 +48,7 @@ const queryClient = new QueryClient({
 // Runs after AuthProvider is mounted
 function AppRoutes() {
   const { isInitializing } = useAuthInit();
+  useSettingsSync();
 
   if (isInitializing) {
     return (
@@ -79,6 +82,7 @@ function AppRoutes() {
 
             {/* User */}
             <Route path="/u/:username" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
 
             {/* Posts */}
             <Route path="/posts/:id" element={<PostDetail />} />
@@ -113,8 +117,8 @@ function DesktopShortcutBridge() {
     });
 
     const removeOpenAIChat = window.electronAPI.onOpenAIChat(({ communitySlug } = {}) => {
-      if (communitySlug) navigate(`/r/${communitySlug}`);
-      navigate('/ai/chat');
+      const path = communitySlug ? `/ai/chat?community=${communitySlug}` : '/ai/chat';
+      navigate(path);
     });
 
     const removeDeepLink = window.electronAPI.onDeepLink?.(({ type, param }) => {

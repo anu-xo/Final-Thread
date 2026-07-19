@@ -17,15 +17,17 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-// Initialize store with default settings schema
+// Initialize store with schema validation — malformed values reset to defaults
 const store = new Store({
-  defaults: {
-    theme: 'system',
-    fontSize: 'medium',
-    sidebarCollapsed: false,
-    defaultCommunitySort: 'hot',
-    notificationSound: true,
-    aiChatAutoOpen: false,
+  schema: {
+    theme: { type: 'string', enum: ['light', 'dark', 'system'], default: 'system' },
+    fontSize: { type: 'string', enum: ['small', 'medium', 'large'], default: 'medium' },
+    sidebarCollapsed: { type: 'boolean', default: false },
+    defaultCommunitySort: { type: 'string', enum: ['hot', 'new', 'top', 'rising'], default: 'hot' },
+    notificationSound: { type: 'boolean', default: true },
+    aiChatAutoOpen: { type: 'boolean', default: false },
+    lastViewedCommunity: { type: ['string', 'null'], default: null },
+    subscribedCommunities: { type: 'array', default: [] },
   },
 });
 
@@ -193,6 +195,23 @@ function createTray() {
   tray.on('click', () => { mainWindow?.show(); mainWindow?.focus(); });
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const MIME_TYPES = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  pdf: 'application/pdf',
+  txt: 'text/plain',
+  json: 'application/json',
+};
+
+function mimeTypeFromExt(filePath) {
+  const ext = path.extname(filePath).slice(1).toLowerCase();
+  return MIME_TYPES[ext] || 'application/octet-stream';
+}
+
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 // 1. Window controls (Frameless windows require synchronous `.on` events)
@@ -216,13 +235,21 @@ ipcMain.handle('show-notification', (_, { title, body }) => {
 ipcMain.handle('settings:get', () => store.store);
 ipcMain.handle('get-settings', () => store.store); // Legacy alias helper
 
-ipcMain.handle('settings:set', (_, partial) => {
-  store.set(partial);
+ipcMain.handle('settings:set', (event, partial) => {
+  const allowedKeys = Object.keys(store.store);
+  for (const key of Object.keys(partial)) {
+    if (!allowedKeys.includes(key)) continue;
+    store.set(key, partial[key]);
+  }
   return store.store;
 });
 
-ipcMain.handle('set-settings', (_, settings) => {
-  store.set(settings);
+ipcMain.handle('set-settings', (event, partial) => {
+  const allowedKeys = Object.keys(store.store);
+  for (const key of Object.keys(partial)) {
+    if (!allowedKeys.includes(key)) continue;
+    store.set(key, partial[key]);
+  }
   return store.store;
 });
 
@@ -265,8 +292,8 @@ ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('app:get-version', () => app.getVersion());
 
 // 5. File Selection Native Dialogs
-ipcMain.handle('select-file', async (_, options = {}) => {
-  const result = await dialog.showOpenDialog({
+ipcMain.handle('select-file', async (event, options = {}) => {
+  const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
     properties: ['openFile'],
     filters: options.filters || [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
   });
@@ -278,15 +305,7 @@ ipcMain.handle('select-file', async (_, options = {}) => {
   if (options.readAs === 'dataUrl') {
     const files = await Promise.all(result.filePaths.map(async (filePath) => {
       const fileBuffer = await fs.readFile(filePath);
-      const extension = path.extname(filePath).slice(1).toLowerCase();
-      const mimeTypeMap = {
-        jpg: 'image/jpeg',
-        jpeg: 'image/jpeg',
-        png: 'image/png',
-        gif: 'image/gif',
-        webp: 'image/webp',
-      };
-      const mimeType = mimeTypeMap[extension] || 'application/octet-stream';
+      const mimeType = mimeTypeFromExt(filePath);
 
       return {
         path: filePath,
@@ -295,7 +314,6 @@ ipcMain.handle('select-file', async (_, options = {}) => {
         dataUrl: `data:${mimeType};base64,${fileBuffer.toString('base64')}`,
       };
     }));
-  
 
     return { canceled: false, files };
   }
@@ -306,17 +324,9 @@ ipcMain.handle('select-file', async (_, options = {}) => {
 // 5b. Read file for upload (returns base64 — renderer converts to Blob)
 ipcMain.handle('read-file-for-upload', async (_, filePath) => {
   const fileBuffer = await fs.readFile(filePath);
-  const extension = path.extname(filePath).slice(1).toLowerCase();
-  const mimeTypeMap = {
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    webp: 'image/webp',
-  };
   return {
     base64: fileBuffer.toString('base64'),
-    mimeType: mimeTypeMap[extension] || 'application/octet-stream',
+    mimeType: mimeTypeFromExt(filePath),
     fileName: path.basename(filePath),
   };
 });
