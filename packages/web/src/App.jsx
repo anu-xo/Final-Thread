@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -11,19 +11,27 @@ import { useIsDesktop } from './hooks/useIsDesktop.js';
 import AppLayout from './components/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
-// Pages
-import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx';
-import CreateCommunity from './pages/CreateCommunity.jsx';
-import CommunityBrowser from './pages/CommunityBrowser.jsx';
-import CommunityPage from './pages/CommunityPage.jsx';
-import TiptapSmokePage from './pages/TiptapSmokePage.jsx';
-import PostDetail from './components/PostDetail.jsx';
-import SubmitPostPage from './pages/SubmitPostPage.jsx';
-import SearchPage from './pages/SearchPage.jsx';
-import AIChatPage from './pages/AIChatPage.jsx';
-import HomePage from './pages/HomePage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
+// Lazy-loaded Pages
+const Login = lazy(() => import('./pages/Login.jsx'));
+const Register = lazy(() => import('./pages/Register.jsx'));
+const CreateCommunity = lazy(() => import('./pages/CreateCommunity.jsx'));
+const CommunityBrowser = lazy(() => import('./pages/CommunityBrowser.jsx'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage.jsx'));
+const TiptapSmokePage = lazy(() => import('./pages/TiptapSmokePage.jsx'));
+const PostDetail = lazy(() => import('./components/PostDetail.jsx'));
+const SubmitPostPage = lazy(() => import('./pages/SubmitPostPage.jsx'));
+const SearchPage = lazy(() => import('./pages/SearchPage.jsx'));
+const AIChatPage = lazy(() => import('./pages/AIChatPage.jsx'));
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+
+function PageSkeleton() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -47,37 +55,39 @@ function AppRoutes() {
   }
 
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <Suspense fallback={<PageSkeleton />}>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* Protected Routes */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/submit" element={<SubmitPostPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/ai/chat" element={<AIChatPage />} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/submit" element={<SubmitPostPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/ai/chat" element={<AIChatPage />} />
 
-          {/* Community */}
-          <Route path="/communities" element={<CommunityBrowser />} />
-          <Route path="/communities/create" element={<CreateCommunity />} />
-          <Route path="/community/:slug" element={<CommunityPage />} />
+            {/* Community */}
+            <Route path="/communities" element={<CommunityBrowser />} />
+            <Route path="/communities/create" element={<CreateCommunity />} />
+            <Route path="/community/:slug" element={<CommunityPage />} />
 
-          {/* User */}
-          <Route path="/u/:username" element={<ProfilePage />} />
+            {/* User */}
+            <Route path="/u/:username" element={<ProfilePage />} />
 
-          {/* Posts */}
-          <Route path="/posts/:id" element={<PostDetail />} />
+            {/* Posts */}
+            <Route path="/posts/:id" element={<PostDetail />} />
 
-          {/* Dev */}
-          <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
+            {/* Dev */}
+            <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<div>404 — Not Found</div>} />
-    </Routes>
+        <Route path="*" element={<div>404 — Not Found</div>} />
+      </Routes>
+    </Suspense>
   );
 }
 
