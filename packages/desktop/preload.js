@@ -115,4 +115,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Badge
   setBadgeCount,
   clearBadge,
+  testBadge: () => ipcRenderer.send('badge:test'),
 });

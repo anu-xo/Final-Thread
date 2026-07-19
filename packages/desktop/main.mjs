@@ -308,30 +308,58 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
 // 8. Connectivity (renderer can query on demand)
 ipcMain.handle('connectivity:check', () => checkConnectivity());
 
-// 9. Badge Count (Dock on macOS, Flash on Windows)
+// 9. Badge Count (Dock on macOS, Overlay icon on Windows)
+
+function createBadgeImage(count) {
+  const size = 16;
+  // For a real badge, replace this with a proper PNG asset in assets/
+  const badge = nativeImage.createFromBuffer(
+    Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAJklEQVQ4T2P8z8BQz0BFAMIAEP8/A5UB4wYYDYYRMAoGP5AYCYMXDAYAB68QEXjBzJoAAAAASUVORK5CYII=',
+      'base64',
+    ),
+  );
+  return badge.resize({ width: size, height: size });
+}
 
 ipcMain.on('badge:set', (_event, count) => {
   if (process.platform === 'darwin') {
-    app.dock.setBadge(String(count));
+    app.dock.setBadge(count > 0 ? String(count) : '');
   } else if (process.platform === 'win32') {
-    const win =
-      BrowserWindow.getFocusedWindow() ||
-      BrowserWindow.getAllWindows()[0];
-
-    win?.flashFrame(true);
+    const win = BrowserWindow.getAllWindows()[0];
+    if (count > 0) {
+      win?.setOverlayIcon(createBadgeImage(count), `${count} new notifications`);
+    } else {
+      win?.setOverlayIcon(null, '');
+    }
   }
 });
-// 9. Clear Badge Count
+
 ipcMain.on('badge:clear', () => {
   if (process.platform === 'darwin') {
     app.dock.setBadge('');
   } else if (process.platform === 'win32') {
-    const win =
-      BrowserWindow.getFocusedWindow() ||
-      BrowserWindow.getAllWindows()[0];
-
-    win?.flashFrame(false);
+    const win = BrowserWindow.getAllWindows()[0];
+    win?.setOverlayIcon(null, '');
   }
+});
+
+// 9b. Manual test trigger — remove after Day 16 socket wiring
+ipcMain.on('badge:test', () => {
+  const win = BrowserWindow.getAllWindows()[0];
+  if (!win) return;
+
+  if (process.platform === 'darwin') {
+    app.dock.setBadge('1');
+  } else if (process.platform === 'win32') {
+    win.setOverlayIcon(createBadgeImage(1), '1 new notification');
+  }
+
+  const notification = new Notification({
+    title: 'ThreadVerse',
+    body: 'Test notification — badge should appear on taskbar',
+  });
+  notification.show();
 });
 
 // 10. Clickable Notifications
