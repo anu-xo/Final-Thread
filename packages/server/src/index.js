@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import app from './app.js';
 import aiRoutes from './routes/ai.js';
 import { initIO } from './socket.js';
+import CORS_ORIGINS from './config/corsOrigins.js';
 
 app.use('/api/ai', aiRoutes);
 
@@ -10,17 +11,12 @@ const PORT = process.env.PORT || 5000;
 
 // ── HTTP & Socket.io Server Setup ───────────────────────────────────────────
 const httpServer = http.createServer(app);
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'electron://.',
-  'file://',
-];
 
 const io = new Server(httpServer, {
   cors: {
     origin(origin, callback) {
       console.log('[Socket CORS] incoming origin:', origin);
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      if (!origin || CORS_ORIGINS.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked: ${origin}`));

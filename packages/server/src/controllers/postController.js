@@ -8,6 +8,7 @@ import { computeHotScore, encodeCursor, decodeCursor } from "../utils/scoring.js
 import { resolveViewerUserId } from "../utils/voteResponse.js";
 import { classifyContent } from '../services/moderationService.js';
 import ModerationLog from '../models/ModerationLog.js';
+import { logActivity } from '../middleware/activityLog.js';
 
 const SORT_FIELDS = {
   new: "createdAt",
@@ -124,6 +125,8 @@ export async function createPost(req, res) {
     });
 
     const populated = await post.populate("author", "username avatarUrl");
+
+    logActivity('post.created', req, { postId: post._id, community: communityId, type: postType });
 
     return res.status(201).json({ post: populated });
   } catch (err) {

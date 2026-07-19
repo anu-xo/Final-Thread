@@ -5,6 +5,7 @@ import Vote from '../models/Vote.js';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
 import { computeHotScore } from '../utils/scoring.js';
+import { logActivity } from '../middleware/activityLog.js';
 
 const router = express.Router();
 
@@ -132,9 +133,9 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     }
 
+    logActivity('vote.cast', req, { targetId, targetType, value: normalizedValue });
+
     return res.json({
-      data: {
-        score: updatedTarget.score,
         userVote: normalizedValue,
         ...(targetType === 'post' ? { hotScore: updatedTarget.hotScore } : {}),
       },

@@ -5,6 +5,7 @@ import User from '../models/User.js';
 import { redis } from '../config/redis.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
+import { logActivity } from '../middleware/activityLog.js';
 
 const router = express.Router();
 
@@ -77,6 +78,8 @@ router.post('/register', authLimiter, async (req, res) => {
 
     setRefreshCookie(res, refreshToken);
 
+    logActivity('user.registered', req, { userId: user._id });
+
     res.status(201).json({
       accessToken,
       user: {
@@ -120,6 +123,8 @@ router.post('/login', authLimiter, async (req, res) => {
     });
 
     setRefreshCookie(res, refreshToken);
+
+    logActivity('user.login', req, { userId: user._id });
 
     res.json({
       accessToken,

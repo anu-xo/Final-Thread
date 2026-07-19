@@ -8,6 +8,7 @@ import AIConversation from '../models/AIConversation.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import * as aiService from '../services/aiService.js'; // adjust the path if different
+import { logActivity } from '../middleware/activityLog.js';
 
 
 const router = express.Router();
@@ -82,6 +83,8 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
       role: 'user',
       content: message,
     });
+
+    logActivity('ai.chat', req, { communityId, conversationId: conversation._id });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

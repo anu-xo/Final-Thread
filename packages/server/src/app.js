@@ -9,6 +9,7 @@ import compression from 'compression';
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
+import CORS_ORIGINS from './config/corsOrigins.js';
 
 // Route Imports
 import authRoutes from './routes/auth.js';
@@ -26,6 +27,7 @@ import notificationsRouter from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
 import sitemapRoutes from './routes/sitemap.js';
 import { adminRouter } from './middleware/adminGuard.js';
+import { platformTag } from './middleware/platformTag.js';
 
 console.log("script start");
 // ── ESM Paths Configuration ──────────────────────────────────────────────────
@@ -52,17 +54,11 @@ app.use(
   })
 );
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'electron://.',
-  'file://',
-];
-
 app.use(
   cors({
     origin(origin, callback) {
       console.log('[CORS] incoming origin:', origin);
-      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      if (!origin || CORS_ORIGINS.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS blocked: ${origin}`));
@@ -72,7 +68,11 @@ app.use(
   })
 );
 
-app.use(morgan('dev'));
+// ── Platform Tag (desktop vs web) ───────────────────────────────────────────
+app.use(platformTag);
+
+morgan.token('platform', (req) => req.platform || 'unknown');
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms [platform=:platform]'));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -143,6 +143,11 @@ app.get('/api/health', async (req, res) => {
 
 app.get('/api/desktop/version', (req, res) => {
   res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/anu-xo/Final-Thread.git/releases' });
+});
+
+// ── Debug echo (used by integration tests to verify platformTag) ─────────────
+app.get('/api/debug/platform', (req, res) => {
+  res.json({ platform: req.platform, appVersion: req.appVersion });
 });
 
 // ── Sitemap (mounted at / so crawlers find /sitemap.xml) ─────────────────────
