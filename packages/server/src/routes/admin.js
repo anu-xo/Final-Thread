@@ -147,4 +147,82 @@ router.get('/ai/costs', async (req, res) => {
   }
 });
 
+// ── AI Community Analytics ─────────────────────────────────────────────────────
+
+router.get('/ai/community/:communityId/breakdown', async (req, res) => {
+  try {
+    const { communityId } = req.params;
+
+    const [conversationIds] = await Promise.all([
+      AIConversation.find({ community: communityId }).distinct('_id'),
+    ]);
+
+    const breakdown = await AIMessage.aggregate([
+      { $match: { conversation: { $in: conversationIds } } },
+      {
+        $group: {
+          _id: null,
+          totalMessages: { $sum: 1 },
+          userMessages: { $sum: { $cond: [{ $eq: ['$role', 'user'] }, 1, 0] } },
+          assistantMessages: { $sum: { $cond: [{ $eq: ['$role', 'assistant'] }, 1, 0] } },
+          totalTokens: { $sum: '$tokensUsed' },
+          avgRating: { $avg: { $cond: [{ $ne: ['$rating', null] }, '$rating', null] } },
+          ratedCount: { $sum: { $cond: [{ $ne: ['$rating', null] }, 1, 0] } },
+          upvotes: { $sum: { $cond: [{ $eq: ['$rating', 1] }, 1, 0] } },
+          downvotes: { $sum: { $cond: [{ $eq: ['$rating', -1] }, 1, 0] } },
+        },
+      },
+    ]);
+
+    const daily = await AIMessage.aggregate([
+      { $match: { conversation: { $in: conversationIds } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          messages: { $sum: 1 },
+          tokens: { $sum: '$tokensUsed' },
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $limit: 30 },
+    ]);
+
+    const stats = breakdown[0] || {
+      totalMessages: 0, userMessages: 0, assistantMessages: 0,
+      totalTokens: 0, avgRating: null, ratedCount: 0, upvotes: 0, downvotes: 0,
+    };
+
+    res.json({
+      data: { ...stats, conversations: conversationIds.length, daily },
+      error: null,
+    });
+  } catch (err) {
+    console.error('admin/ai/breakdown error:', err);
+    res.status(500).json({ error: 'Failed to load AI breakdown' });
+  }
+});
+
+router.get('/ai/community/:communityId/low-rated', async (req, res) => {
+  try {
+    const { communityId } = req.params;
+
+    const conversationIds = await AIConversation.find({ community: communityId }).distinct('_id');
+
+    const messages = await AIMessage.find({
+      conversation: { $in: conversationIds },
+      rating: -1,
+    })
+      .select('conversation content rating createdAt')
+      .populate('conversation', 'user')
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({ data: messages, error: null });
+  } catch (err) {
+    console.error('admin/ai/low-rated error:', err);
+    res.status(500).json({ error: 'Failed to load low-rated messages' });
+  }
+});
+
 export default router;

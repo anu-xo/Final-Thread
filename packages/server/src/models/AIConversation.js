@@ -12,6 +12,9 @@ const aiConversationSchema = new mongoose.Schema(
 // Speeds up checking and listing a user's chronological conversations in a specific community
 aiConversationSchema.index({ user: 1, community: 1, updatedAt: -1 });
 
+// Standalone community index for admin analytics lookups
+aiConversationSchema.index({ community: 1 });
+
 const AIConversation = mongoose.model('AIConversation', aiConversationSchema);
 
 export default AIConversation;
