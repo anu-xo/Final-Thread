@@ -1,30 +1,53 @@
+import { useState } from 'react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
+import { useCommunityStore } from '../store/communityStore.js';
+import ChatPanel from '../components/ChatPanel.jsx';
 
 export default function AIChatPage() {
   const isOnline = useOnlineStatus();
+  const subscribed = useCommunityStore((s) => s.subscribed);
+  const communityList = Object.values(subscribed);
+
+  const [selectedSlug, setSelectedSlug] = useState(communityList[0]?.slug ?? null);
+  const selected = selectedSlug ? subscribed[selectedSlug] : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">AI Chat</h1>
-        <p className="text-sm text-gray-500 mt-2">
-          The AI panel is wired for the desktop shortcut and will be connected to live chat later.
-        </p>
-        {!isOnline && (
-          <div className="mt-4 rounded-lg bg-yellow-50 border border-yellow-200 p-3 text-sm text-yellow-800">
-            You are offline. AI chat is unavailable — only cached conversations will be shown in read-only mode.
-          </div>
-        )}
-        {/* TODO: Day 15 - load cached conversations from electron-store here (read-only when offline) */}
-        <div className="mt-4">
-          <input
-            type="text"
-            placeholder={isOnline ? 'Ask AI anything...' : 'Offline — input disabled'}
-            disabled={!isOnline}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+
+        <select
+          value={selectedSlug ?? ''}
+          onChange={(e) => setSelectedSlug(e.target.value || null)}
+          disabled={!isOnline}
+          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+        >
+          {communityList.length === 0 && <option value="">No communities joined</option>}
+          {communityList.map((c) => (
+            <option key={c.slug} value={c.slug}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {!isOnline && (
+        <div className="rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2.5 text-sm text-yellow-800 mb-3">
+          You are offline — messages will fail until you reconnect.
+        </div>
+      )}
+
+      {!selected ? (
+        <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
+          Join a community first to start chatting with AI.
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <ChatPanel
+            communityId={selected._id}
+            communityName={selected.name}
+            isOnline={isOnline}
           />
         </div>
-      </div>
+      )}
     </div>
   );
 }
