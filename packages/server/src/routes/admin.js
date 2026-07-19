@@ -2,6 +2,7 @@ import { Router } from 'express';
 import User from '../models/User.js';
 import Post from '../models/Post.js';
 import AIConversation from '../models/AIConversation.js';
+import AIMessage from '../models/AIMessage.js';
 import Report from '../models/Report.js';
 import { cacheWrap } from '../utils/cacheWrap.js';
 import { redis } from '../config/redis.js';
@@ -101,6 +102,48 @@ router.post('/users/:id/unban', async (req, res) => {
   } catch (err) {
     console.error('admin/unban error:', err);
     res.status(500).json({ error: 'Failed to unban user' });
+  }
+});
+
+// Gemini text-embedding-004 + 2.5 Flash pricing — update when you outgrow free tier
+const COST_PER_1K_TOKENS = 0.000075;
+
+router.get('/ai/costs', async (req, res) => {
+  try {
+    const costs = await cacheWrap('admin:ai:costs', 300, async () => {
+      return AIMessage.aggregate([
+        {
+          $lookup: {
+            from: 'aiconversations',
+            localField: 'conversation',
+            foreignField: '_id',
+            as: 'conv',
+          },
+        },
+        { $unwind: '$conv' },
+        {
+          $group: {
+            _id: {
+              day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+              community: '$conv.community',
+            },
+            totalTokens: { $sum: '$tokensUsed' },
+            messageCount: { $sum: 1 },
+          },
+        },
+        { $sort: { '_id.day': -1 } },
+      ]);
+    });
+
+    const withCost = costs.map((c) => ({
+      ...c,
+      estimatedCostUsd: (c.totalTokens / 1000) * COST_PER_1K_TOKENS,
+    }));
+
+    res.json({ data: withCost, error: null });
+  } catch (err) {
+    console.error('admin/ai/costs error:', err);
+    res.status(500).json({ error: 'Failed to load AI costs' });
   }
 });
 
