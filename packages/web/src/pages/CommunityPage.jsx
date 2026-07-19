@@ -11,7 +11,6 @@ function CommunityHeader({ community }) {
 
   const joinMutation = useMutation({
     mutationFn: () => communityApi.join(community.slug),
-    // Optimistic update
     onMutate: async () => {
       addSubscription(community);
       return { previousState: false };
@@ -38,7 +37,6 @@ function CommunityHeader({ community }) {
 
   return (
     <div className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700">
-      {/* Banner */}
       <div className="h-24 bg-gradient-to-r from-orange-400 to-red-400" />
 
       <div className="max-w-5xl mx-auto px-4 py-4 flex items-end justify-between gap-4">
@@ -81,11 +79,10 @@ export default function CommunityPage() {
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="h-6 w-48 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-2" />
           <div className="h-4 w-64 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse" />
+        </div>
       </div>
-    </div>
-    </>
-  );
-}
+    );
+  }
 
   if (error) {
     return (
@@ -107,34 +104,35 @@ export default function CommunityPage() {
         <meta name="twitter:title" content={`r/${data.slug}`} />
       </Helmet>
       <div>
-      <CommunityHeader community={data} />
+        <CommunityHeader community={data} />
 
-      <div className="max-w-5xl mx-auto px-4 py-6">
-        {data.description && (
-          <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">{data.description}</p>
-        )}
+        <div className="max-w-5xl mx-auto px-4 py-6">
+          {data.description && (
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">{data.description}</p>
+          )}
 
-        {data.rules?.length > 0 && (
-          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 mb-6">
-            <h2 className="font-semibold text-sm mb-3">Community Rules</h2>
-            <ol className="space-y-2">
-              {data.rules.map((rule, i) => (
-                <li key={i} className="text-sm">
-                  <span className="font-medium">{i + 1}. {rule.title}</span>
-                  {rule.body && (
-                    <p className="text-neutral-400 text-xs mt-0.5">{rule.body}</p>
-                  )}
-                </li>
-              ))}
-            </ol>
+          {data.rules?.length > 0 && (
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 mb-6">
+              <h2 className="font-semibold text-sm mb-3">Community Rules</h2>
+              <ol className="space-y-2">
+                {data.rules.map((rule, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-medium">{i + 1}. {rule.title}</span>
+                    {rule.body && (
+                      <p className="text-neutral-400 text-xs mt-0.5">{rule.body}</p>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* Posts will be added on Day 5 */}
+          <div className="text-center py-16 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl">
+            <p className="text-neutral-400">Posts coming on Day 5 🚀</p>
           </div>
-        )}
-
-        {/* Posts will be added on Day 5 */}
-        <div className="text-center py-16 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl">
-          <p className="text-neutral-400">Posts coming on Day 5 🚀</p>
         </div>
       </div>
-    </div>
+    </>
   );
 }
