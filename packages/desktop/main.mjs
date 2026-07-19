@@ -109,6 +109,7 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    icon: path.join(__dirname, 'build', 'icons', 'png', '1024x1024.png'),
     frame: false,            // Custom title bar (built Day 14)
     titleBarStyle: 'hidden',
     webPreferences: {

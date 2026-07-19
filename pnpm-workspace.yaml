@@ -6,6 +6,6 @@ allowBuilds:
   esbuild: false
   mongodb-memory-server: false
   msgpackr-extract: false
-  phantomjs-prebuilt: set this to true or false
+  phantomjs-prebuilt: true
   protobufjs: true
   sharp: true
