@@ -1,4 +1,6 @@
 import UserManagementTable from '../components/UserManagementTable';
+import AIUsageChart from '../components/AIUsageChart';
+import { useAdminStats } from '../hooks/useAdminStats';
 
 function StatCard({ label, value }) {
   return (
@@ -22,6 +24,10 @@ export default function AdminDashboard() {
         <StatCard label="Open Reports" value={stats?.openReports} />
       </div>
       <UserManagementTable />
+      <div>
+        <h2 className="text-lg font-semibold mb-2">AI Usage</h2>
+        <AIUsageChart />
+      </div>
     </div>
   );
 }
