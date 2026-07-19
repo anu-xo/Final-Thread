@@ -122,10 +122,15 @@ function DesktopShortcutBridge() {
       if (type === 'user') navigate(`/u/${param}`);
     });
 
+    const removeTrayAIChat = window.electronAPI.onTrayOpenAIChat?.(() => {
+      navigate('/ai/chat');
+    });
+
     return () => {
       removeNavigate?.();
       removeOpenAIChat?.();
       removeDeepLink?.();
+      removeTrayAIChat?.();
     };
   }, [isDesktop, navigate]);
 

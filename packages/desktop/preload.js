@@ -100,6 +100,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onDeepLink: (callback) =>
     ipcRenderer.on('deep-link:navigate', (_e, data) => callback(data)),
 
+  // Tray events
+  onTrayOpenAIChat: (callback) =>
+    createListener('tray:open-ai-chat', callback),
+
   // Theme (sync — used by inline <script> in index.html to prevent flash)
   getThemeSync: () => ipcRenderer.sendSync('theme:get-sync'),
 

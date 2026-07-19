@@ -392,7 +392,8 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  // Keep app running in tray on Windows/Linux; only quit when explicitly requested
+  if (process.platform === 'darwin' || isQuitting) app.quit();
 });
 
 // Unregister shortcuts cleanly when the application exits
