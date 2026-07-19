@@ -4,6 +4,75 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 
+// ── IPC Channel Whitelist ──────────────────────────────────────────────────
+// Every channel the renderer is allowed to call must appear here.
+// If an unregistered channel fires, the handler is rejected and logged.
+const ALLOWED_CHANNELS = new Set([
+  // Window controls (frameless title-bar)
+  'window:minimize',
+  'window:maximize',
+  'window:close',
+
+  // Settings & persistent store
+  'settings:get',
+  'get-settings',            // legacy alias
+  'settings:set',
+  'set-settings',            // legacy alias
+  'set-last-community',
+  'set-subscribed-communities',
+  'get-subscribed-communities',
+
+  // Theme (synchronous)
+  'theme:get-sync',
+
+  // Notifications
+  'show-notification',
+  'notification:show',
+  'ai-response-ready',
+
+  // File picker & upload helpers
+  'select-file',
+  'read-file-for-upload',
+
+  // Navigation (main ↔ renderer)
+  'navigate',
+
+  // Updates
+  'check-for-updates',
+  'install-update',
+  'app:install-update',
+  'get-version',
+  'app:get-version',
+
+  // Badge
+  'badge:set',
+  'badge:clear',
+  'badge:test',
+
+  // Connectivity
+  'connectivity:check',
+]);
+
+function guard(channel) {
+  if (!ALLOWED_CHANNELS.has(channel)) {
+    const err = `[ipc-guard] Rejected unregistered channel: "${channel}"`;
+    console.error(err);
+    throw new Error(err);
+  }
+}
+
+/** Guarded wrapper — use instead of ipcMain.handle */
+function safeHandle(channel, handler) {
+  guard(channel);
+  ipcMain.handle(channel, handler);
+}
+
+/** Guarded wrapper — use instead of ipcMain.on */
+function safeOn(channel, handler) {
+  guard(channel);
+  ipcMain.on(channel, handler);
+}
+
 // Register custom scheme BEFORE app.ready — Origin sent by the renderer will be "electron://."
 protocol.registerSchemesAsPrivileged([
   {
@@ -215,27 +284,27 @@ function mimeTypeFromExt(filePath) {
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
 // 1. Window controls (Frameless windows require synchronous `.on` events)
-ipcMain.on('window:minimize', () => mainWindow?.minimize());
-ipcMain.on('window:maximize', () => {
+safeOn('window:minimize', () => mainWindow?.minimize());
+safeOn('window:maximize', () => {
   if (mainWindow?.isMaximized()) mainWindow.unmaximize();
   else mainWindow?.maximize();
 });
-ipcMain.on('window:close', () => {
+safeOn('window:close', () => {
   if (mainWindow) {
     mainWindow.hide(); // minimize to tray instead of closing
   }
 });
 
 // 2. Notifications
-ipcMain.handle('show-notification', (_, { title, body }) => {
+safeHandle('show-notification', (_, { title, body }) => {
   new Notification({ title, body }).show();
 });
 
 // 3. Settings & Storage (Includes Subscribed Communities Cache)
-ipcMain.handle('settings:get', () => store.store);
-ipcMain.handle('get-settings', () => store.store); // Legacy alias helper
+safeHandle('settings:get', () => store.store);
+safeHandle('get-settings', () => store.store); // Legacy alias helper
 
-ipcMain.handle('settings:set', (event, partial) => {
+safeHandle('settings:set', (event, partial) => {
   const allowedKeys = Object.keys(store.store);
   for (const key of Object.keys(partial)) {
     if (!allowedKeys.includes(key)) continue;
@@ -244,7 +313,7 @@ ipcMain.handle('settings:set', (event, partial) => {
   return store.store;
 });
 
-ipcMain.handle('set-settings', (event, partial) => {
+safeHandle('set-settings', (event, partial) => {
   const allowedKeys = Object.keys(store.store);
   for (const key of Object.keys(partial)) {
     if (!allowedKeys.includes(key)) continue;
@@ -254,7 +323,7 @@ ipcMain.handle('set-settings', (event, partial) => {
 });
 
 // Theme sync — used by inline <script> in index.html to prevent flash
-ipcMain.on('theme:get-sync', (event) => {
+safeOn('theme:get-sync', (event) => {
   const theme = store.get('theme', 'system');
   if (theme === 'system') {
     event.returnValue = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
@@ -264,35 +333,35 @@ ipcMain.on('theme:get-sync', (event) => {
 });
 
 // Last viewed community
-ipcMain.on('set-last-community', (_event, slug) => {
+safeOn('set-last-community', (_event, slug) => {
   store.set('lastViewedCommunity', slug);
 });
 
 // Community subscription cache handlers
-ipcMain.handle('set-subscribed-communities', (_event, communities) => {
+safeHandle('set-subscribed-communities', (_event, communities) => {
   store.set('subscribedCommunities', communities);
   return { ok: true };
 });
 
-ipcMain.handle('get-subscribed-communities', () => {
+safeHandle('get-subscribed-communities', () => {
   return store.get('subscribedCommunities', []);
 });
 
 // 4. Updates & Version Check (Wired for Day 16 hooks)
-ipcMain.handle('check-for-updates', () => {
+safeHandle('check-for-updates', () => {
   console.log('Update check triggered from UI');
   // autoUpdater.checkForUpdates() — Day 16
 });
-ipcMain.on('app:install-update', () => console.log('Install update requested'));
-ipcMain.handle('install-update', () => {
+safeOn('app:install-update', () => console.log('Install update requested'));
+safeHandle('install-update', () => {
   console.log('Quit and install update requested');
   // autoUpdater.quitAndInstall() — Day 16
 });
-ipcMain.handle('get-version', () => app.getVersion());
-ipcMain.handle('app:get-version', () => app.getVersion());
+safeHandle('get-version', () => app.getVersion());
+safeHandle('app:get-version', () => app.getVersion());
 
 // 5. File Selection Native Dialogs
-ipcMain.handle('select-file', async (event, options = {}) => {
+safeHandle('select-file', async (event, options = {}) => {
   const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
     properties: ['openFile'],
     filters: options.filters || [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
@@ -322,7 +391,7 @@ ipcMain.handle('select-file', async (event, options = {}) => {
 });
 
 // 5b. Read file for upload (returns base64 — renderer converts to Blob)
-ipcMain.handle('read-file-for-upload', async (_, filePath) => {
+safeHandle('read-file-for-upload', async (_, filePath) => {
   const fileBuffer = await fs.readFile(filePath);
   return {
     base64: fileBuffer.toString('base64'),
@@ -332,12 +401,12 @@ ipcMain.handle('read-file-for-upload', async (_, filePath) => {
 });
 
 // 6. Navigation Helpers
-ipcMain.on('navigate', (_, path) => {
+safeOn('navigate', (_, path) => {
   mainWindow?.webContents.send('navigate', path);
 });
 
 // 7. AI Response Notification
-ipcMain.on('ai-response-ready', (event, communityName) => {
+safeOn('ai-response-ready', (event, communityName) => {
   if (!mainWindow.isFocused()) {
     const notification = new Notification({
       title: 'AI answered',
@@ -355,7 +424,7 @@ ipcMain.on('ai-response-ready', (event, communityName) => {
 });
 
 // 8. Connectivity (renderer can query on demand)
-ipcMain.handle('connectivity:check', () => checkConnectivity());
+safeHandle('connectivity:check', () => checkConnectivity());
 
 // 9. Badge Count (Dock on macOS, Overlay icon on Windows)
 
@@ -371,7 +440,7 @@ function createBadgeImage(count) {
   return badge.resize({ width: size, height: size });
 }
 
-ipcMain.on('badge:set', (_event, count) => {
+safeOn('badge:set', (_event, count) => {
   if (process.platform === 'darwin') {
     app.dock.setBadge(count > 0 ? String(count) : '');
   } else if (process.platform === 'win32') {
@@ -384,7 +453,7 @@ ipcMain.on('badge:set', (_event, count) => {
   }
 });
 
-ipcMain.on('badge:clear', () => {
+safeOn('badge:clear', () => {
   if (process.platform === 'darwin') {
     app.dock.setBadge('');
   } else if (process.platform === 'win32') {
@@ -394,7 +463,7 @@ ipcMain.on('badge:clear', () => {
 });
 
 // 9b. Manual test trigger — remove after Day 16 socket wiring
-ipcMain.on('badge:test', () => {
+safeOn('badge:test', () => {
   const win = BrowserWindow.getAllWindows()[0];
   if (!win) return;
 
@@ -412,7 +481,7 @@ ipcMain.on('badge:test', () => {
 });
 
 // 10. Clickable Notifications
-ipcMain.on('notification:show', (_event, { title, body, targetUrl }) => {
+safeOn('notification:show', (_event, { title, body, targetUrl }) => {
   const notification = new Notification({ title, body });
 
   notification.on('click', () => {
