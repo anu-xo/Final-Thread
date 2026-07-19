@@ -1,4 +1,5 @@
-// packages/web/src/pages/AdminDashboard.jsx
+import UserManagementTable from '../components/UserManagementTable';
+
 function StatCard({ label, value }) {
   return (
     <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
@@ -20,7 +21,7 @@ export default function AdminDashboard() {
         <StatCard label="AI Chats Today" value={stats?.aiChatsToday} />
         <StatCard label="Open Reports" value={stats?.openReports} />
       </div>
-      {/* UserManagementTable, AIUsageChart go below */}
+      <UserManagementTable />
     </div>
   );
 }
