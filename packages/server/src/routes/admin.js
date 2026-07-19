@@ -5,8 +5,12 @@ import AIConversation from '../models/AIConversation.js';
 import Report from '../models/Report.js';
 import { cacheWrap } from '../utils/cacheWrap.js';
 import { redis } from '../config/redis.js';
+import { authMiddleware } from '../middleware/auth.js';
+import adminGuard from '../middleware/adminGuard.js';
 
 const router = Router();
+router.use(authMiddleware);
+router.use(adminGuard);
 
 router.get('/stats', async (req, res) => {
   try {
