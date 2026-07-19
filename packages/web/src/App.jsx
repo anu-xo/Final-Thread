@@ -12,7 +12,7 @@ import AppLayout from './components/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
 // Lazy-loaded Pages
-const LandingPage = lazy(() => import('./pages/LandingPage.jsx'));
+import LandingPage from './pages/LandingPage.jsx';
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity.jsx'));

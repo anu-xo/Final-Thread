@@ -3,15 +3,22 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-// import * as Sentry from '@sentry/electron/renderer';
 
 if (window.electronAPI) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN_DESKTOP,
   });
 }
-createRoot(document.getElementById('root')).render(
+
+const root = createRoot(document.getElementById('root'));
+root.render(
   <StrictMode>
     <App />
   </StrictMode>,
-)
+);
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    const splash = document.getElementById('splash');
+    if (splash) splash.remove();
+  });
+});
