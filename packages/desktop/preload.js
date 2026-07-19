@@ -87,6 +87,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onOpenAIChat: (callback) =>
     createListener('open-ai-chat', callback),
 
+  // Theme (sync — used by inline <script> in index.html to prevent flash)
+  getThemeSync: () => ipcRenderer.sendSync('theme:get-sync'),
+
   // Badge
   setBadgeCount,
   clearBadge,

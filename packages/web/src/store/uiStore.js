@@ -1,28 +1,58 @@
 // packages/web/src/store/uiStore.js
 import { create } from 'zustand';
 
-const savedTheme = localStorage.getItem('threadverse-theme') || 'light';
+const isDesktop = typeof window !== 'undefined' && window.electronAPI !== undefined;
 
-// Apply the saved theme on app startup
-document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+function getInitialTheme() {
+  if (isDesktop) {
+    try {
+      return window.electronAPI.getThemeSync() || 'light';
+    } catch {
+      return 'light';
+    }
+  }
+  return localStorage.getItem('threadverse-theme') || 'light';
+}
 
-export const useUiStore = create((set) => ({
-  theme: savedTheme,
+function resolveTheme(theme) {
+  if (theme === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  return theme;
+}
+
+const initialTheme = getInitialTheme();
+document.documentElement.classList.toggle('dark', resolveTheme(initialTheme) === 'dark');
+
+// When preference is 'system', follow OS changes in real time
+const mq = window.matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener('change', () => {
+  const { theme } = useUiStore.getState();
+  if (theme === 'system') {
+    document.documentElement.classList.toggle('dark', mq.matches);
+  }
+});
+
+export const useUiStore = create((set, get) => ({
+  theme: initialTheme,
   sidebarOpen: true,
 
   setTheme: (theme) => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('threadverse-theme', theme);
+    const resolved = resolveTheme(theme);
+    document.documentElement.classList.toggle('dark', resolved === 'dark');
+
+    if (isDesktop) {
+      window.electronAPI.setSettings({ theme });
+    } else {
+      localStorage.setItem('threadverse-theme', theme);
+    }
     set({ theme });
   },
 
-  toggleTheme: () =>
-    set((state) => {
-      const next = state.theme === 'light' ? 'dark' : 'light';
-      document.documentElement.classList.toggle('dark', next === 'dark');
-      localStorage.setItem('threadverse-theme', next);
-      return { theme: next };
-    }),
+  toggleTheme: () => {
+    const next = get().theme === 'light' ? 'dark' : 'light';
+    get().setTheme(next);
+  },
 
   toggleSidebar: () =>
     set((state) => ({

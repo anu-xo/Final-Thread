@@ -5,6 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>web</title>
+    <script>
+      (function () {
+        var theme;
+        try {
+          if (window.electronAPI && window.electronAPI.getThemeSync) {
+            theme = window.electronAPI.getThemeSync();
+          }
+        } catch (_) {}
+        if (!theme) {
+          theme = localStorage.getItem('threadverse-theme') || 'light';
+          if (theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+        }
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

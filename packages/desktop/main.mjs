@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
@@ -163,6 +163,16 @@ ipcMain.handle('settings:set', (_, partial) => {
 ipcMain.handle('set-settings', (_, settings) => {
   store.set(settings);
   return store.store;
+});
+
+// Theme sync — used by inline <script> in index.html to prevent flash
+ipcMain.on('theme:get-sync', (event) => {
+  const theme = store.get('theme', 'system');
+  if (theme === 'system') {
+    event.returnValue = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+  } else {
+    event.returnValue = theme;
+  }
 });
 
 // Community subscription cache handlers
