@@ -24,6 +24,7 @@ import modRoutes from './routes/mod.js';       // Added from update
 import aiRoutes from './routes/ai.js';
 import notificationsRouter from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
+import sitemapRoutes from './routes/sitemap.js';
 import { adminRouter } from './middleware/adminGuard.js';
 
 console.log("script start");
@@ -130,6 +131,9 @@ app.get('/api/health', async (req, res) => {
 app.get('/api/desktop/version', (req, res) => {
   res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/anu-xo/Final-Thread.git/releases' });
 });
+
+// ── Sitemap (mounted at / so crawlers find /sitemap.xml) ─────────────────────
+app.use('/', sitemapRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {

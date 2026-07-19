@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import PostCard from '../components/PostCard.jsx';
 import { userApi } from '../services/userApi.js';
 
@@ -28,6 +29,7 @@ function ProfileCommentCard({ comment }) {
         </span>
       </div>
     </div>
+    </>
   );
 }
 
@@ -73,7 +75,17 @@ export default function ProfilePage() {
   const commentItems = commentsQuery.data?.pages.flatMap((page) => page.data || []) || [];
 
   return (
-    <div className="space-y-5">
+    <>
+      <Helmet>
+        <title>u/{profile.username} — ThreadVerse</title>
+        <meta name="description" content={profile.bio?.slice(0, 160) || `${profile.username} on ThreadVerse`} />
+        <meta property="og:title" content={`u/${profile.username}`} />
+        <meta property="og:description" content={profile.bio?.slice(0, 160) || `${profile.username} on ThreadVerse`} />
+        <meta property="og:type" content="profile" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`u/${profile.username}`} />
+      </Helmet>
+      <div className="space-y-5">
       <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 min-w-0">

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { socket } from '../lib/socket.js';
 import api from '../services/api.js';
 import VoteButton from './VoteButton.jsx';
@@ -87,7 +88,17 @@ export default function PostDetail() {
   if (error)     return <div className="p-4 text-red-500">Unable to load post.</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-4">
+    <>
+      <Helmet>
+        <title>{post.title} — ThreadVerse</title>
+        <meta name="description" content={post.body?.slice(0, 160)} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.body?.slice(0, 160)} />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+      </Helmet>
+      <div className="max-w-3xl mx-auto p-4 space-y-4">
       {/* ── Post header ─────────────────────────────────────────────── */}
       <article className="flex gap-3 bg-white border border-gray-200 rounded-lg p-4">
         {/* Vote column */}
@@ -143,5 +154,6 @@ export default function PostDetail() {
         <CommentList postId={id} />
       </section>
     </div>
+    </>
   );
 }

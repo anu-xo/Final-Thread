@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Helmet } from 'react-helmet-async';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
 
@@ -62,6 +63,7 @@ function CommunityHeader({ community }) {
         </button>
       </div>
     </div>
+    </>
   );
 }
 
@@ -94,7 +96,17 @@ export default function CommunityPage() {
   }
 
   return (
-    <div>
+    <>
+      <Helmet>
+        <title>r/{data.slug} — ThreadVerse</title>
+        <meta name="description" content={data.description?.slice(0, 160)} />
+        <meta property="og:title" content={`r/${data.slug}`} />
+        <meta property="og:description" content={data.description?.slice(0, 160)} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content={`r/${data.slug}`} />
+      </Helmet>
+      <div>
       <CommunityHeader community={data} />
 
       <div className="max-w-5xl mx-auto px-4 py-6">
