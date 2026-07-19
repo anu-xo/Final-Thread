@@ -1,8 +1,22 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage, protocol } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
+
+// Register custom scheme BEFORE app.ready — Origin sent by the renderer will be "electron://."
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'electron',
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+      stream: true,
+    },
+  },
+]);
+
 // Initialize store with default settings schema
 const store = new Store({
   defaults: {
@@ -125,7 +139,7 @@ function createWindow() {
     mainWindow.loadURL(DEV_SERVER_URL);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../web/dist/index.html'));
+    mainWindow.loadURL('electron://./index.html');
   }
 
   // Register shortcuts once the main window is created
@@ -429,6 +443,31 @@ async function emitConnectivity() {
 // ── App Lifecycle ────────────────────────────────────────────────────────────
 
 app.whenReady().then(() => {
+  // Serve local files via the custom electron:// scheme in production
+  if (!isDev) {
+    const DIST_DIR = path.join(__dirname, '../web/dist');
+
+    const MIME_TYPES = {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2',
+    };
+
+    protocol.handle('electron', (req) => {
+      const url = new URL(req.url);
+      // electron://./index.html → /index.html
+      const filePath = path.join(DIST_DIR, url.pathname === '/' ? 'index.html' : url.pathname);
+
+      return net.fetch(`file://${filePath}`);
+    });
+  }
+
   createTray();
   createWindow();
 
