@@ -213,6 +213,31 @@ function createWindow() {
     mainWindow.loadURL('electron://./index.html');
   }
 
+  // ── Navigation limits (electronegativity HIGH fix) ──────────────────────
+  // Prevent renderer from navigating away from the app origin or opening
+  // arbitrary URLs via window.open / target="_blank" links.
+  const ALLOWED_NAVIGATE_ORIGINS = [
+    'electron://',
+    ...(isDev ? [DEV_SERVER_URL] : []),
+  ];
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const allowed = ALLOWED_NAVIGATE_ORIGINS.some((o) => url.startsWith(o));
+    if (!allowed) {
+      console.error(`[nav-guard] Blocked will-navigate to: ${url}`);
+      event.preventDefault();
+    }
+  });
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    const allowed = ALLOWED_NAVIGATE_ORIGINS.some((o) => url.startsWith(o));
+    if (!allowed) {
+      console.error(`[nav-guard] Blocked new-window to: ${url}`);
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
   // Register shortcuts once the main window is created
   registerGlobalShortcuts(mainWindow);
 
@@ -264,6 +289,21 @@ function createTray() {
   tray.on('click', () => { mainWindow?.show(); mainWindow?.focus(); });
 }
 
+// ── Allowed file paths from select-file (prevents arbitrary path reads) ──
+const allowedFilePaths = new Set();
+
+// ── Store schema types (used by settings:set validation) ──────────────────
+const STORE_SCHEMA = {
+  theme:                   (v) => typeof v === 'string' && ['light','dark','system'].includes(v),
+  fontSize:                (v) => typeof v === 'string' && ['small','medium','large'].includes(v),
+  sidebarCollapsed:        (v) => typeof v === 'boolean',
+  defaultCommunitySort:    (v) => typeof v === 'string' && ['hot','new','top','rising'].includes(v),
+  notificationSound:       (v) => typeof v === 'boolean',
+  aiChatAutoOpen:          (v) => typeof v === 'boolean',
+  lastViewedCommunity:     (v) => v === null || typeof v === 'string',
+  subscribedCommunities:   (v) => Array.isArray(v),
+};
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const MIME_TYPES = {
   jpg: 'image/jpeg',
@@ -296,8 +336,11 @@ safeOn('window:close', () => {
 });
 
 // 2. Notifications
-safeHandle('show-notification', (_, { title, body }) => {
-  new Notification({ title, body }).show();
+safeHandle('show-notification', (_, payload) => {
+  if (typeof payload !== 'object' || payload === null) throw new Error('show-notification: payload must be an object');
+  if (typeof payload.title !== 'string' || !payload.title.length) throw new Error('show-notification: title must be a non-empty string');
+  if (typeof payload.body !== 'string' || !payload.body.length) throw new Error('show-notification: body must be a non-empty string');
+  new Notification({ title: payload.title, body: payload.body }).show();
 });
 
 // 3. Settings & Storage (Includes Subscribed Communities Cache)
@@ -305,18 +348,32 @@ safeHandle('settings:get', () => store.store);
 safeHandle('get-settings', () => store.store); // Legacy alias helper
 
 safeHandle('settings:set', (event, partial) => {
+  if (typeof partial !== 'object' || partial === null || Array.isArray(partial)) {
+    throw new Error('settings:set: partial must be a plain object');
+  }
   const allowedKeys = Object.keys(store.store);
   for (const key of Object.keys(partial)) {
     if (!allowedKeys.includes(key)) continue;
+    const validator = STORE_SCHEMA[key];
+    if (validator && !validator(partial[key])) {
+      throw new Error(`settings:set: invalid value for "${key}"`);
+    }
     store.set(key, partial[key]);
   }
   return store.store;
 });
 
 safeHandle('set-settings', (event, partial) => {
+  if (typeof partial !== 'object' || partial === null || Array.isArray(partial)) {
+    throw new Error('set-settings: partial must be a plain object');
+  }
   const allowedKeys = Object.keys(store.store);
   for (const key of Object.keys(partial)) {
     if (!allowedKeys.includes(key)) continue;
+    const validator = STORE_SCHEMA[key];
+    if (validator && !validator(partial[key])) {
+      throw new Error(`set-settings: invalid value for "${key}"`);
+    }
     store.set(key, partial[key]);
   }
   return store.store;
@@ -334,11 +391,16 @@ safeOn('theme:get-sync', (event) => {
 
 // Last viewed community
 safeOn('set-last-community', (_event, slug) => {
+  if (typeof slug !== 'string') throw new Error('set-last-community: slug must be a string');
   store.set('lastViewedCommunity', slug);
 });
 
 // Community subscription cache handlers
 safeHandle('set-subscribed-communities', (_event, communities) => {
+  if (!Array.isArray(communities)) throw new Error('set-subscribed-communities: must be an array');
+  for (const c of communities) {
+    if (typeof c !== 'string') throw new Error('set-subscribed-communities: each entry must be a string');
+  }
   store.set('subscribedCommunities', communities);
   return { ok: true };
 });
@@ -362,6 +424,8 @@ safeHandle('app:get-version', () => app.getVersion());
 
 // 5. File Selection Native Dialogs
 safeHandle('select-file', async (event, options = {}) => {
+  if (options !== null && typeof options !== 'object') throw new Error('select-file: options must be an object');
+
   const result = await dialog.showOpenDialog(BrowserWindow.fromWebContents(event.sender), {
     properties: ['openFile'],
     filters: options.filters || [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp'] }],
@@ -370,6 +434,9 @@ safeHandle('select-file', async (event, options = {}) => {
   if (result.canceled || result.filePaths.length === 0) {
     return options.readAs === 'dataUrl' ? { canceled: true, files: [] } : [];
   }
+
+  // Whitelist every path the user picked so read-file-for-upload can use them
+  for (const p of result.filePaths) allowedFilePaths.add(p);
 
   if (options.readAs === 'dataUrl') {
     const files = await Promise.all(result.filePaths.map(async (filePath) => {
@@ -392,7 +459,20 @@ safeHandle('select-file', async (event, options = {}) => {
 
 // 5b. Read file for upload (returns base64 — renderer converts to Blob)
 safeHandle('read-file-for-upload', async (_, filePath) => {
+  if (typeof filePath !== 'string' || !filePath.length) {
+    throw new Error('read-file-for-upload: filePath must be a non-empty string');
+  }
+
+  // Only allow paths returned by a prior select-file dialog
+  if (!allowedFilePaths.has(filePath)) {
+    throw new Error('read-file-for-upload: path not in select-file allowlist');
+  }
+
   const fileBuffer = await fs.readFile(filePath);
+
+  // Evict from allowlist after first use (one-shot)
+  allowedFilePaths.delete(filePath);
+
   return {
     base64: fileBuffer.toString('base64'),
     mimeType: mimeTypeFromExt(filePath),
@@ -407,6 +487,9 @@ safeOn('navigate', (_, path) => {
 
 // 7. AI Response Notification
 safeOn('ai-response-ready', (event, communityName) => {
+  if (typeof communityName !== 'string' || !communityName.length) {
+    throw new Error('ai-response-ready: communityName must be a non-empty string');
+  }
   if (!mainWindow.isFocused()) {
     const notification = new Notification({
       title: 'AI answered',
@@ -441,6 +524,9 @@ function createBadgeImage(count) {
 }
 
 safeOn('badge:set', (_event, count) => {
+  if (typeof count !== 'number' || !Number.isInteger(count) || count < 0) {
+    throw new Error('badge:set: count must be a non-negative integer');
+  }
   if (process.platform === 'darwin') {
     app.dock.setBadge(count > 0 ? String(count) : '');
   } else if (process.platform === 'win32') {
@@ -481,8 +567,13 @@ safeOn('badge:test', () => {
 });
 
 // 10. Clickable Notifications
-safeOn('notification:show', (_event, { title, body, targetUrl }) => {
-  const notification = new Notification({ title, body });
+safeOn('notification:show', (_event, payload) => {
+  if (typeof payload !== 'object' || payload === null) throw new Error('notification:show: payload must be an object');
+  if (typeof payload.title !== 'string' || !payload.title.length) throw new Error('notification:show: title must be a non-empty string');
+  if (typeof payload.body !== 'string' || !payload.body.length) throw new Error('notification:show: body must be a non-empty string');
+  if (typeof payload.targetUrl !== 'string' || !payload.targetUrl.length) throw new Error('notification:show: targetUrl must be a non-empty string');
+
+  const notification = new Notification({ title: payload.title, body: payload.body });
 
   notification.on('click', () => {
     const win = BrowserWindow.getAllWindows()[0];
@@ -490,7 +581,7 @@ safeOn('notification:show', (_event, { title, body, targetUrl }) => {
     if (win) {
       win.show();
       win.focus();
-      win.webContents.send('navigate', targetUrl);
+      win.webContents.send('navigate', payload.targetUrl);
     }
   });
 
