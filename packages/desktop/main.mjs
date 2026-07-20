@@ -147,10 +147,11 @@ export function registerGlobalShortcuts(window) {
     window.webContents.send('focus-search');
   });
 
-  // Ctrl+Shift+A -> AI chat panel
+  // Ctrl+Shift+A -> AI chat panel (scoped to last viewed community)
   globalShortcut.register('CommandOrControl+Shift+A', () => {
     if (!bringWindowToFront()) return;
-    window.webContents.send('open-ai-chat');
+    const lastCommunity = store.get('lastViewedCommunity', null);
+    window.webContents.send('open-ai-chat', { communitySlug: lastCommunity });
   });
 }
 
