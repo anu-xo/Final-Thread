@@ -83,14 +83,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Last Viewed Community
   setLastCommunity: (slug) => ipcRenderer.send('set-last-community', slug),
 
-  // Embedding Cache
-  getCachedEmbedding: (communityId, postId) =>
-    ipcRenderer.invoke(
-      'get-cached-embedding',
-      communityId,
-      postId
-    ),
-
   // Global Shortcut Listeners
   onNavigate: (callback) =>
     createListener('navigate', callback),

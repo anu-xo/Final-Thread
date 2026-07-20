@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage, protocol, session } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
@@ -237,6 +237,14 @@ function createWindow() {
       return { action: 'deny' };
     }
     return { action: 'allow' };
+  });
+
+  // ── Permission request handler (electronegativity MEDIUM fix) ────────────
+  // Deny all permission requests (camera, microphone, geolocation, etc.)
+  // unless explicitly needed. This app has no use for these APIs.
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    console.error(`[permission] Denied "${permission}" from ${webContents.getURL()}`);
+    callback(false);
   });
 
   // Register shortcuts once the main window is created
