@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import User from '../models/User.js';
 import Post from '../models/Post.js';
+import ActivityEvent from '../models/ActivityEvent.js';
 import AIConversation from '../models/AIConversation.js';
 import AIMessage from '../models/AIMessage.js';
 import Report from '../models/Report.js';
@@ -19,20 +20,95 @@ router.get('/stats', async (req, res) => {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
-      const [totalUsers, totalPosts, aiChatsToday, openReports] = await Promise.all([
-        User.countDocuments(),
-        Post.countDocuments({ isRemoved: false }),
-        AIConversation.countDocuments({ createdAt: { $gte: startOfDay } }),
-        Report.countDocuments({ status: 'pending' }),
-      ]);
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      return { totalUsers, totalPosts, aiChatsToday, openReports };
+      const [totalUsers, totalPosts, aiChatsToday, openReports, platformTotals, platformDaily] =
+        await Promise.all([
+          User.countDocuments(),
+          Post.countDocuments({ isRemoved: false }),
+          AIConversation.countDocuments({ createdAt: { $gte: startOfDay } }),
+          Report.countDocuments({ status: 'pending' }),
+          ActivityEvent.aggregate([
+            { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+            { $group: { _id: '$platform', count: { $sum: 1 } } },
+          ]),
+          ActivityEvent.aggregate([
+            { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+            {
+              $group: {
+                _id: {
+                  day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                  platform: '$platform',
+                },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { '_id.day': -1 } },
+          ]),
+        ]);
+
+      const platformBreakdown = { desktop: 0, web: 0 };
+      for (const row of platformTotals) {
+        platformBreakdown[row._id] = row.count;
+      }
+
+      return { totalUsers, totalPosts, aiChatsToday, openReports, platformBreakdown, platformDaily };
     });
 
     res.json({ data: stats, error: null });
   } catch (err) {
     console.error('admin/stats error:', err);
     res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+router.get('/stats/platform', async (req, res) => {
+  try {
+    const data = await cacheWrap('admin:stats:platform', 300, async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const [eventsByType, uniqueUsersByPlatform, desktopVersions] = await Promise.all([
+        ActivityEvent.aggregate([
+          { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+          {
+            $group: {
+              _id: { event: '$event', platform: '$platform' },
+              count: { $sum: 1 },
+            },
+          },
+          { $sort: { '_id.event': 1, '_id.platform': 1 } },
+        ]),
+        ActivityEvent.aggregate([
+          { $match: { createdAt: { $gte: thirtyDaysAgo }, user: { $ne: null } } },
+          {
+            $group: {
+              _id: { userId: '$user', platform: '$platform' },
+            },
+          },
+          {
+            $group: {
+              _id: '$_id.platform',
+              uniqueUsers: { $sum: 1 },
+            },
+          },
+        ]),
+        ActivityEvent.aggregate([
+          { $match: { createdAt: { $gte: thirtyDaysAgo }, platform: 'desktop', appVersion: { $ne: null } } },
+          { $group: { _id: '$appVersion', count: { $sum: 1 } } },
+          { $sort: { count: -1 } },
+          { $limit: 10 },
+        ]),
+      ]);
+
+      return { eventsByType, uniqueUsersByPlatform, desktopVersions };
+    });
+
+    res.json({ data, error: null });
+  } catch (err) {
+    console.error('admin/stats/platform error:', err);
+    res.status(500).json({ error: 'Failed to load platform stats' });
   }
 });
 
