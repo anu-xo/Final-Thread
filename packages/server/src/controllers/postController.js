@@ -138,7 +138,7 @@ export async function createPost(req, res) {
 // GET /posts?community=&sort=&cursor=&limit=
 export async function getPosts(req, res) {
   try {
-    const { community, sort = "new", cursor, limit } = req.query;
+    const { community, sort = "new", cursor, limit, since } = req.query;
     const viewerUserId = await resolveViewerUserId(req);
 
     const sortField = SORT_FIELDS[sort];
@@ -156,6 +156,13 @@ export async function getPosts(req, res) {
         return res.status(404).json({ error: "Community not found" });
       }
       query.community = communityId;
+    }
+
+    if (since) {
+      const sinceDate = new Date(since);
+      if (!isNaN(sinceDate.getTime())) {
+        query.createdAt = { $gte: sinceDate };
+      }
     }
 
     if (cursor) {
