@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -22,6 +23,12 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev libusb-1.0-0 rpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
