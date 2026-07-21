@@ -26,6 +26,7 @@ import aiRoutes from './routes/ai.js';
 import notificationsRouter from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
 import sitemapRoutes from './routes/sitemap.js';
+import desktopRoutes from './routes/desktop.js';
 import { adminRouter } from './middleware/adminGuard.js';
 import { platformTag } from './middleware/platformTag.js';
 
@@ -141,9 +142,7 @@ app.get('/api/health', async (req, res) => {
   res.json({ status: 'ok', db: dbStatus, redis: redisStatus, timestamp: new Date().toISOString() });
 });
 
-app.get('/api/desktop/version', (req, res) => {
-  res.json({ minimum: '1.0.0', latest: '1.0.0', downloadUrl: 'https://github.com/anu-xo/Final-Thread.git/releases' });
-});
+app.use('/api/desktop', desktopRoutes);
 
 // ── Debug echo (used by integration tests to verify platformTag) ─────────────
 app.get('/api/debug/platform', (req, res) => {
