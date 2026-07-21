@@ -7,6 +7,7 @@ import api from '../services/api.js';
 import VoteButton from './VoteButton.jsx';
 import CommentThread from './CommentThread.jsx';
 import CommentBox from './CommentBox.jsx';
+import SectionErrorBoundary from './SectionErrorBoundary.jsx';
 import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
 function CommentBoxSkeleton() {
@@ -177,12 +178,14 @@ export default function PostDetail() {
       <CommentBox postId={id} parentId={null} />
 
       {/* ── Comment tree ────────────────────────────────────────────── */}
-      <section>
-        <h2 className="text-sm font-semibold text-gray-600 mb-2">
-          Comments ({post?.commentCount ?? 0})
-        </h2>
-        <CommentList postId={id} />
-      </section>
+      <SectionErrorBoundary sectionName="Comments">
+        <section>
+          <h2 className="text-sm font-semibold text-gray-600 mb-2">
+            Comments ({post?.commentCount ?? 0})
+          </h2>
+          <CommentList postId={id} />
+        </section>
+      </SectionErrorBoundary>
     </div>
     </>
   );

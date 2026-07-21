@@ -1,14 +1,20 @@
 // packages/web/src/main.jsx
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import * as Sentry from '@sentry/react'
 import './index.css'
 import App from './App.jsx'
 
-if (window.electronAPI) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN_DESKTOP,
-  });
-}
+Sentry.init({
+  dsn: window.electronAPI
+    ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
+    : import.meta.env.VITE_SENTRY_DSN,
+  enabled: Boolean(
+    window.electronAPI
+      ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
+      : import.meta.env.VITE_SENTRY_DSN
+  ),
+});
 
 const root = createRoot(document.getElementById('root'));
 root.render(

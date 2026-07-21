@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import SearchModal from './SearchModal.jsx';
+import SectionErrorBoundary from './SectionErrorBoundary.jsx';
 import { useNotificationSocket } from '../hooks/useNotifications.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
@@ -57,10 +58,14 @@ export default function AppLayout() {
       <OfflineBanner />
       {/* pt-14 pushes content below the fixed header */}
       <div className="pt-14 max-w-6xl mx-auto px-4 flex gap-6">
-        <Sidebar />
+        <SectionErrorBoundary sectionName="Sidebar">
+          <Sidebar />
+        </SectionErrorBoundary>
         {/* Main content area — child routes render here */}
         <main className="flex-1 py-4 min-w-0">
-          <Outlet />
+          <SectionErrorBoundary sectionName="Feed">
+            <Outlet />
+          </SectionErrorBoundary>
         </main>
       </div>
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />

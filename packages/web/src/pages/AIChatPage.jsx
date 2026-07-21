@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useCommunityStore } from '../store/communityStore.js';
 import ChatPanel from '../components/ChatPanel.jsx';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 
 export default function AIChatPage() {
   const isOnline = useOnlineStatus();
@@ -55,11 +56,13 @@ export default function AIChatPage() {
         </div>
       ) : (
         <div className="flex-1 min-h-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
-          <ChatPanel
-            communityId={selected._id}
-            communityName={selected.name}
-            isOnline={isOnline}
-          />
+          <SectionErrorBoundary sectionName="AI Chat">
+            <ChatPanel
+              communityId={selected._id}
+              communityName={selected.name}
+              isOnline={isOnline}
+            />
+          </SectionErrorBoundary>
         </div>
       )}
     </div>
