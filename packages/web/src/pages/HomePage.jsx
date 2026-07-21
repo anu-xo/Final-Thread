@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PostCard from '../components/PostCard.jsx';
+import { PostCardSkeleton } from '../components/skeletons/index.js';
 import { useHomeFeed } from '../hooks/useHomeFeed.js';
 import { useFeedRealtimeVotes } from '../hooks/useFeedRealtimeVotes.js';
 
@@ -50,8 +51,8 @@ export default function HomePage() {
       <div className="space-y-4">
         <div className="h-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse" />
         <div className="space-y-3">
-          {[...Array(4)].map((_, index) => (
-            <div key={index} className="h-24 rounded-xl bg-white border border-gray-200 animate-pulse" />
+          {[...Array(6)].map((_, index) => (
+            <PostCardSkeleton key={index} />
           ))}
         </div>
       </div>

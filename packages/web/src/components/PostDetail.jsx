@@ -7,6 +7,7 @@ import api from '../services/api.js';
 import VoteButton from './VoteButton.jsx';
 import CommentThread from './CommentThread.jsx';
 import CommentBox from './CommentBox.jsx';
+import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -33,7 +34,15 @@ function CommentList({ postId }) {
     enabled: Boolean(postId),
   });
 
-  if (isLoading) return <p className="text-sm text-gray-400 animate-pulse">Loading comments…</p>;
+  if (isLoading) {
+    return (
+      <div>
+        {[...Array(4)].map((_, i) => (
+          <CommentSkeleton key={i} depth={i % 3} />
+        ))}
+      </div>
+    );
+  }
   if (isError)   return <p className="text-sm text-red-400">Could not load comments.</p>;
   if (!comments?.length) return <p className="text-sm text-gray-400">No comments yet. Be the first!</p>;
 
@@ -84,7 +93,21 @@ export default function PostDetail() {
     };
   }, [id, queryClient]);
 
-  if (isLoading) return <div className="p-4 text-gray-500 animate-pulse">Loading post…</div>;
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto p-4 space-y-4">
+        <PostCardSkeleton />
+        <div className="border border-gray-200 rounded-lg p-4 bg-white">
+          <div className="h-16 animate-pulse rounded bg-gray-200" />
+        </div>
+        <div>
+          {[...Array(4)].map((_, i) => (
+            <CommentSkeleton key={i} depth={i % 3} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (error)     return <div className="p-4 text-red-500">Unable to load post.</div>;
 
   return (

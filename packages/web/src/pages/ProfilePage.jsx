@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import PostCard from '../components/PostCard.jsx';
+import { ProfileSkeleton, PostCardSkeleton, CommentSkeleton } from '../components/skeletons/index.js';
 import { userApi } from '../services/userApi.js';
 
 function ProfileCommentCard({ comment }) {
@@ -59,7 +60,7 @@ export default function ProfilePage() {
   });
 
   if (profileLoading) {
-    return <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse" />;
+    return <ProfileSkeleton />;
   }
 
   if (profileError || !profile) {
@@ -157,7 +158,11 @@ export default function ProfilePage() {
       {activeTab === 'posts' && (
         <div className="space-y-3">
           {postsQuery.isLoading && postItems.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500">Loading posts…</div>
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <PostCardSkeleton key={i} />
+              ))}
+            </div>
           ) : postItems.length > 0 ? (
             postItems.map((post) => <PostCard key={post._id} post={post} />)
           ) : (
@@ -182,7 +187,11 @@ export default function ProfilePage() {
       {activeTab === 'comments' && (
         <div className="space-y-3">
           {commentsQuery.isLoading && commentItems.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500">Loading comments…</div>
+            <div className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <CommentSkeleton key={i} />
+              ))}
+            </div>
           ) : commentItems.length > 0 ? (
             commentItems.map((comment) => <ProfileCommentCard key={comment._id} comment={comment} />)
           ) : (

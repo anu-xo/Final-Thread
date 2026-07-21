@@ -5,6 +5,7 @@ import { VariableSizeList } from 'react-window';
 import { usePostFeed } from '../hooks/usePostFeed';
 import { usePostRealtimeVotes } from '../hooks/usePostRealtimeVotes';
 import PostCard from './PostCard';
+import { PostCardSkeleton } from './skeletons/index.js';
 
 const ESTIMATED_ITEM_SIZE = 100;
 const OVERSCAN = 5;
@@ -52,7 +53,15 @@ export default function PostFeed({ communityId, sort }) {
     [posts.length, hasNextPage, isFetchingNextPage, fetchNextPage]
   );
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(8)].map((_, i) => (
+          <PostCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
 
   if (isError) return <>{error.message}</>;
 
