@@ -74,7 +74,8 @@ app.use(
 app.use(platformTag);
 
 morgan.token('platform', (req) => req.platform || 'unknown');
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms [platform=:platform]'));
+morgan.token('appVersion', (req) => req.appVersion || '-');
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms [platform=:platform version=:appVersion]'));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
