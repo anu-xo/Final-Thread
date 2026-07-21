@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
+import PostFeed from '../components/PostFeed.jsx';
 
 function CommunityHeader({ community }) {
   const queryClient = useQueryClient();
@@ -65,8 +66,16 @@ function CommunityHeader({ community }) {
   );
 }
 
+const SORT_OPTIONS = [
+  { value: 'hot', label: 'Hot' },
+  { value: 'new', label: 'New' },
+  { value: 'top', label: 'Top' },
+  { value: 'rising', label: 'Rising' },
+];
+
 export default function CommunityPage() {
   const { slug } = useParams();
+  const [sort, setSort] = useState('hot');
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -138,10 +147,23 @@ export default function CommunityPage() {
             </div>
           )}
 
-          {/* Posts will be added on Day 5 */}
-          <div className="text-center py-16 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl">
-            <p className="text-neutral-400">Posts coming on Day 5 🚀</p>
+          <div className="flex gap-2 mb-4">
+            {SORT_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setSort(opt.value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  sort === opt.value
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
+
+          <PostFeed communityId={data._id} sort={sort} />
         </div>
       </div>
     </>
