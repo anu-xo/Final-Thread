@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 import './sync.mjs';
+import { initAutoUpdater, autoUpdater } from './updater.mjs';
 
 // ── IPC Channel Whitelist ──────────────────────────────────────────────────
 // Every channel the renderer is allowed to call must appear here.
@@ -46,6 +47,12 @@ const ALLOWED_CHANNELS = new Set([
   'app:install-update',
   'get-version',
   'app:get-version',
+  'update-checking',
+  'update-available',
+  'update-not-available',
+  'update-progress',
+  'update-downloaded',
+  'update-error',
 
   // Badge
   'badge:set',
@@ -440,15 +447,13 @@ safeHandle('get-subscribed-communities', () => {
   return store.get('subscribedCommunities', []);
 });
 
-// 4. Updates & Version Check (Wired for Day 16 hooks)
+// 4. Updates & Version Check
 safeHandle('check-for-updates', () => {
-  console.log('Update check triggered from UI');
-  // autoUpdater.checkForUpdates() — Day 16
+  autoUpdater.checkForUpdatesAndNotify();
 });
 safeOn('app:install-update', () => console.log('Install update requested'));
 safeHandle('install-update', () => {
-  console.log('Quit and install update requested');
-  // autoUpdater.quitAndInstall() — Day 16
+  autoUpdater.quitAndInstall();
 });
 safeHandle('get-version', () => app.getVersion());
 safeHandle('app:get-version', () => app.getVersion());
@@ -684,6 +689,9 @@ app.whenReady().then(() => {
   // Connectivity polling
   emitConnectivity(); // immediate first check
   setInterval(emitConnectivity, CONNECTIVITY_INTERVAL);
+
+  // Auto-updater (checks on launch + every 4 hours)
+  initAutoUpdater();
 
   // Cold-start deep link (Windows/Linux): URL lands in argv when no prior instance exists
   const deepLinkArg = extractDeepLinkUrl(process.argv);

@@ -17,24 +17,5 @@
     "electron-builder": "^24.9.1",
     "electron-icon-builder": "^2.0.1",
     "electron-vite": "^2.0.0"
-  },
-  "build": {
-    "appId": "com.threadverse.app",
-    "productName": "ThreadVerse",
-    "directories": {
-      "output": "dist"
-    },
-    "publish": {
-      "provider": "github"
-    },
-    "mac": {
-      "target": "dmg"
-    },
-    "win": {
-      "target": "nsis"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
   }
 }
