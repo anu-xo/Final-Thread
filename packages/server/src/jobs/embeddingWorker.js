@@ -7,31 +7,32 @@ const embeddingQueue = getEmbeddingQueue();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const BATCH_SIZE = 20;
+const BATCH_SIZE = 100;
 const BATCH_WINDOW_MS = 2000;
 
 let pendingBatch = [];
 let batchTimer = null;
 let flushing = false;
 
-async function embedText(text) {
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-embedding-001',
-  });
+const embeddingModel = genAI.getGenerativeModel({
+  model: 'gemini-embedding-001',
+});
 
-  const result = await model.embedContent({
+async function embedText(text) {
+  const result = await embeddingModel.embedContent({
     content: { parts: [{ text }] },
     outputDimensionality: 768,
   });
   return result.embedding.values;
 }
 
-/**
- * Current Gemini Node SDK doesn't expose a native batch embedding helper,
- * so we execute requests concurrently.
- */
 async function embedContentBatch(texts) {
-  return Promise.all(texts.map(embedText));
+  const result = await embeddingModel.batchEmbedContents({
+    requests: texts.map((text) => ({
+      content: { parts: [{ text }] },
+    })),
+  });
+  return result.embeddings.map((e) => e.values);
 }
 
 async function shouldSkipEmbedding(text, communityId, embedding) {
@@ -98,7 +99,15 @@ async function flushBatch() {
   try {
     const texts = batch.map((item) => item.job.data.text);
 
-    const embeddings = await embedContentBatch(texts);
+    let embeddings;
+    try {
+      embeddings = await embedContentBatch(texts);
+    } catch (batchErr) {
+      console.warn(
+        `[EmbeddingWorker] Batch API failed (${batchErr.message}), falling back to individual calls`
+      );
+      embeddings = await Promise.all(texts.map(embedText));
+    }
 
     const docs = [];
 
