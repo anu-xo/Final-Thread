@@ -9,6 +9,8 @@ import Sidebar from './Sidebar.jsx';
 import SearchModal from './SearchModal.jsx';
 import { useNotificationSocket } from '../hooks/useNotifications.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
+import { useIsDesktop } from '../hooks/useIsDesktop.js';
+import UpdateBanner from './UpdateBanner.jsx';
 
 function OfflineBanner() {
   const isOnline = useOnlineStatus();
@@ -23,6 +25,7 @@ function OfflineBanner() {
 export default function AppLayout() {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
+  const isDesktop = useIsDesktop();
   useNotificationSocket();
 
   useEffect(() => {
@@ -49,6 +52,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {isDesktop && <UpdateBanner />}
       <Header />
       <OfflineBanner />
       {/* pt-14 pushes content below the fixed header */}
