@@ -56,28 +56,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Auto Updates
   checkForUpdates: () =>
-    ipcRenderer.invoke('check-for-updates'),
-
-  onUpdateChecking: (callback) =>
-    createListener('update-checking', callback),
-
-  onUpdateAvailable: (callback) =>
-    createListener('update-available', callback),
-
-  onUpdateNotAvailable: (callback) =>
-    createListener('update-not-available', callback),
-
-  onUpdateProgress: (callback) =>
-    createListener('update-progress', callback),
-
-  onUpdateDownloaded: (callback) =>
-    createListener('update-downloaded', callback),
-
-  onUpdateError: (callback) =>
-    createListener('update-error', callback),
+    ipcRenderer.invoke('checkForUpdates'),
 
   installUpdate: () =>
-    ipcRenderer.invoke('install-update'),
+    ipcRenderer.invoke('installUpdate'),
+
+  getAppVersion: () =>
+    ipcRenderer.invoke('getAppVersion'),
+
+  onUpdateEvent: (callback) => {
+    const listener = (_event, channel, payload) => callback(channel, payload);
+    ipcRenderer.on('update-event', listener);
+    return () => ipcRenderer.removeListener('update-event', listener);
+  },
 
   // File Picker
   selectFile: (options) =>
@@ -88,9 +79,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App Info
   getVersion: () =>
-    ipcRenderer.invoke('get-version'),
+    ipcRenderer.invoke('getAppVersion'),
   getAppVersion: () =>
-    ipcRenderer.invoke('app:get-version'),
+    ipcRenderer.invoke('getAppVersion'),
 
   // Community Cache
   setSubscribedCommunities: (communities) =>

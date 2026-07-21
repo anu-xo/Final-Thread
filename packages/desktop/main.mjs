@@ -42,17 +42,10 @@ const ALLOWED_CHANNELS = new Set([
   'navigate',
 
   // Updates
-  'check-for-updates',
-  'install-update',
-  'app:install-update',
-  'get-version',
-  'app:get-version',
-  'update-checking',
-  'update-available',
-  'update-not-available',
-  'update-progress',
-  'update-downloaded',
-  'update-error',
+  'checkForUpdates',
+  'installUpdate',
+  'getAppVersion',
+  'update-event',
 
   // Badge
   'badge:set',
@@ -448,15 +441,13 @@ safeHandle('get-subscribed-communities', () => {
 });
 
 // 4. Updates & Version Check
-safeHandle('check-for-updates', () => {
+safeHandle('checkForUpdates', () => {
   autoUpdater.checkForUpdatesAndNotify();
 });
-safeOn('app:install-update', () => console.log('Install update requested'));
-safeHandle('install-update', () => {
+safeHandle('installUpdate', () => {
   autoUpdater.quitAndInstall();
 });
-safeHandle('get-version', () => app.getVersion());
-safeHandle('app:get-version', () => app.getVersion());
+safeHandle('getAppVersion', () => app.getVersion());
 
 // 5. File Selection Native Dialogs
 safeHandle('select-file', async (event, options = {}) => {
