@@ -13,7 +13,7 @@ export function useBackgroundSync() {
       const online = await window.electronAPI.isOnline();
       if (!online) return;
 
-      const lastSyncAt = (await window.electronAPI.getSettings('lastSyncAt')) ?? null;
+      const lastSyncAt = (await window.electronAPI.getSetting('lastSyncAt')) ?? null;
       const since = lastSyncAt ?? new Date(0).toISOString();
       const startedAt = Date.now();
 
@@ -22,13 +22,14 @@ export function useBackgroundSync() {
         const { data } = await api.get('/posts', {
           params: { community: communityId, since },
         });
-        if (data?.length) {
-          await window.electronAPI.embedAndCachePosts(communityId, data);
-          totalSynced += data.length;
+        const posts = data?.posts ?? [];
+        if (posts.length) {
+          await window.electronAPI.embedAndCachePosts(communityId, posts);
+          totalSynced += posts.length;
         }
       }
 
-      await window.electronAPI.setSettings('lastSyncAt', new Date().toISOString());
+      await window.electronAPI.setSetting('lastSyncAt', new Date().toISOString());
       window.electronAPI.logSyncBreadcrumb({
         postsSynced: totalSynced,
         durationMs: Date.now() - startedAt,

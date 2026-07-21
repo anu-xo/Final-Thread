@@ -47,6 +47,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setSettings: (partial) =>
     ipcRenderer.invoke('settings:set', partial),
 
+  // Individual setting accessors (used by background sync)
+  getSetting: (key) =>
+    ipcRenderer.invoke('settings:get-key', key),
+
+  setSetting: (key, value) =>
+    ipcRenderer.invoke('settings:set-key', key, value),
+
   // Auto Updates
   checkForUpdates: () =>
     ipcRenderer.invoke('check-for-updates'),
@@ -110,4 +117,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setBadgeCount,
   clearBadge,
   testBadge: () => ipcRenderer.send('badge:test'),
+
+  // Background sync
+  embedAndCachePosts: (communityId, posts) =>
+    ipcRenderer.invoke('embedAndCachePosts', communityId, posts),
+
+  logSyncBreadcrumb: (data) =>
+    ipcRenderer.invoke('logSyncBreadcrumb', data),
+
+  isOnline: () => ipcRenderer.invoke('connectivity:check'),
 });

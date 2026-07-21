@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
+import './sync.mjs';
 
 // ── IPC Channel Whitelist ──────────────────────────────────────────────────
 // Every channel the renderer is allowed to call must appear here.
@@ -18,6 +19,8 @@ const ALLOWED_CHANNELS = new Set([
   'get-settings',            // legacy alias
   'settings:set',
   'set-settings',            // legacy alias
+  'settings:get-key',
+  'settings:set-key',
   'set-last-community',
   'set-subscribed-communities',
   'get-subscribed-communities',
@@ -51,6 +54,10 @@ const ALLOWED_CHANNELS = new Set([
 
   // Connectivity
   'connectivity:check',
+
+  // Background sync (embedding cache)
+  'embedAndCachePosts',
+  'logSyncBreadcrumb',
 ]);
 
 function guard(channel) {
@@ -402,6 +409,18 @@ safeOn('theme:get-sync', (event) => {
 safeOn('set-last-community', (_event, slug) => {
   if (typeof slug !== 'string') throw new Error('set-last-community: slug must be a string');
   store.set('lastViewedCommunity', slug);
+});
+
+// Individual setting accessors (background sync)
+safeHandle('settings:get-key', (_event, key) => {
+  if (typeof key !== 'string') throw new Error('settings:get-key: key must be a string');
+  return store.get(key, null);
+});
+
+safeHandle('settings:set-key', (_event, key, value) => {
+  if (typeof key !== 'string') throw new Error('settings:set-key: key must be a string');
+  store.set(key, value);
+  return { ok: true };
 });
 
 // Community subscription cache handlers
