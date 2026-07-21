@@ -63,6 +63,76 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+router.get('/stats/versions', async (req, res) => {
+  try {
+    const data = await cacheWrap('admin:stats:versions', 300, async () => {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const [byVersion, totals] = await Promise.all([
+        ActivityEvent.aggregate([
+          {
+            $match: {
+              platform: 'desktop',
+              appVersion: { $ne: null },
+              createdAt: { $gte: sevenDaysAgo },
+            },
+          },
+          {
+            $group: {
+              _id: '$appVersion',
+              users: { $addToSet: { $ifNull: ['$user', 'anon'] } },
+              requests: { $sum: 1 },
+            },
+          },
+          {
+            $project: {
+              version: '$_id',
+              userCount: { $size: '$users' },
+              requestCount: '$requests',
+              _id: 0,
+            },
+          },
+          { $sort: { version: -1 } },
+        ]),
+        ActivityEvent.aggregate([
+          {
+            $match: {
+              platform: 'desktop',
+              createdAt: { $gte: sevenDaysAgo },
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              totalDesktopEvents: { $sum: 1 },
+              uniqueUsers: { $addToSet: { $ifNull: ['$user', 'anon'] } },
+            },
+          },
+          {
+            $project: {
+              totalEvents: '$totalDesktopEvents',
+              uniqueUsers: { $size: '$uniqueUsers' },
+              _id: 0,
+            },
+          },
+        ]),
+      ]);
+
+      return {
+        window: { from: sevenDaysAgo.toISOString(), to: new Date().toISOString() },
+        versions: byVersion,
+        totals: totals[0] || { totalEvents: 0, uniqueUsers: 0 },
+      };
+    });
+
+    res.json({ data, error: null });
+  } catch (err) {
+    console.error('admin/stats/versions error:', err);
+    res.status(500).json({ error: 'Failed to load version stats' });
+  }
+});
+
 router.get('/stats/platform', async (req, res) => {
   try {
     const data = await cacheWrap('admin:stats:platform', 300, async () => {
