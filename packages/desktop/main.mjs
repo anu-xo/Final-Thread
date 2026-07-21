@@ -58,6 +58,9 @@ const ALLOWED_CHANNELS = new Set([
   // Background sync (embedding cache)
   'embedAndCachePosts',
   'logSyncBreadcrumb',
+
+  // Online status check
+  'net:isOnline',
 ]);
 
 function guard(channel) {
@@ -536,6 +539,9 @@ safeOn('ai-response-ready', (event, communityName) => {
 
 // 8. Connectivity (renderer can query on demand)
 safeHandle('connectivity:check', () => checkConnectivity());
+
+// 8b. Online status — lightweight OS-level check (no HTTP ping)
+safeHandle('net:isOnline', () => net.isOnline());
 
 // 9. Badge Count (Dock on macOS, Overlay icon on Windows)
 

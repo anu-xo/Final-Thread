@@ -125,5 +125,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   logSyncBreadcrumb: (data) =>
     ipcRenderer.invoke('logSyncBreadcrumb', data),
 
-  isOnline: () => ipcRenderer.invoke('connectivity:check'),
+  isOnline: () => ipcRenderer.invoke('net:isOnline'),
 });

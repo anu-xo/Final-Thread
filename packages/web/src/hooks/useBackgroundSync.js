@@ -1,10 +1,14 @@
-import { useEffect } from 'react';
-import { useAuthStore } from '../store/authStore.js';
+import { useEffect, useState } from 'react';
 import api from '../services/api.js';
 
 export function useBackgroundSync() {
   const isDesktop = !!window.electronAPI;
-  const subscribedCommunities = useAuthStore((s) => s.subscribedCommunities) ?? [];
+  const [subscribedCommunities, setSubscribedCommunities] = useState([]);
+
+  useEffect(() => {
+    if (!isDesktop) return;
+    window.electronAPI.getSubscribedCommunities().then(setSubscribedCommunities);
+  }, [isDesktop]);
 
   useEffect(() => {
     if (!isDesktop || !subscribedCommunities.length) return;

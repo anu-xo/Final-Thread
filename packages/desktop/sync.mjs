@@ -2,13 +2,13 @@ import { ipcMain } from 'electron';
 import Store from 'electron-store';
 
 const embeddingCache = new Store({ name: 'embedding-cache' });
-const appStore = new Store();
 
 const MAX_CACHE_ENTRIES = 200;
 
 /**
  * embedAndCachePosts(communityId, posts)
  * Merges fetched posts into the per-community embedding cache (LRU cap 200).
+ * Existing posts with matching IDs get their access timestamp refreshed.
  */
 ipcMain.handle('embedAndCachePosts', async (_event, communityId, posts) => {
   if (typeof communityId !== 'string' || !communityId) {
@@ -25,9 +25,19 @@ ipcMain.handle('embedAndCachePosts', async (_event, communityId, posts) => {
     postId: p._id ?? p.postId,
     title: p.title ?? '',
     text: p.body ?? p.content ?? '',
+    lastAccessed: Date.now(),
   }));
 
-  const merged = [...incoming, ...existing].slice(0, MAX_CACHE_ENTRIES);
+  const existingMap = new Map(existing.map((e) => [e.postId, e]));
+
+  for (const entry of incoming) {
+    existingMap.set(entry.postId, entry);
+  }
+
+  const merged = Array.from(existingMap.values())
+    .sort((a, b) => b.lastAccessed - a.lastAccessed)
+    .slice(0, MAX_CACHE_ENTRIES);
+
   embeddingCache.set(key, merged);
 
   return { cached: merged.length };
