@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
+import { ChartSkeleton } from './skeletons/index.js';
 
 export default function AIUsageChart() {
   const { data: costs, isLoading } = useQuery({
@@ -8,7 +9,7 @@ export default function AIUsageChart() {
     queryFn: async () => (await api.get('/admin/ai/costs')).data.data,
   });
 
-  if (isLoading) return <p className="text-sm text-neutral-500">Loading AI usage…</p>;
+  if (isLoading) return <ChartSkeleton height={260} />;
   if (!costs?.length) return <p className="text-sm text-neutral-500">No AI usage data yet.</p>;
 
   return (

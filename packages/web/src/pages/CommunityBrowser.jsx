@@ -2,6 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
+import { CommunityCardSkeleton } from '../components/skeletons/index.js';
 
 function CommunityCard({ community }) {
   const isSubscribed = useCommunityStore((s) => s.isSubscribed(community.slug));
@@ -58,7 +59,7 @@ export default function CommunityBrowser() {
       <div className="max-w-5xl mx-auto py-8 px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-40 rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+            <CommunityCardSkeleton key={i} />
           ))}
         </div>
       </div>

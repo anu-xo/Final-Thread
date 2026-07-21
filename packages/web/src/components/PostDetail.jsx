@@ -9,6 +9,14 @@ import CommentThread from './CommentThread.jsx';
 import CommentBox from './CommentBox.jsx';
 import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
+function CommentBoxSkeleton() {
+  return (
+    <div className="border border-gray-200 dark:border-neutral-700 rounded-lg p-3 bg-white dark:bg-neutral-900">
+      <div className="h-16 rounded bg-gray-200 dark:bg-neutral-700 animate-pulse" />
+    </div>
+  );
+}
+
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   const units = [
@@ -97,10 +105,9 @@ export default function PostDetail() {
     return (
       <div className="max-w-3xl mx-auto p-4 space-y-4">
         <PostCardSkeleton />
-        <div className="border border-gray-200 rounded-lg p-4 bg-white">
-          <div className="h-16 animate-pulse rounded bg-gray-200" />
-        </div>
+        <CommentBoxSkeleton />
         <div>
+          <h2 className="text-sm font-semibold text-gray-600 dark:text-neutral-400 mb-2">Comments</h2>
           {[...Array(4)].map((_, i) => (
             <CommentSkeleton key={i} depth={i % 3} />
           ))}

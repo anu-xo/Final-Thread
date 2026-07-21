@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api.js';
 import PostCard from '../components/PostCard.jsx';
+import { SearchResultsSkeleton } from '../components/skeletons/index.js';
 
 function ResultSection({ title, count, children }) {
   return (
@@ -93,9 +94,7 @@ export default function SearchPage() {
           Search is ready, but it needs a slightly longer query.
         </div>
       ) : isLoading ? (
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm">
-          Loading results…
-        </div>
+        <SearchResultsSkeleton />
       ) : isError ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 shadow-sm">
           {(error)?.message || 'Unable to load search results.'}

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { ChartSkeleton } from './skeletons/index.js';
 
 export default function PlatformActivityChart() {
   const { data: platformDaily, isLoading } = useQuery({
@@ -23,7 +24,7 @@ export default function PlatformActivityChart() {
       .sort((a, b) => a.day.localeCompare(b.day));
   }, [platformDaily]);
 
-  if (isLoading) return <p className="text-sm text-neutral-500">Loading platform activity…</p>;
+  if (isLoading) return <ChartSkeleton height={260} />;
   if (!chartData.length) return <p className="text-sm text-neutral-500">No activity data yet.</p>;
 
   return (

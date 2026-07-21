@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import api from '../services/api.js';
 import { useDebouncedValue } from '../hooks/useDebouncedValue.js';
+import { SearchResultsSkeleton } from './skeletons/index.js';
 
 function ResultHeader({ title, count, open, onToggle }) {
   return (
@@ -179,9 +180,7 @@ export default function SearchModal({ open, onClose }) {
               Type at least 2 characters to search.
             </div>
           ) : isLoading ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-8 text-sm text-gray-500">
-              Searching...
-            </div>
+            <SearchResultsSkeleton />
           ) : isError ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-sm text-red-700">
               Unable to load results.

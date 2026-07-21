@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
+import { TableSkeleton } from './skeletons/index.js';
 
 export default function UserManagementTable() {
   const [search, setSearch] = useState('');
@@ -39,7 +40,10 @@ export default function UserManagementTable() {
         placeholder="Search by username or email"
         className="border rounded px-3 py-1.5 mb-3 w-full"
       />
-      <table className="w-full text-sm">
+      {isLoading ? (
+        <TableSkeleton rows={6} columns={5} />
+      ) : (
+        <table className="w-full text-sm">
         <thead>
           <tr>
             <th className="text-left">Username</th>
@@ -69,6 +73,7 @@ export default function UserManagementTable() {
           ))}
         </tbody>
       </table>
+      )}
     </div>
   );
 }

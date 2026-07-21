@@ -157,7 +157,7 @@ export default function ProfilePage() {
 
       {activeTab === 'posts' && (
         <div className="space-y-3">
-          {postsQuery.isLoading && postItems.length === 0 ? (
+          {postsQuery.isLoading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
                 <PostCardSkeleton key={i} />
@@ -186,7 +186,7 @@ export default function ProfilePage() {
 
       {activeTab === 'comments' && (
         <div className="space-y-3">
-          {commentsQuery.isLoading && commentItems.length === 0 ? (
+          {commentsQuery.isLoading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (
                 <CommentSkeleton key={i} />

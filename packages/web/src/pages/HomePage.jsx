@@ -46,7 +46,7 @@ export default function HomePage() {
     setSearchParams({ sort: nextSort }, { replace: true });
   };
 
-  if (isLoading && posts.length === 0) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <div className="h-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse" />

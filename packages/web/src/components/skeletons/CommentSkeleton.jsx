@@ -12,24 +12,29 @@ export default function CommentSkeleton({ depth = 0 }) {
       className={`pl-3 border-l-2 ${borderColor} ${depth > 0 ? 'mt-2' : 'mt-4'}`}
     >
       <div className="flex gap-2">
-        {/* Vote column — small */}
-        <div className="shrink-0 flex flex-col items-center gap-0.5 pt-0.5">
-          <Skeleton className="h-3.5 w-3.5 rounded" />
-          <Skeleton className="h-3 w-4 rounded" />
-          <Skeleton className="h-3.5 w-3.5 rounded" />
+        {/* Vote column — matches VoteButton default size="md": 20px icons, p-1 */}
+        <div className="shrink-0 flex flex-col items-center gap-0.5 p-1">
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="text-xs w-6 rounded" />
+          <Skeleton className="h-5 w-5 rounded" />
         </div>
 
         <div className="flex-1 space-y-1.5">
-          {/* Username + time */}
-          <div className="flex items-center gap-2">
+          {/* Username + time — matches text-xs text-gray-500 */}
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             <Skeleton className="h-3 w-16" />
             <Skeleton className="h-3 w-10" />
           </div>
 
-          {/* Body — two lines */}
+          {/* Body — matches text-sm mt-1 */}
           <div className="space-y-1">
-            <Skeleton className="h-3.5 w-full" />
-            <Skeleton className="h-3.5 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+          </div>
+
+          {/* Reply link — matches flex gap-3 mt-1 text-xs */}
+          <div className="flex gap-3 mt-1">
+            <Skeleton className="h-3 w-10" />
           </div>
         </div>
       </div>

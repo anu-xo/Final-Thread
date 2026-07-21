@@ -1,4 +1,5 @@
 import { usePlatformStats } from '../hooks/usePlatformStats';
+import { TableSkeleton } from './skeletons/index.js';
 
 function badgeColor(platform) {
   return platform === 'desktop'
@@ -9,7 +10,28 @@ function badgeColor(platform) {
 export default function PlatformBreakdownTable() {
   const { data, isLoading } = usePlatformStats();
 
-  if (isLoading) return <p className="text-sm text-neutral-500">Loading breakdown…</p>;
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
+            <p className="text-sm text-neutral-500">Unique Users (30d)</p>
+            <div className="flex gap-4 mt-1">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 animate-pulse">Desktop: --</span>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 animate-pulse">Web: --</span>
+            </div>
+          </div>
+          <div className="rounded-lg border border-neutral-200 dark:border-neutral-700 p-4">
+            <p className="text-sm text-neutral-500">Desktop App Versions</p>
+            <div className="flex flex-wrap gap-2 mt-1">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 animate-pulse">v-- (--)</span>
+            </div>
+          </div>
+        </div>
+        <TableSkeleton rows={4} columns={4} />
+      </div>
+    );
+  }
   if (!data) return null;
 
   const { eventsByType, uniqueUsersByPlatform, desktopVersions } = data;
