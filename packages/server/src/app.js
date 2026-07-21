@@ -29,6 +29,7 @@ import sitemapRoutes from './routes/sitemap.js';
 import desktopRoutes from './routes/desktop.js';
 import { adminRouter } from './middleware/adminGuard.js';
 import { platformTag } from './middleware/platformTag.js';
+import { versionGate } from './middleware/versionGate.js';
 
 console.log("script start");
 // ── ESM Paths Configuration ──────────────────────────────────────────────────
@@ -112,6 +113,24 @@ redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
+// Ungated — health & version must stay reachable for outdated clients.
+app.get('/api/health', async (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  let redisStatus = 'disconnected';
+  try {
+    await redis.ping();
+    redisStatus = 'connected';
+  } catch {
+    redisStatus = 'disconnected';
+  }
+  res.json({ status: 'ok', db: dbStatus, redis: redisStatus, timestamp: new Date().toISOString() });
+});
+app.use('/api/desktop', desktopRoutes);
+
+// ── Version Gate ────────────────────────────────────────────────────────────
+app.use(versionGate);
+
+// Gated routes below ─────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/communities', communityRoutes);
 app.use('/api/feed', feedRoutes);
@@ -129,20 +148,6 @@ app.use('/api/notifications', notificationsRouter);
 
 // Admin routes — auth + role check applied once via adminRouter
 app.use('/api/admin', adminRouter, adminRoutes);
-
-app.get('/api/health', async (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  let redisStatus = 'disconnected';
-  try {
-    await redis.ping();
-    redisStatus = 'connected';
-  } catch {
-    redisStatus = 'disconnected';
-  }
-  res.json({ status: 'ok', db: dbStatus, redis: redisStatus, timestamp: new Date().toISOString() });
-});
-
-app.use('/api/desktop', desktopRoutes);
 
 // ── Debug echo (used by integration tests to verify platformTag) ─────────────
 app.get('/api/debug/platform', (req, res) => {
