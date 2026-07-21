@@ -7,6 +7,7 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
 import { useIsDesktop } from './hooks/useIsDesktop.js';
 import { useSettingsSync } from './hooks/useSettingsSync.js';
+import { useBackgroundSync } from './hooks/useBackgroundSync.js';
 
 // Layout & Route Guards
 import AppLayout from './components/AppLayout.jsx';
@@ -49,6 +50,7 @@ const queryClient = new QueryClient({
 function AppRoutes() {
   const { isInitializing } = useAuthInit();
   useSettingsSync();
+  useBackgroundSync();
 
   if (isInitializing) {
     return (
