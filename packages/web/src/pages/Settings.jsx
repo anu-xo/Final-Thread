@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useDesktopSettings } from '../hooks/useDesktopSettings.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
+import About from './settings/About.jsx';
 import { useUiStore } from '../store/uiStore.js';
 import { pushSharedToServer } from '../hooks/useSettingsSync.js';
 import { userApi } from '../services/userApi.js';
@@ -183,6 +184,8 @@ export default function SettingsPage() {
         {saving && (
           <p className="text-xs text-neutral-400 text-right">Saving...</p>
         )}
+
+        {desktop && <About />}
       </div>
     </>
   );
