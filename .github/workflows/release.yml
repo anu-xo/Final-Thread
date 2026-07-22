@@ -24,11 +24,15 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
+      # ── Platform dependencies ────────────────────────────────────────────
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libsecret-1-dev libusb-1.0-0 rpm
+
+      # ── Code-signing certificates (must be imported BEFORE build) ────────
 
       - name: Import macOS code-signing certificate
         if: runner.os == 'macOS'
@@ -45,19 +49,23 @@ jobs:
           [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\certificate.pfx", $pfxBytes)
           echo "WIN_CSC_LINK=$env:RUNNER_TEMP\certificate.pfx" >> $env:GITHUB_ENV
 
+      # ── Build ───────────────────────────────────────────────────────────
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build web
         run: pnpm --filter web build
 
-      - name: Build & publish Electron app
-        run: pnpm --filter desktop exec electron-builder --publish always
+      - name: Build Electron app
+        run: pnpm --filter desktop exec electron-builder --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+
+      # ── Verify signing ──────────────────────────────────────────────────
 
       - name: Verify Windows code signature
         if: runner.os == 'Windows'
@@ -76,12 +84,14 @@ jobs:
             exit 1
           }
 
-          # SmartScreen note: a brand-new EV certificate will trigger SmartScreen
+          # SmartScreen note: a brand-new EV certificate triggers SmartScreen
           # warnings for 1-7 days while Microsoft builds reputation for the cert.
           # This is expected and NOT a pipeline bug. Once reputation is established,
           # EV-signed binaries pass SmartScreen without warnings.
 
-      - name: Notarize macOS app
+      # ── Notarize + staple (macOS only, must happen before publish) ──────
+
+      - name: Notarize macOS DMG
         if: runner.os == 'macOS'
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -115,3 +125,16 @@ jobs:
           APP_PATH=$(find /Volumes -name "ThreadVerse.app" -maxdepth 2 | head -1)
           spctl --assess --verbose "$APP_PATH"
           hdiutil detach /Volumes/ThreadVerse*
+
+      # ── Publish (only after all signing/verification passes) ────────────
+
+      - name: Publish to GitHub Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release create "$TAG" --title "Release $TAG" --generate-notes || true
+          for f in dist/*; do
+            [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber
+          done
