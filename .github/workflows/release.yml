@@ -30,6 +30,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsecret-1-dev libusb-1.0-0 rpm
 
+      - name: Import macOS code-signing certificate
+        if: runner.os == 'macOS'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Decode Windows code-signing certificate
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pfxBytes = [Convert]::FromBase64String("${{ secrets.WIN_CERTIFICATE }}")
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\certificate.pfx", $pfxBytes)
+          echo "WIN_CSC_LINK=$env:RUNNER_TEMP\certificate.pfx" >> $env:GITHUB_ENV
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -40,4 +55,63 @@ jobs:
         run: pnpm --filter desktop exec electron-builder --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Day 17 will add: CSC_LINK / CSC_KEY_PASSWORD (macOS) and WIN_CSC_LINK (Windows)
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+
+      - name: Verify Windows code signature
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem dist -Filter "*.exe" -Recurse | Select-Object -First 1
+          if (-not $exe) { Write-Host "No .exe found, skipping"; exit 0 }
+
+          $sig = Get-AuthenticodeSignature $exe.FullName
+          Write-Host "Status: $($sig.Status)"
+          Write-Host "Signer: $($sig.SignerCertificate.Subject)"
+          Write-Host "Thumbprint: $($sig.SignerCertificate.Thumbprint)"
+
+          if ($sig.Status -ne "Valid") {
+            Write-Error "Signature is NOT valid — signing may have failed"
+            exit 1
+          }
+
+          # SmartScreen note: a brand-new EV certificate will trigger SmartScreen
+          # warnings for 1-7 days while Microsoft builds reputation for the cert.
+          # This is expected and NOT a pipeline bug. Once reputation is established,
+          # EV-signed binaries pass SmartScreen without warnings.
+
+      - name: Notarize macOS app
+        if: runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          DMG_PATH=$(find dist -name "*.dmg" -maxdepth 1 | head -1)
+          if [ -z "$DMG_PATH" ]; then
+            echo "No .dmg found, skipping notarization"
+            exit 0
+          fi
+
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$DMG_PATH"
+
+      - name: Verify macOS notarization
+        if: runner.os == 'macOS'
+        run: |
+          DMG_PATH=$(find dist -name "*.dmg" -maxdepth 1 | head -1)
+          if [ -z "$DMG_PATH" ]; then
+            echo "No .dmg found, skipping verification"
+            exit 0
+          fi
+
+          hdiutil attach "$DMG_PATH" -nobrowse
+          APP_PATH=$(find /Volumes -name "ThreadVerse.app" -maxdepth 2 | head -1)
+          spctl --assess --verbose "$APP_PATH"
+          hdiutil detach /Volumes/ThreadVerse*

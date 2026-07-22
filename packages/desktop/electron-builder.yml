@@ -12,6 +12,11 @@ publish:
 
 win:
   target: nsis
+  signingHashAlgorithms:
+    - sha256
+  # certificateFile / certificatePassword are read from WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD env vars.
+  # For EV / cloud-HSM signing, uncomment and point to a signing callback script:
+  # sign: build/sign-ev.cmd
 
 mac:
   target: dmg
