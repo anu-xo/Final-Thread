@@ -17,7 +17,10 @@ function OfflineBanner() {
   const isOnline = useOnlineStatus();
   if (isOnline) return null;
   return (
-    <div className="fixed inset-x-0 top-14 z-50 bg-yellow-500 text-yellow-950 text-center text-sm font-medium py-1.5">
+    <div
+      className="fixed inset-x-0 z-50 bg-yellow-500 text-yellow-950 text-center text-sm font-medium py-1.5"
+      style={{ top: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
+    >
       You are offline — some features may be unavailable
     </div>
   );
@@ -56,8 +59,12 @@ export default function AppLayout() {
       {isDesktop && <UpdateBanner />}
       <Header />
       <OfflineBanner />
-      {/* pt-14 pushes content below the fixed header */}
-      <div className="pt-14 max-w-6xl mx-auto px-4 flex gap-6">
+      {/* pt-14 pushes content below the fixed Header; on Win/Linux the TitleBar
+          adds --tv-titlebar-h (32px) above it, so we use calc() to combine. */}
+      <div
+        className="max-w-6xl mx-auto px-4 flex gap-6"
+        style={{ paddingTop: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
+      >
         <SectionErrorBoundary sectionName="Sidebar">
           <Sidebar />
         </SectionErrorBoundary>

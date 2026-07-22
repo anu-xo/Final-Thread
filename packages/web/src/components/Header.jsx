@@ -38,7 +38,10 @@ export default function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-4">
+    <header
+      className="fixed left-0 right-0 z-50 h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-4"
+      style={{ top: 'var(--tv-titlebar-h, 0px)' }}
+    >
       {/* Logo */}
       <Link to="/home" className="flex items-center gap-2 font-bold text-orange-500 text-lg shrink-0">
         ⚡ ThreadVerse

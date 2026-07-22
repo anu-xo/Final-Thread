@@ -213,7 +213,7 @@ test.describe('Font weight rendering', () => {
 
     const headingWeights = await page.evaluate(() => {
       const results = [];
-      for (const sel of HEADING_SELECTORS) {
+      for (const sel of ['h1', 'h2', 'h3']) {
         const el = document.querySelector(sel);
         if (!el) continue;
         const style = window.getComputedStyle(el);
@@ -334,10 +334,9 @@ test.describe('Font size baseline', () => {
 //    In production builds, fonts are served via electron:// protocol.
 
 test.describe('Electron font protocol', () => {
-  test.skip(({ }, testInfo) => {
-    // Only run in electron project
-    return testInfo.project.name !== 'electron';
-  });
+  // Only run in electron project — skip in web/font-audit
+  const isElectronProject = process.argv.some((a) => a.includes('electron'));
+  test.skip(!isElectronProject, 'Only runs in Electron project');
 
   test('fonts load via electron:// protocol', async ({ page }) => {
     const fontRequests = [];
@@ -375,8 +374,10 @@ test.describe('Linux fallback chain', () => {
     const fontSource = await page.evaluate(async () => {
       const fonts = [...document.fonts];
       const interFonts = fonts.filter((f) => f.family === 'Inter');
+      const loaded = interFonts.filter((f) => f.status === 'loaded');
       return {
         count: interFonts.length,
+        loadedCount: loaded.length,
         weights: interFonts.map((f) => f.weight),
         statuses: interFonts.map((f) => f.status),
       };
@@ -384,13 +385,16 @@ test.describe('Linux fallback chain', () => {
 
     expect(
       fontSource.count,
-      'At least one Inter weight should be loaded from @fontsource',
+      'At least one Inter weight should be registered from @fontsource',
     ).toBeGreaterThan(0);
 
-    // All loaded Inter faces should have status "loaded"
-    for (const status of fontSource.statuses) {
-      expect(status).toBe('loaded');
-    }
+    // At least some Inter faces must have loaded (the ones used by rendered text)
+    // Not all weights load on every page — only weights actually referenced by
+    // the DOM.  For example, weight 500 may not appear on the landing page.
+    expect(
+      fontSource.loadedCount,
+      'At least one Inter weight should have loaded',
+    ).toBeGreaterThan(0);
   });
 
   test('fallback stack is legible when system Inter is absent', async ({

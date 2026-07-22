@@ -17,7 +17,7 @@
 //   tray/title-bar conventions, so matching the Windows pattern is the
 //   least-surprising choice.  The -webkit-app-region:drag property provides
 //   window dragging on all Linux DEs that support it.
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Minus, Square, X, Copy } from 'lucide-react';
 
 const platform =
@@ -28,6 +28,26 @@ const platform =
 /** macOS traffic-light padding (pixels). These match hiddenInset defaults. */
 const MACOS_PADDING_LEFT = 78;
 const MACOS_TITLE_HEIGHT = 48;
+const WIN_LINUX_TITLE_HEIGHT = 32;
+
+/**
+ * Sets a CSS custom property on <html> so that the Header and AppLayout can
+ * offset their content below the title bar without prop drilling.
+ *
+ *   --tv-titlebar-h   total height of the title bar region (px)
+ *   --tv-platform      'darwin' | 'win32' | 'linux' | 'web'
+ */
+function useTitleBarCSSVar(height) {
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--tv-titlebar-h', `${height}px`);
+    root.style.setProperty('--tv-platform', platform);
+    return () => {
+      root.style.removeProperty('--tv-titlebar-h');
+      root.style.removeProperty('--tv-platform');
+    };
+  }, [height]);
+}
 
 /**
  * Windows / Linux custom title bar buttons.
@@ -126,8 +146,13 @@ function WinLinuxTitleBar({ isDark }) {
  * macOS — just a drag region + left padding so content clears the
  * traffic-light buttons.  No custom close/min/max buttons are rendered;
  * the OS handles them natively via titleBarStyle:'hiddenInset'.
+ *
+ * The titleBarOverlay reserves space at the OS level, so the CSS var
+ * is set to 0 — the Header stays at top-0.
  */
 function MacOSTitleBar() {
+  useTitleBarCSSVar(0);
+
   return (
     <div
       className="flex items-center shrink-0"
@@ -168,12 +193,14 @@ export default function TitleBar({ pageTitle }) {
   }
 
   // Windows / Linux — custom title bar with min/max/close buttons
+  // Fixed at the very top; z-[60] ensures it sits above the Header (z-50).
+  // The CSS var --tv-titlebar-h is read by Header and AppLayout.
   return (
     <div
-      className="flex items-center justify-between select-none shrink-0"
+      className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between select-none shrink-0"
       style={{
         WebkitAppRegion: 'drag',
-        height: 32,
+        height: WIN_LINUX_TITLE_HEIGHT,
         background: isDark ? '#1a1a1d' : '#ffffff',
         borderBottom: `1px solid ${isDark ? '#2a2a2d' : '#e5e7eb'}`,
       }}
@@ -185,6 +212,18 @@ export default function TitleBar({ pageTitle }) {
 
       {/* Right — window controls */}
       <WinLinuxTitleBar isDark={isDark} />
+
+      {/* Set CSS var so Header/AppLayout can offset below this bar */}
+      <TitleBarCSSVarSetter height={WIN_LINUX_TITLE_HEIGHT} />
     </div>
   );
+}
+
+/**
+ * Renders nothing visible — only sets --tv-titlebar-h on mount.
+ * Placed inside the title bar div so it's part of the React tree.
+ */
+function TitleBarCSSVarSetter({ height }) {
+  useTitleBarCSSVar(height);
+  return null;
 }

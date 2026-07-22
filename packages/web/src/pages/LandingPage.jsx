@@ -11,7 +11,10 @@ export default function LandingPage() {
   const user = useAuthStore((s) => s.user);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col"
+      style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
+    >
       {/* Nav */}
       <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4">
         <span className="font-bold text-orange-500 text-lg">⚡ ThreadVerse</span>
