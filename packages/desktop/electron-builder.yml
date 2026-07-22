@@ -15,6 +15,15 @@ win:
 
 mac:
   target: dmg
+  entitlements: build/entitlements.mac.plist
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+mas:
+  target: mas
+  entitlements: build/entitlements.mas.plist
+  entitlementsInherit: build/entitlements.mas.inherit.plist
+  hardenedRuntime: false
 
 linux:
   target: AppImage
