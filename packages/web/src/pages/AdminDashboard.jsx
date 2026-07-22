@@ -2,6 +2,7 @@ import UserManagementTable from '../components/UserManagementTable';
 import AIUsageChart from '../components/AIUsageChart';
 import PlatformActivityChart from '../components/PlatformActivityChart';
 import PlatformBreakdownTable from '../components/PlatformBreakdownTable';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { useAdminStats } from '../hooks/useAdminStats';
 
 function StatCard({ label, value, sub }) {
@@ -30,27 +31,38 @@ export default function AdminDashboard() {
         <StatCard label="Open Reports" value={stats?.openReports} />
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Traffic by Platform (30d)</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <StatCard label="Total Events" value={totalActivity} />
-          <StatCard label="Desktop" value={pb?.desktop} sub={totalActivity ? `${((pb.desktop / totalActivity) * 100).toFixed(1)}%` : undefined} />
-          <StatCard label="Web" value={pb?.web} sub={totalActivity ? `${((pb.web / totalActivity) * 100).toFixed(1)}%` : undefined} />
+      <SectionErrorBoundary sectionName="Platform Stats">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Traffic by Platform (30d)</h2>
+          <div className="grid grid-cols-3 gap-4">
+            <StatCard label="Total Events" value={totalActivity} />
+            <StatCard label="Desktop" value={pb?.desktop} sub={totalActivity ? `${((pb.desktop / totalActivity) * 100).toFixed(1)}%` : undefined} />
+            <StatCard label="Web" value={pb?.web} sub={totalActivity ? `${((pb.web / totalActivity) * 100).toFixed(1)}%` : undefined} />
+          </div>
         </div>
-      </div>
+      </SectionErrorBoundary>
 
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Platform Activity Trend</h2>
-        <PlatformActivityChart />
-      </div>
+      <SectionErrorBoundary sectionName="Activity Chart">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Platform Activity Trend</h2>
+          <PlatformActivityChart />
+        </div>
+      </SectionErrorBoundary>
 
-      <PlatformBreakdownTable />
+      <SectionErrorBoundary sectionName="Platform Breakdown">
+        <PlatformBreakdownTable />
+      </SectionErrorBoundary>
 
-      <UserManagementTable />
-      <div>
-        <h2 className="text-lg font-semibold mb-2">AI Usage</h2>
-        <AIUsageChart />
-      </div>
+      <SectionErrorBoundary sectionName="User Management">
+        <UserManagementTable />
+      </SectionErrorBoundary>
+
+      <SectionErrorBoundary sectionName="AI Usage">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">AI Usage</h2>
+          <AIUsageChart />
+        </div>
+      </SectionErrorBoundary>
     </div>
   );
 }

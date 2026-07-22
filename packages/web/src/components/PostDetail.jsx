@@ -129,64 +129,66 @@ export default function PostDetail() {
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={post.title} />
       </Helmet>
-      <div className="max-w-3xl mx-auto p-4 space-y-4">
-      {/* ── Post header ─────────────────────────────────────────────── */}
-      <article className="flex gap-3 bg-white border border-gray-200 rounded-lg p-4">
-        {/* Vote column */}
-        <div className="shrink-0">
-          <VoteButton
-            targetId={post?._id}
-            targetType="post"
-            initialScore={post?.score ?? 0}
-            initialUserVote={post?.userVote ?? 0}
-          />
-        </div>
-
-        {/* Post body */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-            <span className="font-medium text-gray-700">
-              r/{post?.community?.name}
-            </span>
-            <span>· u/{post?.author?.username}</span>
-            <span>· {timeAgo(post?.createdAt)}</span>
+      <SectionErrorBoundary sectionName="Post">
+        <div className="max-w-3xl mx-auto p-4 space-y-4">
+        {/* ── Post header ─────────────────────────────────────────────── */}
+        <article className="flex gap-3 bg-white border border-gray-200 rounded-lg p-4">
+          {/* Vote column */}
+          <div className="shrink-0">
+            <VoteButton
+              targetId={post?._id}
+              targetType="post"
+              initialScore={post?.score ?? 0}
+              initialUserVote={post?.userVote ?? 0}
+            />
           </div>
 
-          <h1 className="text-xl font-semibold text-gray-900 leading-snug mb-2">
-            {post?.title}
-          </h1>
-
-          {post?.media?.length > 0 && (
-            <div className="mb-3 overflow-hidden rounded-lg border bg-gray-50">
-              <img
-                src={post.media[0]}
-                alt={post.title}
-                className="max-h-[32rem] w-full object-contain bg-black/5"
-              />
+          {/* Post body */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+              <span className="font-medium text-gray-700">
+                r/{post?.community?.name}
+              </span>
+              <span>· u/{post?.author?.username}</span>
+              <span>· {timeAgo(post?.createdAt)}</span>
             </div>
-          )}
 
-          {post?.body && (
-            <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-              {post.body}
-            </p>
-          )}
-        </div>
-      </article>
+            <h1 className="text-xl font-semibold text-gray-900 leading-snug mb-2">
+              {post?.title}
+            </h1>
 
-      {/* ── Comment composer ────────────────────────────────────────── */}
-      <CommentBox postId={id} parentId={null} />
+            {post?.media?.length > 0 && (
+              <div className="mb-3 overflow-hidden rounded-lg border bg-gray-50">
+                <img
+                  src={post.media[0]}
+                  alt={post.title}
+                  className="max-h-[32rem] w-full object-contain bg-black/5"
+                />
+              </div>
+            )}
 
-      {/* ── Comment tree ────────────────────────────────────────────── */}
-      <SectionErrorBoundary sectionName="Comments">
-        <section>
-          <h2 className="text-sm font-semibold text-gray-600 mb-2">
-            Comments ({post?.commentCount ?? 0})
-          </h2>
-          <CommentList postId={id} />
-        </section>
+            {post?.body && (
+              <p className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
+                {post.body}
+              </p>
+            )}
+          </div>
+        </article>
+
+        {/* ── Comment composer ────────────────────────────────────────── */}
+        <CommentBox postId={id} parentId={null} />
+
+        {/* ── Comment tree ────────────────────────────────────────────── */}
+        <SectionErrorBoundary sectionName="Comments">
+          <section>
+            <h2 className="text-sm font-semibold text-gray-600 mb-2">
+              Comments ({post?.commentCount ?? 0})
+            </h2>
+            <CommentList postId={id} />
+          </section>
+        </SectionErrorBoundary>
+      </div>
       </SectionErrorBoundary>
-    </div>
     </>
   );
 }

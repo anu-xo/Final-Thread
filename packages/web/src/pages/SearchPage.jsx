@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api.js';
 import PostCard from '../components/PostCard.jsx';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { SearchResultsSkeleton } from '../components/skeletons/index.js';
 
 function ResultSection({ title, count, children }) {
@@ -84,7 +85,7 @@ export default function SearchPage() {
         <h1 className="text-2xl font-bold text-gray-900">Search</h1>
         <p className="mt-2 text-sm text-gray-500">
           {query
-            ? `Results for “${query}”`
+            ? `Results for "${query}"`
             : 'Type at least 2 characters in the header search box to search posts, communities, and users.'}
         </p>
       </div>
@@ -100,39 +101,41 @@ export default function SearchPage() {
           {(error)?.message || 'Unable to load search results.'}
         </div>
       ) : (
-        <div className="space-y-8">
-          <ResultSection title="Posts" count={posts.length}>
-            {posts.length > 0 ? (
-              posts.map((post) => <PostCard key={post._id} post={post} />)
-            ) : (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
-                No posts matched this query.
-              </div>
-            )}
-          </ResultSection>
+        <SectionErrorBoundary sectionName="Search Results">
+          <div className="space-y-8">
+            <ResultSection title="Posts" count={posts.length}>
+              {posts.length > 0 ? (
+                posts.map((post) => <PostCard key={post._id} post={post} />)
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
+                  No posts matched this query.
+                </div>
+              )}
+            </ResultSection>
 
-          <ResultSection title="Communities" count={communities.length}>
-            {communities.length > 0 ? (
-              communities.map((community) => (
-                <CommunityResult key={community._id} community={community} />
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
-                No communities matched this query.
-              </div>
-            )}
-          </ResultSection>
+            <ResultSection title="Communities" count={communities.length}>
+              {communities.length > 0 ? (
+                communities.map((community) => (
+                  <CommunityResult key={community._id} community={community} />
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
+                  No communities matched this query.
+                </div>
+              )}
+            </ResultSection>
 
-          <ResultSection title="Users" count={users.length}>
-            {users.length > 0 ? (
-              users.map((user) => <UserResult key={user._id || user.username} user={user} />)
-            ) : (
-              <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
-                No users matched this query.
-              </div>
-            )}
-          </ResultSection>
-        </div>
+            <ResultSection title="Users" count={users.length}>
+              {users.length > 0 ? (
+                users.map((user) => <UserResult key={user._id || user.username} user={user} />)
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-500">
+                  No users matched this query.
+                </div>
+              )}
+            </ResultSection>
+          </div>
+        </SectionErrorBoundary>
       )}
     </div>
   );

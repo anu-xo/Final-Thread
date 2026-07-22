@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
 import PostFeed from '../components/PostFeed.jsx';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { Skeleton } from '../components/skeletons/index.js';
 
 function CommunityHeader({ community }) {
@@ -154,49 +155,51 @@ export default function CommunityPage() {
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content={`r/${data.slug}`} />
       </Helmet>
-      <div>
-        <CommunityHeader community={data} />
+      <SectionErrorBoundary sectionName="Community">
+        <div>
+          <CommunityHeader community={data} />
 
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          {data.description && (
-            <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">{data.description}</p>
-          )}
+          <div className="max-w-5xl mx-auto px-4 py-6">
+            {data.description && (
+              <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">{data.description}</p>
+            )}
 
-          {data.rules?.length > 0 && (
-            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 mb-6">
-              <h2 className="font-semibold text-sm mb-3">Community Rules</h2>
-              <ol className="space-y-2">
-                {data.rules.map((rule, i) => (
-                  <li key={i} className="text-sm">
-                    <span className="font-medium">{i + 1}. {rule.title}</span>
-                    {rule.body && (
-                      <p className="text-neutral-400 text-xs mt-0.5">{rule.body}</p>
-                    )}
-                  </li>
-                ))}
-              </ol>
+            {data.rules?.length > 0 && (
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-4 mb-6">
+                <h2 className="font-semibold text-sm mb-3">Community Rules</h2>
+                <ol className="space-y-2">
+                  {data.rules.map((rule, i) => (
+                    <li key={i} className="text-sm">
+                      <span className="font-medium">{i + 1}. {rule.title}</span>
+                      {rule.body && (
+                        <p className="text-neutral-400 text-xs mt-0.5">{rule.body}</p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            <div className="flex gap-2 mb-4">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSort(opt.value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                    sort === opt.value
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
-          )}
 
-          <div className="flex gap-2 mb-4">
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setSort(opt.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                  sort === opt.value
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+            <PostFeed communityId={data._id} sort={sort} />
           </div>
-
-          <PostFeed communityId={data._id} sort={sort} />
         </div>
-      </div>
+      </SectionErrorBoundary>
     </>
   );
 }

@@ -2,6 +2,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { CommunityCardSkeleton } from '../components/skeletons/index.js';
 
 function CommunityCard({ community }) {
@@ -67,48 +68,50 @@ export default function CommunityBrowser() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Explore Communities</h1>
-          <p className="text-sm text-neutral-500 mt-1">Find your people</p>
-        </div>
-        <Link
-          to="/communities/create"
-          className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-        >
-          + Create Community
-        </Link>
-      </div>
-
-      {communities.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-neutral-400 text-lg">No communities yet.</p>
-          <Link to="/communities/create" className="text-orange-500 hover:underline mt-2 block">
-            Be the first to create one
+    <SectionErrorBoundary sectionName="Communities">
+      <div className="max-w-5xl mx-auto py-8 px-4">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Explore Communities</h1>
+            <p className="text-sm text-neutral-500 mt-1">Find your people</p>
+          </div>
+          <Link
+            to="/communities/create"
+            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            + Create Community
           </Link>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {communities.map((c) => (
-              <CommunityCard key={c._id} community={c} />
-            ))}
-          </div>
 
-          {hasNextPage && (
-            <div className="flex justify-center mt-8">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-6 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
-              >
-                {isFetchingNextPage ? 'Loading...' : 'Load more'}
-              </button>
+        {communities.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-neutral-400 text-lg">No communities yet.</p>
+            <Link to="/communities/create" className="text-orange-500 hover:underline mt-2 block">
+              Be the first to create one
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {communities.map((c) => (
+                <CommunityCard key={c._id} community={c} />
+              ))}
             </div>
-          )}
-        </>
-      )}
-    </div>
+
+            {hasNextPage && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-6 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                >
+                  {isFetchingNextPage ? 'Loading...' : 'Load more'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </SectionErrorBoundary>
   );
 }

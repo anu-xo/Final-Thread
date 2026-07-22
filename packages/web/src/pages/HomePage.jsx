@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import PostCard from '../components/PostCard.jsx';
+import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { PostCardSkeleton } from '../components/skeletons/index.js';
 import { useHomeFeed } from '../hooks/useHomeFeed.js';
 import { useFeedRealtimeVotes } from '../hooks/useFeedRealtimeVotes.js';
@@ -88,51 +89,53 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Your feed</p>
-          <h1 className="mt-1 text-2xl font-bold text-gray-900">Home</h1>
-          <p className="mt-1 text-sm text-gray-500">Personalized from communities you’ve joined.</p>
+    <SectionErrorBoundary sectionName="Feed">
+      <div className="space-y-5">
+        <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Your feed</p>
+            <h1 className="mt-1 text-2xl font-bold text-gray-900">Home</h1>
+            <p className="mt-1 text-sm text-gray-500">Personalized from communities you&apos;ve joined.</p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {SORT_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => updateSort(option)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  sort === option
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {option[0].toUpperCase() + option.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {SORT_OPTIONS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => updateSort(option)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                sort === option
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {option[0].toUpperCase() + option.slice(1)}
-            </button>
+        <div className="space-y-3">
+          {posts.map((post) => (
+            <PostCard key={post._id} post={post} />
           ))}
         </div>
+
+        <div ref={sentinelRef} className="h-4" />
+
+        {isFetchingNextPage && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-500">
+            Loading more...
+          </div>
+        )}
+
+        {!hasNextPage && posts.length > 0 && (
+          <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-400">
+            You&apos;ve reached the end.
+          </div>
+        )}
       </div>
-
-      <div className="space-y-3">
-        {posts.map((post) => (
-          <PostCard key={post._id} post={post} />
-        ))}
-      </div>
-
-      <div ref={sentinelRef} className="h-4" />
-
-      {isFetchingNextPage && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-500">
-          Loading more...
-        </div>
-      )}
-
-      {!hasNextPage && posts.length > 0 && (
-        <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-400">
-          You&apos;ve reached the end.
-        </div>
-      )}
-    </div>
+    </SectionErrorBoundary>
   );
 }
