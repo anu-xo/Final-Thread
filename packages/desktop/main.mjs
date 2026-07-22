@@ -341,34 +341,43 @@ function getTrayIcon() {
   const isMac = process.platform === 'darwin';
 
   if (isMac) {
-    // macOS: use a template image — AppKit auto-inverts for dark/light menu bar
-    // The @2x variant is picked up automatically by nativeImage when present.
-    const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
+    // macOS: Template images (suffix "Template" or setTemplateImage(true))
+    // allow AppKit to auto-invert for the current menu-bar appearance.
+    // nativeImage.createFromPath picks up tray-iconTemplate@2x.png
+    // automatically on Retina displays — do NOT resize.
+    const iconPath = path.join(__dirname, 'assets', 'tray-iconTemplate.png');
     const icon = nativeImage.createFromPath(iconPath);
+    if (icon.isEmpty()) {
+      // Graceful fallback if template file hasn't been generated yet
+      return nativeImage.createFromPath(
+        path.join(__dirname, 'assets', 'tray-icon.png'),
+      );
+    }
     icon.setTemplateImage(true);
     return icon;
   }
 
-  // Windows / Linux: Electron auto-tints monochrome tray icons on Windows 10+.
-  // For explicit control, supply tray-icon-light.png (for dark taskbars) and
-  // tray-icon-dark.png (for light taskbars).  Falls back to the single asset.
-  const themedPath = path.join(
-    __dirname,
-    'assets',
-    isDark ? 'tray-icon-light.png' : 'tray-icon-dark.png',
-  );
-  let icon;
-  try {
-    icon = nativeImage.createFromPath(themedPath);
-    // If the themed file doesn't exist, nativeImage returns an empty image
-    if (icon.isEmpty()) throw new Error('themed icon not found');
-  } catch {
-    // Fallback to the base icon
+  // ── Windows / Linux ──────────────────────────────────────────────────────
+  // Two explicit PNGs avoid relying on undocumented OS auto-tinting:
+  //   tray-icon-light.png  — light glyph on transparent bg (for dark taskbars)
+  //   tray-icon-dark.png   — dark glyph on transparent bg  (for light taskbars)
+  //
+  // HiDPI: nativeImage.createFromPath auto-selects the @2x variant when
+  // present.  Do NOT call .resize() — it strips the scale factor and the
+  // resulting icon renders at 1x on HiDPI screens.
+  const fileName = isDark ? 'tray-icon-light.png' : 'tray-icon-dark.png';
+  const themedPath = path.join(__dirname, 'assets', fileName);
+  let icon = nativeImage.createFromPath(themedPath);
+
+  if (icon.isEmpty()) {
+    // Fallback: single base icon (Electron auto-tints monochrome on Win10+)
     icon = nativeImage.createFromPath(
       path.join(__dirname, 'assets', 'tray-icon.png'),
     );
   }
-  return icon.resize({ width: 16, height: 16 });
+
+  // Never resize — let the OS handle DPI scaling.
+  return icon;
 }
 
 function createTray() {
