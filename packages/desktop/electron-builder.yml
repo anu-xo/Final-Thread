@@ -11,30 +11,45 @@ publish:
   releaseType: release
 
 win:
-  target: nsis
+  target:
+    - target: nsis
+      arch:
+        - x64
   signingHashAlgorithms:
     - sha256
   # certificateFile / certificatePassword are read from WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD env vars.
-  # For EV / cloud-HSM signing, uncomment and point to a signing callback script:
+  # For EV / cloud-HSM signing, set the sign callback:
   # sign: build/sign-ev.cmd
+  signAndEditExecutable: true
 
 mac:
-  target: dmg
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
   entitlements: build/entitlements.mac.plist
   hardenedRuntime: true
   gatekeeperAssess: false
+  notarize: false  # handled separately in CI via xcrun notarytool
   extraResources:
     - from: ../web/dist
       to: web/dist
 
 mas:
   target: mas
+  bundleId: com.threadverse.app
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
   hardenedRuntime: false
+  # MAS requires app sandbox — no hardened runtime
+  # provisioningProfile is provided via CSC_LINK / CSC_KEY_PASSWORD env vars
   extraResources:
     - from: ../web/dist
       to: web/dist
 
 linux:
-  target: AppImage
+  target:
+    - target: AppImage
+      arch:
+        - x64
