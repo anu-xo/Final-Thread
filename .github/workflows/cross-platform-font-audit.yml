@@ -1,0 +1,281 @@
+name: Cross-Platform Font Audit
+
+on:
+  push:
+    branches: [main, develop, staging]
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/index.html'
+      - 'packages/desktop/**'
+      - 'e2e/tests/font-rendering.spec.js'
+      - '.github/workflows/cross-platform-font-audit.yml'
+  pull_request:
+    branches: [main, staging]
+    paths:
+      - 'packages/web/src/**'
+      - 'packages/web/index.html'
+      - 'packages/desktop/**'
+      - 'e2e/tests/font-rendering.spec.js'
+  workflow_dispatch:
+
+# Cancel in-progress runs on same ref
+concurrency:
+  group: font-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Web font audit (Chromium, Firefox, WebKit) ───────────────────────────
+  font-audit-web:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows 10 target
+          - os: windows-2022
+            target: 'Windows 10'
+            browser: chromium
+          - os: windows-2022
+            target: 'Windows 10'
+            browser: firefox
+          - os: windows-2022
+            target: 'Windows 10'
+            browser: webkit
+
+          # Windows 11 target
+          - os: windows-latest
+            target: 'Windows 11'
+            browser: chromium
+          - os: windows-latest
+            target: 'Windows 11'
+            browser: firefox
+          - os: windows-latest
+            target: 'Windows 11'
+            browser: webkit
+
+          # macOS Ventura target
+          - os: macos-13
+            target: 'macOS Ventura'
+            browser: chromium
+          - os: macos-13
+            target: 'macOS Ventura'
+            browser: firefox
+          - os: macos-13
+            target: 'macOS Ventura'
+            browser: webkit
+
+          # macOS Sonoma target
+          - os: macos-14
+            target: 'macOS Sonoma'
+            browser: chromium
+          - os: macos-14
+            target: 'macOS Sonoma'
+            browser: firefox
+          - os: macos-14
+            target: 'macOS Sonoma'
+            browser: webkit
+
+          # Ubuntu 22.04 target
+          - os: ubuntu-22.04
+            target: 'Ubuntu 22.04'
+            browser: chromium
+          - os: ubuntu-22.04
+            target: 'Ubuntu 22.04'
+            browser: firefox
+          - os: ubuntu-22.04
+            target: 'Ubuntu 22.04'
+            browser: webkit
+
+    name: '${{ matrix.target }} — ${{ matrix.browser }}'
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # ── Platform deps ──────────────────────────────────────────────────────
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
+            libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 \
+            libcairo2 libasound2t64
+
+      # ── Setup ──────────────────────────────────────────────────────────────
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Build web app
+        run: pnpm --filter web build
+
+      # ── Font audit ─────────────────────────────────────────────────────────
+      - name: Run font rendering audit
+        run: |
+          pnpm exec playwright test \
+            e2e/tests/font-rendering.spec.js \
+            --project=web \
+            --reporter=list
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ''
+
+      - name: Upload font audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-audit-${{ matrix.target }}-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 14
+
+  # ── Linux fallback test — Inter not installed ─────────────────────────────
+  # Verifies the fallback stack renders legibly when Inter is unavailable
+  # system-wide (the typical Ubuntu desktop scenario).
+  font-audit-linux-fallback:
+    name: 'Ubuntu 22.04 — Linux fallback (no system Inter)'
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
+            libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 \
+            libcairo2 libasound2t64
+
+      - name: Remove system Inter font (if installed)
+        run: |
+          # Remove any system-installed Inter to simulate vanilla Ubuntu
+          sudo apt-get remove -y fonts-inter || true
+          sudo rm -rf /usr/share/fonts/truetype/inter* || true
+          sudo fc-cache -f
+          echo "--- Installed fonts (sanity check) ---"
+          fc-list | grep -i inter || echo "No system Inter found (expected)"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build web app
+        run: pnpm --filter web build
+
+      - name: Run font audit (fallback scenario)
+        run: |
+          pnpm exec playwright test \
+            e2e/tests/font-rendering.spec.js \
+            --project=web \
+            --reporter=list
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ''
+
+      - name: Upload fallback audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-audit-linux-fallback
+          path: test-results/
+          retention-days: 14
+
+  # ── Electron build + font audit per platform ──────────────────────────────
+  font-audit-electron:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            target: 'Windows 10'
+          - os: windows-latest
+            target: 'Windows 11'
+          - os: macos-13
+            target: 'macOS Ventura'
+          - os: macos-14
+            target: 'macOS Sonoma'
+          - os: ubuntu-22.04
+            target: 'Ubuntu 22.04'
+
+    name: 'Electron — ${{ matrix.target }}'
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 \
+            libcups2 libdrm2 libxkbcommon0 libxcomposite1 \
+            libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 \
+            libcairo2 libasound2t64 libsecret-1-dev libusb-1.0-0 rpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Build web app
+        run: pnpm --filter web build
+
+      - name: Build Electron app
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            pnpm --filter desktop exec electron-builder --publish never --win
+          elif [ "${{ runner.os }}" = "macOS" ]; then
+            pnpm --filter desktop exec electron-builder --publish never --mac dmg
+          else
+            pnpm --filter desktop exec electron-builder --publish never --linux AppImage
+          fi
+
+      - name: Run Electron font audit
+        run: |
+          pnpm exec playwright test \
+            e2e/tests/font-rendering.spec.js \
+            --project=electron \
+            --reporter=list
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ''
+
+      - name: Upload Electron font audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-audit-electron-${{ matrix.target }}
+          path: test-results/
+          retention-days: 14

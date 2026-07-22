@@ -20,6 +20,12 @@ export default defineConfig({
       testDir: './e2e/tests',
       testMatch: '**/*desktop*.spec.js',
     },
+    {
+      name: 'font-audit',
+      testDir: './e2e/tests',
+      testMatch: '**/font-rendering*.spec.js',
+      use: { browserName: 'chromium' },
+    },
   ],
   webServer: {
     command: 'pnpm --filter web dev',

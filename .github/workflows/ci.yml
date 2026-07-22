@@ -56,3 +56,21 @@ jobs:
 
       - name: Build applications
         run: pnpm --filter web build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Font rendering audit
+        run: |
+          pnpm exec playwright test \
+            e2e/tests/font-rendering.spec.js \
+            --project=web \
+            --reporter=list
+
+      - name: Upload font audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: font-audit-ci
+          path: test-results/
+          retention-days: 14
