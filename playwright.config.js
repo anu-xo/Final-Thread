@@ -26,6 +26,12 @@ export default defineConfig({
       testMatch: '**/font-rendering*.spec.js',
       use: { browserName: 'chromium' },
     },
+    {
+      name: 'titlebar-tray-audit',
+      testDir: './e2e/tests',
+      testMatch: '**/titlebar-tray-audit*.spec.js',
+      use: { browserName: 'chromium' },
+    },
   ],
   webServer: {
     command: 'pnpm --filter web dev',

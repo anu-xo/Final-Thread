@@ -11,7 +11,9 @@
     "electron:dev": "pnpm --filter desktop dev",
     "electron:build": "pnpm --filter desktop build",
     "test:e2e": "playwright test",
-    "test:font-audit": "playwright test e2e/tests/font-rendering.spec.js --project=web --reporter=list"
+    "test:font-audit": "playwright test e2e/tests/font-rendering.spec.js --project=web --reporter=list",
+    "test:titlebar-tray-audit": "playwright test e2e/tests/titlebar-tray-audit.spec.js --project=titlebar-tray-audit --reporter=list",
+    "generate:tray-icons": "node scripts/generate-tray-icons.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
@@ -20,6 +22,7 @@
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.4",
+    "sharp": "^0.33.0",
     "tailwindcss": "^4.3.1"
   },
   "dependencies": {

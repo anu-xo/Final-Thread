@@ -12,6 +12,7 @@ import { useBackgroundSync } from './hooks/useBackgroundSync.js';
 // Layout & Route Guards
 import AppLayout from './components/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import TitleBar from './components/TitleBar.jsx';
 
 // Lazy-loaded Pages
 import LandingPage from './pages/LandingPage.jsx';
@@ -145,6 +146,7 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
+            <TitleBar />
             <DesktopShortcutBridge />
             <AppRoutes />
           </BrowserRouter>

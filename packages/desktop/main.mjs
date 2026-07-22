@@ -61,6 +61,9 @@ const ALLOWED_CHANNELS = new Set([
 
   // Online status check
   'net:isOnline',
+
+  // Theme change notification (renderer → main for macOS titlebar overlay)
+  'theme:changed',
 ]);
 
 function guard(channel) {
@@ -196,18 +199,32 @@ export function setCachedEmbedding(communityId, postId, data) {
 
 /**
  * ── Window Management ────────────────────────────────────────────────────────
+ *
+ * Platform-specific title bar strategy:
+ *
+ * macOS — Use titleBarStyle:'hiddenInset' so the native traffic-light buttons
+ *   (close/minimise/zoom) appear in the top-left corner with standard macOS
+ *   drag behaviour.  This gives users the expected platform feel without
+ *   reimplementing traffic-light button art, hover states, or accessibility
+ *   gestures.  The renderer adds left padding (env(titlebar-area-x) or a
+ *   fixed offset) so page content doesn't slide under the buttons.
+ *
+ * Windows / Linux — Use frame:false for a fully custom title bar.
+ *   The React TitleBar component renders min/max/close buttons that follow
+ *   Fluent (Windows) and GNOME (Linux) hover conventions.  Window dragging
+ *   is handled via -webkit-app-region:drag on the title bar element.
  */
 function createWindow() {
   unregisterGlobalShortcuts();
 
-  mainWindow = new BrowserWindow({
+  const isMac = process.platform === 'darwin';
+
+  const windowOptions = {
     width: 1280,
     height: 800,
     minWidth: 800,
     minHeight: 600,
-    icon: path.join(__dirname, 'build', 'icons', 'png', '1024x1024.png'),
-    frame: false,            // Custom title bar (built Day 14)
-    titleBarStyle: 'hidden',
+    icon: path.join(__dirname, 'build', 'icons', '1024x1024.png'),
     webPreferences: {
       nodeIntegration: false, // Security: no Node in renderer
       contextIsolation: true, // Security: isolate preload
@@ -215,7 +232,22 @@ function createWindow() {
       webSecurity: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-  });
+  };
+
+  if (isMac) {
+    // macOS: hiddenInset keeps native traffic-light buttons; no frame:false
+    windowOptions.titleBarStyle = 'hiddenInset';
+    windowOptions.titleBarOverlay = {
+      height: 48,
+      symbolColor: nativeTheme.shouldUseDarkColors ? '#ffffff' : '#000000',
+      backgroundColor: nativeTheme.shouldUseDarkColors ? '#1a1a1d' : '#ffffff',
+    };
+  } else {
+    // Windows / Linux: fully custom title bar
+    windowOptions.frame = false;
+  }
+
+  mainWindow = new BrowserWindow(windowOptions);
 
   if (isDev) {
     mainWindow.loadURL(DEV_SERVER_URL);
@@ -282,11 +314,65 @@ function createWindow() {
 
 /**
  * ── System Tray ───────────────────────────────────────────────────────────────
+ *
+ * Platform notes:
+ *
+ * Windows 10/11 — Taskbar auto-inverts monochrome tray icons via the
+ *   undocumented "per-channel icon tinting" rule.  If the icon is a single
+ *   non-transparent colour it will be recoloured to match the taskbar theme
+ *   (light taskbar → dark icon, dark taskbar → light icon).  We supply two
+ *   explicit PNGs (light-on-transparent for dark taskbars, dark-on-transparent
+ *   for light taskbars) and swap them when `nativeTheme` changes, which is the
+ *   most reliable approach.
+ *
+ * macOS — The menu bar expects a *template image* (1-bit alpha, no colour).
+ *   Passing `template: true` to nativeImage tells AppKit to automatically
+ *   invert the icon to contrast with the menu bar, so we only need one asset.
+ *
+ * Linux / GNOME — GNOME Shell (≥40) removed the classic notification area
+ *   tray.  Ubuntu ships `gnome-shell-extension-appindicator` (SNI) which some
+ *   users install, but it is NOT present by default.  KDE Plasma and XFCE
+ *   panels do render tray icons natively.  We create the tray unconditionally
+ *   so KDE/XFCE users get it; on GNOME the Tray constructor is a no-op if no
+ *   supported panel extension is active.
  */
+function getTrayIcon() {
+  const isDark = nativeTheme.shouldUseDarkColors;
+  const isMac = process.platform === 'darwin';
+
+  if (isMac) {
+    // macOS: use a template image — AppKit auto-inverts for dark/light menu bar
+    // The @2x variant is picked up automatically by nativeImage when present.
+    const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
+    const icon = nativeImage.createFromPath(iconPath);
+    icon.setTemplateImage(true);
+    return icon;
+  }
+
+  // Windows / Linux: Electron auto-tints monochrome tray icons on Windows 10+.
+  // For explicit control, supply tray-icon-light.png (for dark taskbars) and
+  // tray-icon-dark.png (for light taskbars).  Falls back to the single asset.
+  const themedPath = path.join(
+    __dirname,
+    'assets',
+    isDark ? 'tray-icon-light.png' : 'tray-icon-dark.png',
+  );
+  let icon;
+  try {
+    icon = nativeImage.createFromPath(themedPath);
+    // If the themed file doesn't exist, nativeImage returns an empty image
+    if (icon.isEmpty()) throw new Error('themed icon not found');
+  } catch {
+    // Fallback to the base icon
+    icon = nativeImage.createFromPath(
+      path.join(__dirname, 'assets', 'tray-icon.png'),
+    );
+  }
+  return icon.resize({ width: 16, height: 16 });
+}
+
 function createTray() {
-  const iconPath = path.join(__dirname, 'assets', 'tray-icon.png');
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 });
-  tray = new Tray(icon);
+  tray = new Tray(getTrayIcon());
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Open ThreadVerse', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
@@ -306,6 +392,16 @@ function createTray() {
   tray.setToolTip('ThreadVerse');
   tray.setContextMenu(contextMenu);
   tray.on('click', () => { mainWindow?.show(); mainWindow?.focus(); });
+
+  // ── Swap tray icon when OS theme changes (Windows / Linux) ────────────────
+  // On macOS the template image auto-inverts, so we only swap on other platforms.
+  if (process.platform !== 'darwin') {
+    nativeTheme.on('updated', () => {
+      if (tray && !tray.isDestroyed()) {
+        tray.setImage(getTrayIcon());
+      }
+    });
+  }
 }
 
 // ── Allowed file paths from select-file (prevents arbitrary path reads) ──
@@ -405,6 +501,18 @@ safeOn('theme:get-sync', (event) => {
     event.returnValue = nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
   } else {
     event.returnValue = theme;
+  }
+});
+
+// Theme change notification — renderer tells main process when the user
+// switches theme so we can update macOS titlebar overlay colours.
+safeOn('theme:changed', (_event, resolvedTheme) => {
+  if (process.platform === 'darwin' && mainWindow && !mainWindow.isDestroyed()) {
+    const isDark = resolvedTheme === 'dark';
+    mainWindow.setTitleBarOverlay({
+      symbolColor: isDark ? '#ffffff' : '#000000',
+      backgroundColor: isDark ? '#1a1a1d' : '#ffffff',
+    });
   }
 });
 

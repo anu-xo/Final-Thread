@@ -29,7 +29,10 @@ const mq = window.matchMedia('(prefers-color-scheme: dark)');
 mq.addEventListener('change', () => {
   const { theme } = useUiStore.getState();
   if (theme === 'system') {
+    const resolved = mq.matches ? 'dark' : 'light';
     document.documentElement.classList.toggle('dark', mq.matches);
+    // Notify main process so macOS titlebar overlay & tray icon stay in sync
+    if (isDesktop) window.electronAPI?.notifyThemeChanged?.(resolved);
   }
 });
 
@@ -43,6 +46,8 @@ export const useUiStore = create((set, get) => ({
 
     if (isDesktop) {
       window.electronAPI.setSettings({ theme });
+      // Notify main process so macOS titlebar overlay & tray icon stay in sync
+      window.electronAPI?.notifyThemeChanged?.(resolved);
     } else {
       localStorage.setItem('threadverse-theme', theme);
     }

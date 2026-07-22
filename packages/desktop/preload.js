@@ -111,6 +111,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Theme (sync — used by inline <script> in index.html to prevent flash)
   getThemeSync: () => ipcRenderer.sendSync('theme:get-sync'),
 
+  // Theme change notification — renderer tells main when theme switches
+  // so macOS titlebar overlay colours stay in sync.
+  notifyThemeChanged: (resolvedTheme) =>
+    ipcRenderer.send('theme:changed', resolvedTheme),
+
+  // Platform info (used by TitleBar to pick correct controls)
+  platform: process.platform,
+
   // Connectivity
   checkConnectivity: () => ipcRenderer.invoke('connectivity:check'),
   onConnectivityChange: (callback) =>
