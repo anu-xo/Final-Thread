@@ -18,12 +18,18 @@ mac:
   entitlements: build/entitlements.mac.plist
   hardenedRuntime: true
   gatekeeperAssess: false
+  extraResources:
+    - from: ../web/dist
+      to: web/dist
 
 mas:
   target: mas
   entitlements: build/entitlements.mas.plist
   entitlementsInherit: build/entitlements.mas.inherit.plist
   hardenedRuntime: false
+  extraResources:
+    - from: ../web/dist
+      to: web/dist
 
 linux:
   target: AppImage

@@ -651,7 +651,7 @@ async function emitConnectivity() {
 app.whenReady().then(() => {
   // Serve local files via the custom electron:// scheme in production
   if (!isDev) {
-    const DIST_DIR = path.join(__dirname, '../web/dist');
+    const DIST_DIR = path.join(process.resourcesPath, 'web/dist');
 
     const MIME_TYPES = {
       '.html': 'text/html',
