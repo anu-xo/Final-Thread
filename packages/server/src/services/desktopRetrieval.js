@@ -130,16 +130,55 @@ export async function buildDesktopRagPrompt({ message, communityId, embedQuery, 
   return { prompt, sources, retrievalSource: 'local-cache', cacheSize: getCache(communityId.toString()).size };
 }
 
-// ── Stats / introspection ───────────────────────────────────────────────────
+// ── Stats / instrumentation ──────────────────────────────────────────────────
+
+let _cacheHits = 0;
+let _cacheMisses = 0;
+let _totalCacheRetrievalMs = 0;
+let _totalApiRetrievalMs = 0;
+let _apiCalls = 0;
 
 export function getCacheStats() {
   const stats = {};
   for (const [cid, cache] of communityCaches.entries()) {
     stats[cid] = { entries: cache.size, maxEntries: MAX_CACHE_ENTRIES };
   }
-  return stats;
+  return {
+    perCommunity: stats,
+    cacheHits: _cacheHits,
+    cacheMisses: _cacheMisses,
+    hitRate: _cacheHits + _cacheMisses > 0
+      ? (_cacheHits / (_cacheHits + _cacheMisses) * 100).toFixed(1) + '%'
+      : 'N/A',
+    avgCacheRetrievalMs: _cacheHits + _cacheMisses > 0
+      ? (_totalCacheRetrievalMs / (_cacheHits + _cacheMisses)).toFixed(1)
+      : 'N/A',
+    avgApiRetrievalMs: _apiCalls > 0
+      ? (_totalApiRetrievalMs / _apiCalls).toFixed(1)
+      : 'N/A',
+    apiCalls: _apiCalls,
+  };
+}
+
+export function resetInstrumentation() {
+  _cacheHits = 0;
+  _cacheMisses = 0;
+  _totalCacheRetrievalMs = 0;
+  _totalApiRetrievalMs = 0;
+  _apiCalls = 0;
+}
+
+export function recordCacheRetrieval(hit, ms) {
+  if (hit) { _cacheHits++; } else { _cacheMisses++; }
+  _totalCacheRetrievalMs += ms;
+}
+
+export function recordApiRetrieval(ms) {
+  _apiCalls++;
+  _totalApiRetrievalMs += ms;
 }
 
 export function resetCaches() {
   communityCaches.clear();
+  resetInstrumentation();
 }
