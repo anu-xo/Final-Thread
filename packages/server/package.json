@@ -14,7 +14,9 @@
     "seed": "node src/scripts/seed.js",
     "seed:perf": "node src/scripts/seedPerf.js",
     "migrate:indexes": "node src/scripts/createIndexes.js",
-    "eval": "node --env-file=.env src/scripts/evalRag.js"
+    "eval": "node --env-file=.env src/scripts/evalRag.js",
+    "eval:desktop": "node src/scripts/evalDesktop.js",
+    "test:digest": "node src/scripts/testDigest.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
