@@ -76,7 +76,11 @@ httpServer.listen(PORT, async () => {
     const evalCron = await import('./jobs/evalCron.js');
     evalCron.scheduleNightlyEval();
 
+    const digestCron = await import('./jobs/digestCron.js');
+    digestCron.registerDigestCron();
+
     console.log('[Server] Nightly eval cron scheduled');
+    console.log('[Server] Weekly digest cron scheduled');
   }
 });
 
