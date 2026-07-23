@@ -1,8 +1,7 @@
-// packages/server/src/scripts/evalDesktop.js
+// packages/server/src/scripts/evalServer.js
 //
-// Mock-desktop eval: 20-question suite across 5 communities.
-// Measures cache-hit rate, retrieval latency, and answer quality.
-// Compare output against the server (live $vectorSearch) baseline.
+// Server baseline eval: same 20-question suite, live $vectorSearch retrieval.
+// Produces identical report format to evalDesktop.js for A/B comparison.
 
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
@@ -11,53 +10,32 @@ import dotenv from 'dotenv';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-// Dynamic imports AFTER dotenv — evalJudge.js and aiService.js instantiate
-// Groq/Google clients at module top-level and need env vars loaded first.
 const { default: mongoose } = await import('mongoose');
 const questionsByCommunity = (await import('./evalQuestions.json', { with: { type: 'json' } })).default;
 const { judgeResponse } = await import('../services/evalJudge.js');
 const { default: EvalResult } = await import('../models/EvalResult.js');
 const { default: Community } = await import('../models/Community.js');
 const aiService = await import('../services/aiService.js');
-const {
-  seedCache,
-  buildDesktopRagPrompt,
-  retrieveFromCache,
-  getCacheStats,
-  resetCaches,
-  resetInstrumentation,
-} = await import('../services/desktopRetrieval.js');
 
-const PROMPT_VERSION = 'desktop-cache-v1';
+const PROMPT_VERSION = 'server-vsearch-v1';
 
-async function runDesktopEval(communityId) {
+async function runServerEval(communityId) {
   const questions = questionsByCommunity[communityId];
   if (!questions) throw new Error(`No eval questions for community ${communityId}`);
-
-  // Seed the LRU cache (simulates electron-store sync.mjs population)
-  const cacheStart = Date.now();
-  const cacheCount = await seedCache(communityId);
-  const seedMs = Date.now() - cacheStart;
-  console.log(`  cache seeded: ${cacheCount} entries in ${seedMs}ms`);
-
-  if (cacheCount === 0) {
-    console.warn('  cache empty — skipping community');
-    return null;
-  }
 
   const questionResults = [];
 
   for (const { question } of questions) {
     try {
-      // ── Embedding (Gemini API call — same for both desktop & server) ──
+      // ── Embedding ──
       const embedStart = Date.now();
       const queryEmbedding = await aiService.embedQuery(question);
       const embedMs = Date.now() - embedStart;
 
-      // ── Cache retrieval (local cosine-sim — replaces $vectorSearch) ──
-      const cacheRetrievalStart = Date.now();
-      const contextChunks = retrieveFromCache(queryEmbedding, communityId);
-      const cacheRetrievalMs = Date.now() - cacheRetrievalStart;
+      // ── Live $vectorSearch retrieval ──
+      const retrievalStart = Date.now();
+      const contextChunks = await aiService.retrieveContext(queryEmbedding, communityId);
+      const retrievalMs = Date.now() - retrievalStart;
       const cacheHit = contextChunks.length > 0;
 
       // ── Build prompt ──
@@ -84,8 +62,6 @@ async function runDesktopEval(communityId) {
       const grade = await judgeResponse({ question, answer, sources });
       const judgeMs = Date.now() - judgeStart;
 
-      // Save to DB — groundedness may be 0 which violates model min:1,
-      // so we coerce to 1 for persistence but keep original for metrics
       const saveGrade = { ...grade };
       if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
       await EvalResult.create({
@@ -96,7 +72,7 @@ async function runDesktopEval(communityId) {
         promptVersion: PROMPT_VERSION,
       });
 
-      const totalMs = embedMs + cacheRetrievalMs + llmMs + judgeMs;
+      const totalMs = embedMs + retrievalMs + llmMs + judgeMs;
 
       questionResults.push({
         question,
@@ -106,25 +82,24 @@ async function runDesktopEval(communityId) {
         sourcesReturned: sources.length,
         cacheHit,
         embedMs,
-        cacheRetrievalMs,
+        retrievalMs,
         llmMs,
         judgeMs,
         totalMs,
       });
 
-      console.log(`  Q: "${question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} cache=${cacheHit ? 'HIT' : 'MISS'} ${totalMs}ms`);
+      console.log(`  Q: "${question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} src=${sources.length} ${totalMs}ms`);
     } catch (err) {
       console.error(`  Q FAILED: "${question.slice(0, 50)}…" → ${err.message}`);
     }
 
-    // Rate-limit delay
     await new Promise((r) => setTimeout(r, 500));
   }
 
   return questionResults;
 }
 
-// ── CLI entry point ─────────────────────────────────────────────────────────
+// ── CLI ─────────────────────────────────────────────────────────────────────
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB\n');
@@ -136,10 +111,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     const community = await Community.findById(cid).select('name slug');
     const label = community ? `${community.name} (${community.slug})` : cid;
     console.log(`━━━ ${label} ━━━`);
-    resetInstrumentation();
 
     try {
-      const results = await runDesktopEval(cid);
+      const results = await runServerEval(cid);
       if (results) allResults.push(...results);
     } catch (err) {
       console.error(`  ERROR: ${err.message}`);
@@ -147,35 +121,27 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     console.log('');
   }
 
-  // ── Final report ────────────────────────────────────────────────────────
   const total = allResults.length;
   const avg = (key) => {
     const vals = allResults.map((r) => r[key]).filter((v) => v !== null && v !== undefined);
     return vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : 'N/A';
   };
 
-  const cacheHits = allResults.filter((r) => r.cacheHit).length;
-  const cacheMisses = allResults.filter((r) => !r.cacheHit).length;
-
+  const hits = allResults.filter((r) => r.cacheHit).length;
   const avgEmbed = (allResults.reduce((s, r) => s + r.embedMs, 0) / total).toFixed(0);
-  const avgCacheRetrieval = (allResults.reduce((s, r) => s + r.cacheRetrievalMs, 0) / total).toFixed(1);
+  const avgRetrieval = (allResults.reduce((s, r) => s + r.retrievalMs, 0) / total).toFixed(1);
   const avgLLM = (allResults.reduce((s, r) => s + r.llmMs, 0) / total).toFixed(0);
   const avgJudge = (allResults.reduce((s, r) => s + r.judgeMs, 0) / total).toFixed(0);
   const avgTotal = (allResults.reduce((s, r) => s + r.totalMs, 0) / total).toFixed(0);
 
   console.log('════════════════════════════════════════════════════════════');
-  console.log('  DESKTOP EVAL REPORT — 20-Question Suite');
+  console.log('  SERVER BASELINE REPORT — 20-Question Suite ($vectorSearch)');
   console.log('════════════════════════════════════════════════════════════');
   console.log(`  Questions evaluated:  ${total}`);
   console.log('');
-  console.log('  ── Cache Performance ──────────────────────────────────');
-  console.log(`  Cache hit rate:       ${cacheHits}/${total} (${(cacheHits / total * 100).toFixed(0)}%)`);
-  console.log(`  Avg cache retrieval:  ${avgCacheRetrieval}ms`);
-  console.log(`  (target: < 5ms local cosine-sim vs ~50ms $vectorSearch)`);
-  console.log('');
   console.log('  ── Latency Breakdown (avg per question) ──────────────');
   console.log(`  Embedding (Gemini):   ${avgEmbed}ms`);
-  console.log(`  Cache retrieval:      ${avgCacheRetrieval}ms`);
+  console.log(`  $vectorSearch (Atlas): ${avgRetrieval}ms`);
   console.log(`  LLM generation:       ${avgLLM}ms`);
   console.log(`  Judge grading:        ${avgJudge}ms`);
   console.log(`  ──────────────────────────────────────────────────────`);
@@ -186,28 +152,15 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log(`  Faithfulness (1-5):   ${avg('faithfulness')}`);
   console.log(`  Groundedness (0/1):   ${avg('groundedness')} (${(avg('groundedness') * 100).toFixed(0)}% cited a source)`);
   console.log(`  Sources returned:     ${allResults.reduce((s, r) => s + r.sourcesReturned, 0) / total}`);
-  console.log('');
-  console.log('  ── vs Server Baseline ($vectorSearch) ────────────────');
-  console.log('  Note: Server baseline has no pre-recorded latency data.');
-  console.log('  Cache retrieval (local cosine-sim) should be ~10x faster');
-  console.log('  than Atlas $vectorSearch (~2-5ms vs ~30-80ms).');
-  console.log('  Answer quality should not regress — same embedding model,');
-  console.log('  same LLM, same judge.');
   console.log('════════════════════════════════════════════════════════════');
 
-  // Save structured report
   const report = {
-    mode: 'desktop-cache',
+    mode: 'server-vsearch',
     promptVersion: PROMPT_VERSION,
     totalQuestions: total,
-    cache: {
-      hits: cacheHits,
-      misses: cacheMisses,
-      hitRate: `${(cacheHits / total * 100).toFixed(0)}%`,
-    },
     latency: {
       avgEmbeddingMs: Number(avgEmbed),
-      avgCacheRetrievalMs: Number(avgCacheRetrieval),
+      avgVectorSearchMs: Number(avgRetrieval),
       avgLlmMs: Number(avgLLM),
       avgJudgeMs: Number(avgJudge),
       avgTotalMs: Number(avgTotal),
@@ -219,15 +172,13 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       avgSourcesReturned: Number((allResults.reduce((s, r) => s + r.sourcesReturned, 0) / total).toFixed(1)),
     },
     perQuestion: allResults,
-    cacheStats: getCacheStats(),
   };
 
-  const reportPath = path.resolve(__dirname, '..', '..', 'eval-desktop-report.json');
+  const reportPath = path.resolve(__dirname, '..', '..', 'eval-server-report.json');
   const fs = await import('fs');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\nFull report saved to: ${reportPath}`);
 
-  resetCaches();
   await mongoose.disconnect();
   console.log('Done.');
 }

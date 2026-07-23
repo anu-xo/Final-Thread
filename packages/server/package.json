@@ -16,6 +16,7 @@
     "migrate:indexes": "node src/scripts/createIndexes.js",
     "eval": "node --env-file=.env src/scripts/evalRag.js",
     "eval:desktop": "node src/scripts/evalDesktop.js",
+    "eval:server": "node src/scripts/evalServer.js",
     "test:digest": "node src/scripts/testDigest.js"
   },
   "dependencies": {

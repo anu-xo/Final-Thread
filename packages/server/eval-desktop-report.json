@@ -1,0 +1,315 @@
+{
+  "mode": "desktop-cache",
+  "promptVersion": "desktop-cache-v1",
+  "totalQuestions": 20,
+  "cache": {
+    "hits": 20,
+    "misses": 0,
+    "hitRate": "100%"
+  },
+  "latency": {
+    "avgEmbeddingMs": 1594,
+    "avgCacheRetrievalMs": 1.6,
+    "avgLlmMs": 3020,
+    "avgJudgeMs": 1427,
+    "avgTotalMs": 6042
+  },
+  "quality": {
+    "avgRelevance": 5,
+    "avgFaithfulness": 5,
+    "avgGroundedness": 0.55,
+    "avgSourcesReturned": 8
+  },
+  "perQuestion": [
+    {
+      "question": "What is the difference between useEffect and useLayoutEffect in React?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 866,
+      "cacheRetrievalMs": 4,
+      "llmMs": 2940,
+      "judgeMs": 2516,
+      "totalMs": 6326
+    },
+    {
+      "question": "How do you fix a stale closure bug in a custom hook?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 943,
+      "cacheRetrievalMs": 1,
+      "llmMs": 2976,
+      "judgeMs": 1203,
+      "totalMs": 5123
+    },
+    {
+      "question": "When should you use React.memo versus useMemo?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 480,
+      "cacheRetrievalMs": 1,
+      "llmMs": 1029,
+      "judgeMs": 1233,
+      "totalMs": 2743
+    },
+    {
+      "question": "What are the best practices for managing global state in a large React app?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 649,
+      "cacheRetrievalMs": 1,
+      "llmMs": 1817,
+      "judgeMs": 881,
+      "totalMs": 3348
+    },
+    {
+      "question": "How do you handle unhandled promise rejections in Node.js?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 2952,
+      "cacheRetrievalMs": 2,
+      "llmMs": 5104,
+      "judgeMs": 858,
+      "totalMs": 8916
+    },
+    {
+      "question": "What is the difference between worker_threads and child_process in Node.js?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 3478,
+      "cacheRetrievalMs": 2,
+      "llmMs": 1715,
+      "judgeMs": 1025,
+      "totalMs": 6220
+    },
+    {
+      "question": "How do you implement rate limiting in an Express.js API?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 1585,
+      "cacheRetrievalMs": 3,
+      "llmMs": 2380,
+      "judgeMs": 1505,
+      "totalMs": 5473
+    },
+    {
+      "question": "When should you use streams versus buffer in Node.js file operations?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 477,
+      "cacheRetrievalMs": 2,
+      "llmMs": 2994,
+      "judgeMs": 960,
+      "totalMs": 4433
+    },
+    {
+      "question": "What is the difference between embedded references and manual lookups in MongoDB?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 472,
+      "cacheRetrievalMs": 1,
+      "llmMs": 4639,
+      "judgeMs": 2690,
+      "totalMs": 7802
+    },
+    {
+      "question": "How do you create a compound index for a text search query in MongoDB?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 559,
+      "cacheRetrievalMs": 1,
+      "llmMs": 2233,
+      "judgeMs": 2713,
+      "totalMs": 5506
+    },
+    {
+      "question": "When should you use change streams versus polling in MongoDB?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 3480,
+      "cacheRetrievalMs": 1,
+      "llmMs": 7268,
+      "judgeMs": 2687,
+      "totalMs": 13436
+    },
+    {
+      "question": "How do you implement transactions across multiple collections in MongoDB?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 1413,
+      "cacheRetrievalMs": 1,
+      "llmMs": 1001,
+      "judgeMs": 504,
+      "totalMs": 2919
+    },
+    {
+      "question": "What is the best CSS architecture for a scalable frontend project?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 2948,
+      "cacheRetrievalMs": 1,
+      "llmMs": 4702,
+      "judgeMs": 1127,
+      "totalMs": 8778
+    },
+    {
+      "question": "How do you implement responsive images with the picture element?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 3463,
+      "cacheRetrievalMs": 1,
+      "llmMs": 5999,
+      "judgeMs": 1591,
+      "totalMs": 11054
+    },
+    {
+      "question": "What are the core web vitals and how do you optimize them?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 577,
+      "cacheRetrievalMs": 1,
+      "llmMs": 4189,
+      "judgeMs": 3090,
+      "totalMs": 7857
+    },
+    {
+      "question": "When should you use SSR versus CSR for a content-heavy website?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 0,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 1630,
+      "cacheRetrievalMs": 2,
+      "llmMs": 2983,
+      "judgeMs": 1335,
+      "totalMs": 5950
+    },
+    {
+      "question": "How do you pick the right database for a side project?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 583,
+      "cacheRetrievalMs": 2,
+      "llmMs": 1484,
+      "judgeMs": 614,
+      "totalMs": 2683
+    },
+    {
+      "question": "What deployment strategy works best for a small SaaS MVP?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 1677,
+      "cacheRetrievalMs": 1,
+      "llmMs": 989,
+      "judgeMs": 1028,
+      "totalMs": 3695
+    },
+    {
+      "question": "How do you set up CI/CD for a personal project with GitHub Actions?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 3142,
+      "cacheRetrievalMs": 2,
+      "llmMs": 1471,
+      "judgeMs": 462,
+      "totalMs": 5077
+    },
+    {
+      "question": "What are the most common mistakes when launching a side project?",
+      "relevance": 5,
+      "faithfulness": 5,
+      "groundedness": 1,
+      "sourcesReturned": 8,
+      "cacheHit": true,
+      "embedMs": 511,
+      "cacheRetrievalMs": 2,
+      "llmMs": 2479,
+      "judgeMs": 510,
+      "totalMs": 3502
+    }
+  ],
+  "cacheStats": {
+    "perCommunity": {
+      "6a5f85bd0d968cc815a85c51": {
+        "entries": 105,
+        "maxEntries": 200
+      },
+      "6a5f85bd0d968cc815a85c59": {
+        "entries": 101,
+        "maxEntries": 200
+      },
+      "6a5f85bd0d968cc815a85c61": {
+        "entries": 108,
+        "maxEntries": 200
+      },
+      "6a5f85bd0d968cc815a85c69": {
+        "entries": 105,
+        "maxEntries": 200
+      },
+      "6a5f85bd0d968cc815a85c71": {
+        "entries": 102,
+        "maxEntries": 200
+      }
+    },
+    "cacheHits": 0,
+    "cacheMisses": 0,
+    "hitRate": "N/A",
+    "avgCacheRetrievalMs": "N/A",
+    "avgApiRetrievalMs": "N/A",
+    "apiCalls": 0
+  }
+}
