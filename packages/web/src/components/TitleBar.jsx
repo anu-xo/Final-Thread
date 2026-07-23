@@ -17,6 +17,57 @@
 //   tray/title-bar conventions, so matching the Windows pattern is the
 //   least-surprising choice.  The -webkit-app-region:drag property provides
 //   window dragging on all Linux DEs that support it.
+//
+// ── OS-Native Chrome (cannot respect Tailwind dark mode) ────────────────────
+//
+// The following elements are rendered by the OS, not the web renderer, and
+// therefore CANNOT use Tailwind `dark:` classes or CSS custom properties.
+// They are documented here as "expected behavior" — not bugs.
+//
+// 1. macOS traffic-light buttons (close / minimize / zoom)
+//    — Rendered by AppKit via titleBarStyle:'hiddenInset'.
+//    — Symbol color and background are set via Electron's setTitleBarOverlay()
+//      in main.mjs, using nativeTheme.shouldUseDarkColors to toggle.
+//    — These buttons automatically follow the macOS system appearance.
+//
+// 2. macOS titleBarOverlay area
+//    — The 48px-high region behind the traffic-light buttons.
+//    — Background and symbol color are set in main.mjs on theme:changed IPC.
+//    — Cannot be styled with CSS — it's native OS chrome.
+//
+// 3. Windows title bar (when using Electron default frame)
+//    — We use frame:false, so this is NOT present in our app.
+//    — Our custom WinLinuxTitleBar component replaces it entirely.
+//
+// 4. Windows taskbar overlay icon (badge count)
+//    — Set via win.setOverlayIcon() in main.mjs.
+//    — The badge is a 16x16 PNG; the OS renders it on the taskbar icon.
+//    — Taskbar icon tinting is automatic on Win10+ (monochrome auto-invert).
+//
+// 5. macOS dock badge
+//    — Set via app.dock.setBadge() in main.mjs.
+//    — The OS renders the badge text on the dock icon.
+//
+// 6. System tray context menu
+//    — Built with Menu.buildFromTemplate() in main.mjs.
+//    — The OS renders the menu using native widgets (Win: Win32 menus,
+//      macOS: NSMenu, Linux: GTK/Qt menus).
+//    — No CSS or Tailwind can style these — they follow the OS theme.
+//
+// 7. Native OS notifications
+//    — Electron Notification API on macOS/Windows, libnotify on Linux.
+//    — Styled by the OS notification center, not the web app.
+//    — Dark/light appearance follows the OS theme automatically.
+//
+// 8. Electron dialog boxes (file picker, alerts)
+//    — Use dialog.showOpenDialog() / dialog.showMessageBox() in main.mjs.
+//    — These are native OS dialogs and follow the system theme.
+//
+// All of the above are by-design.  The custom title bar (WinLinuxTitleBar)
+// IS styled via Tailwind dark: classes because it's rendered in the web
+// renderer.  The inline `style=` attributes with hardcoded hex values are
+// properly toggled via the `isDark` boolean derived from a MutationObserver
+// on document.documentElement.classList.
 import { useState, useEffect } from 'react';
 import { Minus, Square, X, Copy } from 'lucide-react';
 

@@ -29,13 +29,13 @@ export default function AIChatPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">AI Chat</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100">AI Chat</h1>
 
         <select
           value={selectedSlug ?? ''}
           onChange={(e) => setSelectedSlug(e.target.value || null)}
           disabled={!isOnline}
-          className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+          className="rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 px-3 py-1.5 text-sm disabled:bg-gray-100 dark:disabled:bg-neutral-800 disabled:text-gray-400 disabled:cursor-not-allowed"
         >
           {communityList.length === 0 && <option value="">No communities joined</option>}
           {communityList.map((c) => (
@@ -45,17 +45,17 @@ export default function AIChatPage() {
       </div>
 
       {!isOnline && (
-        <div className="rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2.5 text-sm text-yellow-800 mb-3">
+        <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 px-4 py-2.5 text-sm text-yellow-800 dark:text-yellow-300 mb-3">
           You are offline — messages will fail until you reconnect.
         </div>
       )}
 
       {!selected ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
+        <div className="flex-1 flex items-center justify-center text-sm text-gray-400 dark:text-neutral-500">
           Join a community first to start chatting with AI.
         </div>
       ) : (
-        <div className="flex-1 min-h-0 rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">
           <SectionErrorBoundary sectionName="AI Chat">
             <ChatPanel
               communityId={selected._id}

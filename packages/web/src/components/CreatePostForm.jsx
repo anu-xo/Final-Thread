@@ -82,21 +82,21 @@ function CommunityPicker({ value, onChange, error }) {
 
     return (
         <div className="relative">
-            <label className="block text-sm font-medium mb-1">Community</label>
-            <input
-                className="w-full border rounded-md px-3 py-2"
-                placeholder="Search communities..."
-                value={open ? query : (selected ? `r/${selected.name}` : '')}
-                onFocus={() => setOpen(true)}
-                onChange={(e) => setQuery(e.target.value)}
-                onBlur={() => setTimeout(() => setOpen(false), 150)}
-            />
-            {open && communities.length > 0 && (
-                <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-56 overflow-auto shadow-lg">
-                    {communities.map((c) => (
-                        <li
-                            key={c._id}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+            <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-neutral-100">Community</label>
+                <input
+                    className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2"
+                    placeholder="Search communities..."
+                    value={open ? query : (selected ? `r/${selected.name}` : '')}
+                    onFocus={() => setOpen(true)}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onBlur={() => setTimeout(() => setOpen(false), 150)}
+                />
+                {open && communities.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-md mt-1 max-h-56 overflow-auto shadow-lg">
+                        {communities.map((c) => (
+                            <li
+                                key={c._id}
+                                className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-neutral-700 cursor-pointer"
                             onMouseDown={() => { onChange(c._id); setOpen(false); }}
                         >
                             r/{c.name}
@@ -120,9 +120,9 @@ function FlairSelector({ communityId, value, onChange }) {
 
     return (
         <div>
-            <label className="block text-sm font-medium mb-1">Flair (optional)</label>
+            <label className="block text-sm font-medium mb-1 text-gray-900 dark:text-neutral-100">Flair (optional)</label>
             <select
-                className="w-full border rounded-md px-3 py-2"
+                className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2"
                 value={value || ''}
                 onChange={(e) => onChange(e.target.value || undefined)}
             >
@@ -145,23 +145,23 @@ function TiptapField({ value, onChange }) {
     });
 
     return (
-        <div className="border rounded-md">
-            <div className="flex gap-1 border-b p-2 text-sm">
-                <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className="px-2 py-1 font-bold hover:bg-gray-100 rounded">B</button>
-                <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className="px-2 py-1 italic hover:bg-gray-100 rounded">I</button>
-                <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className="px-2 py-1 hover:bg-gray-100 rounded">• List</button>
+        <div className="border border-gray-300 dark:border-neutral-600 rounded-md">
+            <div className="flex gap-1 border-b border-gray-300 dark:border-neutral-600 p-2 text-sm">
+                <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className="px-2 py-1 font-bold hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">B</button>
+                <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className="px-2 py-1 italic hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">I</button>
+                <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded">• List</button>
                 <button
                     type="button"
                     onClick={() => {
                         const url = window.prompt('URL');
                         if (url) editor?.chain().focus().setLink({ href: url }).run();
                     }}
-                    className="px-2 py-1 hover:bg-gray-100 rounded"
+                    className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded"
                 >
                     Link
                 </button>
             </div>
-            <EditorContent editor={editor} className="prose prose-sm max-w-none p-3 min-h-[120px]" />
+            <EditorContent editor={editor} className="prose prose-sm dark:prose-invert max-w-none p-3 min-h-[120px]" />
         </div>
     );
 }
@@ -303,7 +303,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                 <input
                     {...register('title')}
                     placeholder="Title"
-                    className="w-full border rounded-md px-3 py-2 text-lg"
+                    className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2 text-lg"
                 />
                 {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
             </div>
@@ -320,7 +320,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                                 onClick={() => field.onChange(t)}
                                 className={`px-3 py-1 rounded-md text-sm border transition-colors ${field.value === t
                                         ? 'bg-blue-600 text-white'
-                                        : 'bg-white hover:bg-gray-50'
+                                        : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 text-gray-900 dark:text-neutral-100 border-gray-300 dark:border-neutral-600'
                                     }`}
                             >
                                 {t === 'text' ? 'Text post' : t === 'link' ? 'Link post' : 'Image post'}
@@ -335,7 +335,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                     <input
                         {...register('linkUrl')}
                         placeholder="https://..."
-                        className="w-full border rounded-md px-3 py-2"
+                        className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2"
                     />
                     {errors.linkUrl && <p className="text-red-500 text-xs mt-1">{errors.linkUrl.message}</p>}
                 </div>
@@ -355,7 +355,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                             type="button"
                             onClick={handleFileSelection}
                             disabled={uploading}
-                            className="px-3 py-2 rounded-md border bg-white hover:bg-gray-50 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-3 py-2 rounded-md border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {uploading && (
                                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -365,7 +365,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                             )}
                             {uploading ? 'Uploading...' : 'Attach image(s)'}
                         </button>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-neutral-400">
                             Uploads go straight to Cloudinary; the server only receives CDN URLs.
                         </span>
                     </div>
@@ -375,7 +375,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                     {selectedFiles.length > 0 && (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                             {selectedFiles.map((file, index) => (
-                                <div key={`${file.name}-${index}`} className="relative rounded-lg border overflow-hidden bg-gray-50">
+                                <div key={`${file.name}-${index}`} className="relative rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden bg-gray-50 dark:bg-neutral-800">
                                     <img src={file.previewUrl} alt={file.name} className="h-32 w-full object-cover" />
                                     <button
                                         type="button"

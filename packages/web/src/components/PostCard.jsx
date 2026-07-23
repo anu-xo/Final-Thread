@@ -22,7 +22,7 @@ export default function PostCard({ post }) {
   } = post;
 
   return (
-    <div className="flex gap-3 border rounded-lg p-3 bg-white hover:border-gray-300 transition-colors">
+    <div className="flex gap-3 border rounded-lg p-3 bg-white dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 hover:border-gray-300 dark:hover:border-neutral-600 transition-colors">
       {/* Vote column — uses the shared VoteButton with optimistic updates */}
       <div className="shrink-0">
         <VoteButton
@@ -35,8 +35,8 @@ export default function PostCard({ post }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-          <span className="bg-gray-100 px-2 py-0.5 rounded-full font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-neutral-400 mb-1">
+          <span className="bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded-full font-medium text-gray-700 dark:text-neutral-300">
             r/{community?.name}
           </span>
           {flair && (
@@ -48,14 +48,14 @@ export default function PostCard({ post }) {
           <span>· {timeAgo(createdAt)}</span>
         </div>
 
-        <h3 className="font-medium text-gray-900 leading-snug">
+        <h3 className="font-medium text-gray-900 dark:text-neutral-100 leading-snug">
           <Link to={`/posts/${_id}`} className="hover:text-orange-500 transition-colors">
             {title}
           </Link>
         </h3>
 
         {post?.media?.length > 0 && (
-          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50">
+          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50 dark:bg-neutral-900 border-gray-200 dark:border-neutral-700">
             <img
               src={post.media[0]}
               alt={title}
@@ -65,10 +65,10 @@ export default function PostCard({ post }) {
           </Link>
         )}
 
-        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-neutral-400">
           <Link
             to={`/posts/${_id}`}
-            className="hover:text-gray-700 transition-colors"
+            className="hover:text-gray-700 dark:hover:text-neutral-200 transition-colors"
           >
             💬 {commentCount} comments
           </Link>

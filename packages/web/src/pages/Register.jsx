@@ -55,15 +55,15 @@ export default function Register() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-50 px-4"
+      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900 px-4"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center mb-2">
+      <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-8">
+        <h1 className="text-3xl font-bold text-center mb-2 text-gray-900 dark:text-neutral-100">
           Create your account
         </h1>
 
-        <p className="text-gray-500 text-center mb-6">
+        <p className="text-gray-500 dark:text-neutral-400 text-center mb-6">
           Join the community today.
         </p>
 
@@ -71,7 +71,7 @@ export default function Register() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1"
             >
               Username
             </label>
@@ -80,7 +80,7 @@ export default function Register() {
               id="username"
               {...register('username')}
               placeholder="cooluser123"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
             {errors.username && (
@@ -93,7 +93,7 @@ export default function Register() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1"
             >
               Email
             </label>
@@ -103,7 +103,7 @@ export default function Register() {
               type="email"
               {...register('email')}
               placeholder="you@example.com"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
             {errors.email && (
@@ -116,7 +116,7 @@ export default function Register() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1"
             >
               Password
             </label>
@@ -126,7 +126,7 @@ export default function Register() {
               type="password"
               {...register('password')}
               placeholder="At least 8 characters"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
 
             {errors.password && (
@@ -151,7 +151,7 @@ export default function Register() {
           </button>
         </form>
 
-        <p className="text-sm text-gray-500 mt-6 text-center">
+        <p className="text-sm text-gray-500 dark:text-neutral-400 mt-6 text-center">
           Already have an account?{' '}
           <Link
             to="/login"

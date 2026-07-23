@@ -50,7 +50,7 @@ export default function HomePage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-24 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm animate-pulse" />
+        <div className="h-24 rounded-2xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm animate-pulse" />
         <div className="space-y-3">
           {[...Array(6)].map((_, index) => (
             <PostCardSkeleton key={index} />
@@ -62,7 +62,7 @@ export default function HomePage() {
 
   if (isError) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300">
         {error?.message || 'Unable to load your feed.'}
       </div>
     );
@@ -70,10 +70,10 @@ export default function HomePage() {
 
   if (noSubscriptions && posts.length === 0) {
     return (
-      <div className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-8 shadow-sm">
+      <div className="rounded-3xl border border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 to-white dark:from-orange-900/20 dark:to-neutral-900 p-8 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Welcome to ThreadVerse</p>
-        <h1 className="mt-2 text-3xl font-bold text-gray-900">Join some communities to build your feed</h1>
-        <p className="mt-3 max-w-2xl text-sm text-gray-600">
+        <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">Join some communities to build your feed</h1>
+        <p className="mt-3 max-w-2xl text-sm text-gray-600 dark:text-neutral-400">
           Your home feed is personalized from the communities you subscribe to. Join a few spaces and we’ll start filling this page with posts that match your interests.
         </p>
         <div className="mt-6">
@@ -91,11 +91,11 @@ export default function HomePage() {
   return (
     <SectionErrorBoundary sectionName="Feed">
       <div className="space-y-5">
-        <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Your feed</p>
-            <h1 className="mt-1 text-2xl font-bold text-gray-900">Home</h1>
-            <p className="mt-1 text-sm text-gray-500">Personalized from communities you&apos;ve joined.</p>
+            <h1 className="mt-1 text-2xl font-bold text-gray-900 dark:text-neutral-100">Home</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Personalized from communities you&apos;ve joined.</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ export default function HomePage() {
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   sort === option
                     ? 'bg-orange-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
                 }`}
               >
                 {option[0].toUpperCase() + option.slice(1)}
@@ -125,13 +125,13 @@ export default function HomePage() {
         <div ref={sentinelRef} className="h-4" />
 
         {isFetchingNextPage && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-500">
+          <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 text-center text-sm text-gray-500 dark:text-neutral-400">
             Loading more...
           </div>
         )}
 
         {!hasNextPage && posts.length > 0 && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4 text-center text-sm text-gray-400">
+          <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 text-center text-sm text-gray-400 dark:text-neutral-500">
             You&apos;ve reached the end.
           </div>
         )}
