@@ -1,0 +1,230 @@
+{
+  "desktop": {
+    "label": "Desktop (cache)",
+    "questions": 15,
+    "avgRelevance": 5,
+    "avgFaithfulness": 5,
+    "avgGroundedness": 0.5,
+    "avgRetrievalMs": 1.6,
+    "avgTotalMs": 5145.67
+  },
+  "server": {
+    "label": "Server ($vectorSearch)",
+    "questions": 1,
+    "avgRelevance": null,
+    "avgFaithfulness": null,
+    "avgGroundedness": null,
+    "avgRetrievalMs": 46,
+    "avgTotalMs": 50451
+  },
+  "delta": {
+    "relevance": 5,
+    "faithfulness": 5,
+    "groundedness": 0.5
+  },
+  "acceptanceCriteria": {
+    "relevanceWithinTolerance": false,
+    "faithfulnessWithinTolerance": false,
+    "groundednessWithinTolerance": false,
+    "cacheHitRate": "100%",
+    "cacheSpeedup": "28.8x"
+  },
+  "perQuestion": {
+    "desktop": [
+      {
+        "question": "What is the difference between useEffect and useLayoutEffect in React?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 748,
+        "retrievalMs": 5,
+        "llmMs": 3142,
+        "judgeMs": 753,
+        "totalMs": 4648
+      },
+      {
+        "question": "How do you fix a stale closure bug in a custom hook?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 932,
+        "retrievalMs": 1,
+        "llmMs": 1481,
+        "judgeMs": 1444,
+        "totalMs": 3858
+      },
+      {
+        "question": "When should you use React.memo versus useMemo?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 1044,
+        "retrievalMs": 1,
+        "llmMs": 1454,
+        "judgeMs": 573,
+        "totalMs": 3072
+      },
+      {
+        "question": "What are the best practices for managing global state in a large React app?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 474,
+        "retrievalMs": 1,
+        "llmMs": 2896,
+        "judgeMs": 1494,
+        "totalMs": 4865
+      },
+      {
+        "question": "How do you handle unhandled promise rejections in Node.js?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 1702,
+        "retrievalMs": 1,
+        "llmMs": 3891,
+        "judgeMs": 916,
+        "totalMs": 6510
+      },
+      {
+        "question": "What is the difference between worker_threads and child_process in Node.js?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 565,
+        "retrievalMs": 4,
+        "llmMs": 2290,
+        "judgeMs": 947,
+        "totalMs": 3806
+      },
+      {
+        "question": "How do you implement rate limiting in an Express.js API?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 461,
+        "retrievalMs": 2,
+        "llmMs": 1831,
+        "judgeMs": 1673,
+        "totalMs": 3967
+      },
+      {
+        "question": "When should you use streams versus buffer in Node.js file operations?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 1083,
+        "retrievalMs": 1,
+        "llmMs": 2867,
+        "judgeMs": 798,
+        "totalMs": 4749
+      },
+      {
+        "question": "What is the difference between embedded references and manual lookups in MongoDB?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 2925,
+        "retrievalMs": 1,
+        "llmMs": 1935,
+        "judgeMs": 798,
+        "totalMs": 5659
+      },
+      {
+        "question": "How do you create a compound index for a text search query in MongoDB?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 468,
+        "retrievalMs": 1,
+        "llmMs": 1512,
+        "judgeMs": 2060,
+        "totalMs": 4041
+      },
+      {
+        "question": "When should you use change streams versus polling in MongoDB?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 2708,
+        "retrievalMs": 2,
+        "llmMs": 4553,
+        "judgeMs": 1041,
+        "totalMs": 8304
+      },
+      {
+        "question": "How do you implement transactions across multiple collections in MongoDB?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 3468,
+        "retrievalMs": 1,
+        "llmMs": 2671,
+        "judgeMs": 1792,
+        "totalMs": 7932
+      },
+      {
+        "question": "What is the best CSS architecture for a scalable frontend project?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 1,
+        "sourcesReturned": 8,
+        "embedMs": 941,
+        "retrievalMs": 1,
+        "llmMs": 2105,
+        "judgeMs": 2484,
+        "totalMs": 5531
+      },
+      {
+        "question": "How do you implement responsive images with the picture element?",
+        "relevance": 5,
+        "faithfulness": 5,
+        "groundedness": 0,
+        "sourcesReturned": 8,
+        "embedMs": 3311,
+        "retrievalMs": 1,
+        "llmMs": 1927,
+        "judgeMs": 617,
+        "totalMs": 5856
+      },
+      {
+        "question": "What are the core web vitals and how do you optimize them?",
+        "relevance": null,
+        "faithfulness": null,
+        "groundedness": null,
+        "sourcesReturned": 8,
+        "embedMs": 2561,
+        "retrievalMs": 1,
+        "llmMs": 1728,
+        "judgeMs": 97,
+        "totalMs": 4387
+      }
+    ],
+    "server": [
+      {
+        "question": "What is the difference between embedded references and manual lookups in MongoDB?",
+        "relevance": null,
+        "faithfulness": null,
+        "groundedness": null,
+        "sourcesReturned": 8,
+        "embedMs": 477,
+        "retrievalMs": 46,
+        "llmMs": 49860,
+        "judgeMs": 68,
+        "totalMs": 50451
+      }
+    ]
+  }
+}
