@@ -1,14 +1,32 @@
-
 {
-  "community_reactjs_id_here": [
-    { "question": "What's the difference between useEffect and useLayoutEffect?" },
-    { "question": "How do I fix a stale closure in a custom hook?" }
-    
+  "6a5f85bd0d968cc815a85c51": [
+    { "question": "What is the difference between useEffect and useLayoutEffect in React?" },
+    { "question": "How do you fix a stale closure bug in a custom hook?" },
+    { "question": "When should you use React.memo versus useMemo?" },
+    { "question": "What are the best practices for managing global state in a large React app?" }
   ],
-  "community_webdev_id_here": [
-    { "question": "What's a good starter stack for a side project in 2026?" }
+  "6a5f85bd0d968cc815a85c59": [
+    { "question": "How do you handle unhandled promise rejections in Node.js?" },
+    { "question": "What is the difference between worker_threads and child_process in Node.js?" },
+    { "question": "How do you implement rate limiting in an Express.js API?" },
+    { "question": "When should you use streams versus buffer in Node.js file operations?" }
   ],
-  "6a4bd8edd229b2503f58d325": [
-    { "question": "What's a good starter stack for a React side project?" }
+  "6a5f85bd0d968cc815a85c61": [
+    { "question": "What is the difference between embedded references and manual lookups in MongoDB?" },
+    { "question": "How do you create a compound index for a text search query in MongoDB?" },
+    { "question": "When should you use change streams versus polling in MongoDB?" },
+    { "question": "How do you implement transactions across multiple collections in MongoDB?" }
+  ],
+  "6a5f85bd0d968cc815a85c69": [
+    { "question": "What is the best CSS architecture for a scalable frontend project?" },
+    { "question": "How do you implement responsive images with the picture element?" },
+    { "question": "What are the core web vitals and how do you optimize them?" },
+    { "question": "When should you use SSR versus CSR for a content-heavy website?" }
+  ],
+  "6a5f85bd0d968cc815a85c71": [
+    { "question": "How do you pick the right database for a side project?" },
+    { "question": "What deployment strategy works best for a small SaaS MVP?" },
+    { "question": "How do you set up CI/CD for a personal project with GitHub Actions?" },
+    { "question": "What are the most common mistakes when launching a side project?" }
   ]
 }
