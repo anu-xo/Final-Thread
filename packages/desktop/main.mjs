@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, Notification, globalShortcut, nativeTheme, net, Tray, Menu, nativeImage, protocol, session } from 'electron';
 import path from 'path';
 import fs from 'fs/promises';
+import { execFile } from 'child_process';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
 import './sync.mjs';
@@ -32,6 +33,7 @@ const ALLOWED_CHANNELS = new Set([
   // Notifications
   'show-notification',
   'notification:show',
+  'notification:ping-test',
   'ai-response-ready',
 
   // File picker & upload helpers
@@ -464,7 +466,7 @@ safeHandle('show-notification', (_, payload) => {
   if (typeof payload !== 'object' || payload === null) throw new Error('show-notification: payload must be an object');
   if (typeof payload.title !== 'string' || !payload.title.length) throw new Error('show-notification: title must be a non-empty string');
   if (typeof payload.body !== 'string' || !payload.body.length) throw new Error('show-notification: body must be a non-empty string');
-  new Notification({ title: payload.title, body: payload.body }).show();
+  showPlatformNotification({ title: payload.title, body: payload.body });
 });
 
 // 3. Settings & Storage (Includes Subscribed Communities Cache)
@@ -635,18 +637,15 @@ safeOn('ai-response-ready', (event, communityName) => {
     throw new Error('ai-response-ready: communityName must be a non-empty string');
   }
   if (!mainWindow.isFocused()) {
-    const notification = new Notification({
+    showPlatformNotification({
       title: 'AI answered',
       body: `In r/${communityName}`,
+      onClick: () => {
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send('navigate', { view: 'ai-chat', scrollToLatest: true });
+      },
     });
-
-    notification.on('click', () => {
-      mainWindow.show();
-      mainWindow.focus();
-      mainWindow.webContents.send('navigate', { view: 'ai-chat', scrollToLatest: true });
-    });
-
-    notification.show();
   }
 });
 
@@ -696,7 +695,7 @@ safeOn('badge:clear', () => {
 });
 
 // 9b. Manual test trigger — remove after Day 16 socket wiring
-safeOn('badge:test', () => {
+safeOn('badge:test', async () => {
   const win = BrowserWindow.getAllWindows()[0];
   if (!win) return;
 
@@ -706,33 +705,102 @@ safeOn('badge:test', () => {
     win.setOverlayIcon(createBadgeImage(1), '1 new notification');
   }
 
-  const notification = new Notification({
+  await showPlatformNotification({
     title: 'ThreadVerse',
     body: 'Test notification — badge should appear on taskbar',
   });
-  notification.show();
 });
 
 // 10. Clickable Notifications
 safeOn('notification:show', (_event, payload) => {
   if (typeof payload !== 'object' || payload === null) throw new Error('notification:show: payload must be an object');
-  if (typeof payload.title !== 'string' || !payload.title.length) throw new Error('notification:show: title must be a non-empty string');
-  if (typeof payload.body !== 'string' || !payload.body.length) throw new Error('notification:show: body must be a non-empty string');
+  if (typeof payload.title !== 'string' || !payload.title.length) throw new Error('notification:show: payload must be a non-empty string');
+  if (typeof payload.body !== 'string' || !payload.body.length) throw new Error('notification:show: payload must be a non-empty string');
   if (typeof payload.targetUrl !== 'string' || !payload.targetUrl.length) throw new Error('notification:show: targetUrl must be a non-empty string');
 
-  const notification = new Notification({ title: payload.title, body: payload.body });
-
-  notification.on('click', () => {
-    const win = BrowserWindow.getAllWindows()[0];
-
-    if (win) {
-      win.show();
-      win.focus();
-      win.webContents.send('navigate', payload.targetUrl);
-    }
+  showPlatformNotification({
+    title: payload.title,
+    body: payload.body,
+    onClick: () => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (win) {
+        win.show();
+        win.focus();
+        win.webContents.send('navigate', payload.targetUrl);
+      }
+    },
   });
+});
 
   notification.show();
+});
+
+// ── Platform-Aware Notification Helper ───────────────────────────────────────
+//
+// macOS / Windows — Electron's Notification class uses the OS native notification
+//   center (macOS Notification Center, Windows Action Center). No extra deps.
+//
+// Linux — Electron's Notification class uses libnotify under the hood, but only
+//   when `libnotify` is installed.  On headless servers or minimal Docker images
+//   it may be absent.  We detect this with Notification.isSupported() and fall
+//   back to spawning `notify-send` (from the `libnotify-bin` package) directly.
+//   If neither is available we return { supported: false } so the caller can
+//   degrade gracefully (e.g. show an in-app toast instead).
+//
+// Decision: We keep Electron's Notification as the primary path because it
+//   handles click events (needed for navigation).  The notify-send fallback
+//   is fire-and-forget — no click handler — which is acceptable for test pings
+//   and simple alerts where navigation isn't required.
+async function showPlatformNotification({ title, body, onClick }) {
+  const platform = process.platform;
+
+  // macOS & Windows — native Notification API is always available
+  if (platform === 'darwin' || platform === 'win32') {
+    const notification = new Notification({ title, body });
+    if (typeof onClick === 'function') {
+      notification.on('click', onClick);
+    }
+    notification.show();
+    return { backend: 'native', supported: true };
+  }
+
+  // Linux — try Electron's Notification (libnotify) first
+  if (platform === 'linux') {
+    // Notification.isSupported() checks for libnotify at runtime
+    if (Notification.isSupported()) {
+      const notification = new Notification({ title, body });
+      if (typeof onClick === 'function') {
+        notification.on('click', onClick);
+      }
+      notification.show();
+      return { backend: 'native', supported: true };
+    }
+
+    // Fallback: spawn notify-send (from libnotify-bin / libnotify-tools)
+    try {
+      await new Promise((resolve, reject) => {
+        execFile('notify-send', [title, body], { timeout: 5000 }, (err, _stdout, stderr) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+      return { backend: 'notify-send', supported: true };
+    } catch {
+      console.warn('[notification] Linux: neither libnotify nor notify-send available');
+      return { backend: 'unsupported', supported: false };
+    }
+  }
+
+  return { backend: 'unsupported', supported: false };
+}
+
+// 11. Notification Ping Test — triggers a test notification and reports the backend used
+safeHandle('notification:ping-test', async () => {
+  const result = await showPlatformNotification({
+    title: 'ThreadVerse',
+    body: `Test notification — ${process.platform} (${new Date().toLocaleTimeString()})`,
+  });
+  return result;
 });
 
 

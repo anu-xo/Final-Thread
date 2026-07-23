@@ -63,6 +63,7 @@ export default function SettingsPage() {
 
   const [serverPrefs, setServerPrefs] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [notifTestResult, setNotifTestResult] = useState(null);
 
   useEffect(() => {
     userApi.getMe().then(({ data }) => setServerPrefs(data.data)).catch(() => {});
@@ -93,6 +94,17 @@ export default function SettingsPage() {
     setSaving(true);
     await updateDesktop({ [key]: val });
     setSaving(false);
+  };
+
+  const handlePingNotification = async () => {
+    if (!desktop || !window.electronAPI?.pingNotificationTest) return;
+    setNotifTestResult(null);
+    try {
+      const result = await window.electronAPI.pingNotificationTest();
+      setNotifTestResult(result);
+    } catch {
+      setNotifTestResult({ backend: 'error', supported: false });
+    }
   };
 
   return (
@@ -148,6 +160,25 @@ export default function SettingsPage() {
               checked={aiChatAutoOpen}
               onChange={(val) => handleDesktopSetting('aiChatAutoOpen', val)}
             />
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 mt-2">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm">Send test notification</span>
+                <button
+                  type="button"
+                  onClick={handlePingNotification}
+                  className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 transition-colors"
+                >
+                  Send
+                </button>
+              </div>
+              {notifTestResult && (
+                <p className={`text-xs mt-1 ${notifTestResult.supported ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                  {notifTestResult.supported
+                    ? `Delivered via ${notifTestResult.backend}`
+                    : 'No notification daemon found — install libnotify or notify-send'}
+                </p>
+              )}
+            </div>
             <Select
               label="Default community sort"
               value={defaultSort}

@@ -37,6 +37,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showOSNotification: (payload) =>
     ipcRenderer.send('notification:show', payload),
 
+  pingNotificationTest: () =>
+    ipcRenderer.invoke('notification:ping-test'),
+
   notifyAIResponse: (communityName) =>
     ipcRenderer.send('ai-response-ready', communityName),
 
