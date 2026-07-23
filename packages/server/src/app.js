@@ -27,6 +27,7 @@ import notificationsRouter from './routes/notifications.js';
 import adminRoutes from './routes/admin.js';
 import sitemapRoutes from './routes/sitemap.js';
 import desktopRoutes from './routes/desktop.js';
+import emailRoutes from './routes/email.js';
 import { adminRouter } from './middleware/adminGuard.js';
 import { platformTag } from './middleware/platformTag.js';
 import { versionGate } from './middleware/versionGate.js';
@@ -127,6 +128,7 @@ app.get('/api/health', async (req, res) => {
   res.json({ status: 'ok', db: dbStatus, redis: redisStatus, timestamp: new Date().toISOString() });
 });
 app.use('/api/desktop', desktopRoutes);
+app.use('/api/email', emailRoutes);
 
 // ── Version Gate ────────────────────────────────────────────────────────────
 app.use(versionGate);
