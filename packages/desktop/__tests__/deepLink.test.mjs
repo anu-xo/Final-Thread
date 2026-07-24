@@ -120,12 +120,23 @@ describe('handleDeepLink — IPC + window behaviour (mocked)', () => {
   });
 
   function handleDeepLink(url) {
-    const parsed = new URL(url);
-    const type = parsed.hostname;
-    const param = parsed.pathname.replace(/^\//, '');
-    mockMainWindow?.webContents.send('deep-link:navigate', { type, param });
-    mockMainWindow?.show();
-    mockMainWindow?.focus();
+    try {
+      const parsed = new URL(url);
+      const type = parsed.hostname;
+      const param = parsed.pathname.replace(/^\//, '');
+      const VALID_TYPES = ['community', 'post', 'user'];
+      if (!VALID_TYPES.includes(type) || !param) {
+        mockMainWindow?.webContents.send('deep-link:navigate', { type: null, param: null });
+        mockMainWindow?.show();
+        mockMainWindow?.focus();
+        return;
+      }
+      mockMainWindow?.webContents.send('deep-link:navigate', { type, param });
+      mockMainWindow?.show();
+      mockMainWindow?.focus();
+    } catch {
+      // malformed URL — silently ignore
+    }
   }
 
   it('sends IPC with correct channel and payload for community', () => {
@@ -168,6 +179,21 @@ describe('handleDeepLink — IPC + window behaviour (mocked)', () => {
       mockMainWindow?.webContents.send('deep-link:navigate', { type, param });
       globalThis.mainWindow = saved;
     });
+  });
+
+  it('sends null type/param for malformed URL (missing param)', () => {
+    handleDeepLink('threadverse://community/');
+    assert.deepEqual(capturedPayload.payload, { type: null, param: null });
+  });
+
+  it('sends null type/param for unknown type', () => {
+    handleDeepLink('threadverse://unknown/value');
+    assert.deepEqual(capturedPayload.payload, { type: null, param: null });
+  });
+
+  it('sends null type/param for URL with no path at all', () => {
+    handleDeepLink('threadverse://');
+    assert.deepEqual(capturedPayload.payload, { type: null, param: null });
   });
 });
 

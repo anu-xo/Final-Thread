@@ -38,6 +38,10 @@ describe('Renderer deep link routing — all 3 patterns', () => {
     assert.equal(resolveDeepLinkRoute('unknown', 'something'), null);
   });
 
+  it('null type returns null (malformed deep link)', () => {
+    assert.equal(resolveDeepLinkRoute(null, null), null);
+  });
+
   it('empty param still produces valid route', () => {
     assert.equal(resolveDeepLinkRoute('community', ''), '/r/');
     assert.equal(resolveDeepLinkRoute('post', ''), '/post/');

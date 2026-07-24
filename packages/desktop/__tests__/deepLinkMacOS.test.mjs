@@ -148,3 +148,22 @@ describe('Cross-platform protocol consistency', () => {
     assert.equal(parsed.pathname.replace(/^\//, ''), 'reactjs');
   });
 });
+
+describe('electron-builder.yml — Linux .desktop MIME handler', () => {
+  it('has linux section', () => {
+    assert.ok(yamlRaw.includes('linux:'), 'linux section missing');
+  });
+
+  it('declares x-scheme-handler/threadverse in MimeType', () => {
+    assert.ok(yamlRaw.includes('x-scheme-handler/threadverse'),
+      'x-scheme-handler/threadverse MIME type not found');
+  });
+
+  it('has desktop key for .desktop file generation', () => {
+    assert.ok(yamlRaw.includes('desktop:'), 'desktop key missing under linux');
+  });
+
+  it('sets StartupWMClass for Wayland/X11 matching', () => {
+    assert.ok(yamlRaw.includes('StartupWMClass: ThreadVerse'));
+  });
+});

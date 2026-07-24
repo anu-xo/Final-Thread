@@ -899,13 +899,27 @@ function extractDeepLinkUrl(argv) {
 }
 
 function handleDeepLink(url) {
-  // threadverse://community/reactjs -> { type: 'community', param: 'reactjs' }
-  const parsed = new URL(url);
-  const type = parsed.hostname;      // 'community', 'post', 'user'
-  const param = parsed.pathname.replace(/^\//, '');
-  mainWindow?.webContents.send('deep-link:navigate', { type, param });
-  mainWindow?.show();
-  mainWindow?.focus();
+  try {
+    // threadverse://community/reactjs -> { type: 'community', param: 'reactjs' }
+    const parsed = new URL(url);
+    const type = parsed.hostname;      // 'community', 'post', 'user'
+    const param = parsed.pathname.replace(/^\//, '');
+
+    const VALID_TYPES = ['community', 'post', 'user'];
+    if (!VALID_TYPES.includes(type) || !param) {
+      console.warn('[deep-link] malformed or unknown URL:', url);
+      mainWindow?.webContents.send('deep-link:navigate', { type: null, param: null });
+      mainWindow?.show();
+      mainWindow?.focus();
+      return;
+    }
+
+    mainWindow?.webContents.send('deep-link:navigate', { type, param });
+    mainWindow?.show();
+    mainWindow?.focus();
+  } catch (err) {
+    console.error('[deep-link] failed to parse URL:', url, err);
+  }
 }
 
 // Windows/Linux: single-instance lock — second instance passes URL via argv

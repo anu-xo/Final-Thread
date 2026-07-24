@@ -125,9 +125,14 @@ function DesktopShortcutBridge() {
     });
 
     const removeDeepLink = window.electronAPI.onDeepLink?.(({ type, param }) => {
+      if (!type || !param) {
+        navigate('/home');
+        return;
+      }
       if (type === 'community') navigate(`/r/${param}`);
-      if (type === 'post') navigate(`/post/${param}`);
-      if (type === 'user') navigate(`/u/${param}`);
+      else if (type === 'post') navigate(`/post/${param}`);
+      else if (type === 'user') navigate(`/u/${param}`);
+      else navigate('/home');
     });
 
     return () => {

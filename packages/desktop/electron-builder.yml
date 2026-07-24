@@ -59,3 +59,7 @@ linux:
     - target: AppImage
       arch:
         - x64
+  desktop:
+    MimeType: x-scheme-handler/threadverse;
+    Categories: Network;InstantMessaging;
+    StartupWMClass: ThreadVerse
