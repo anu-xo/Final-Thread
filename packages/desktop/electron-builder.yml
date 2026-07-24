@@ -32,6 +32,12 @@ mac:
   hardenedRuntime: true
   gatekeeperAssess: false
   notarize: false  # handled separately in CI via xcrun notarytool
+  extendInfo:
+    CFBundleURLTypes:
+      - CFBundleURLSchemes:
+          - threadverse
+        CFBundleURLName: com.threadverse.app
+        CFBundleURLIcon: AppIcon
   extraResources:
     - from: ../web/dist
       to: web/dist
