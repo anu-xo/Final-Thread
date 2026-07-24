@@ -22,6 +22,21 @@ win:
   # sign: build/sign-ev.cmd
   signAndEditExecutable: true
 
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ThreadVerse
+  deleteAppDataOnUninstall: true
+  runAfterFinish: true
+  perMachine: false
+  include: build/installer.nsh
+  uninstallDisplayName: ThreadVerse
+  installerIcon: build/icons/icon.ico
+  uninstallerIcon: build/icons/icon.ico
+  installerHeader: build/icons/icon.ico
+
 mac:
   target:
     - target: dmg
