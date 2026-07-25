@@ -26,7 +26,7 @@ export function useBackgroundSync() {
         const { data } = await api.get('/posts', {
           params: { community: communityId, since },
         });
-        const posts = data?.posts ?? [];
+        const posts = data?.data?.posts ?? [];
         if (posts.length) {
           await window.electronAPI.embedAndCachePosts(communityId, posts);
           totalSynced += posts.length;

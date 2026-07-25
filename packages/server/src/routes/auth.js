@@ -49,17 +49,17 @@ router.post('/register', authLimiter, async (req, res) => {
 
     // Validate inputs
     if (!username || !email || !password) {
-      return res.status(400).json({ error: 'All fields required.' });
+      return res.status(400).json({ data: null, error: 'All fields required.', meta: null });
     }
     if (password.length < 8) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+      return res.status(400).json({ data: null, error: 'Password must be at least 8 characters.', meta: null });
     }
 
     // Check duplicates
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
       const field = existing.email === email ? 'email' : 'username';
-      return res.status(409).json({ error: `That ${field} is already taken.` });
+      return res.status(409).json({ data: null, error: `That ${field} is already taken.`, meta: null });
     }
 
     // Why cost factor 12 for bcrypt?
@@ -81,18 +81,22 @@ router.post('/register', authLimiter, async (req, res) => {
     logActivity('user.registered', req, { userId: user._id });
 
     res.status(201).json({
-      accessToken,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        karma: user.karma,
-      }
+      data: {
+        accessToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          karma: user.karma,
+        }
+      },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ error: 'Registration failed.' });
+    res.status(500).json({ data: null, error: 'Registration failed.', meta: null });
   }
 });
 
@@ -105,16 +109,16 @@ router.post('/login', authLimiter, async (req, res) => {
     if (!user) {
       // Why the same error for wrong email vs wrong password?
       // "User not found" tells an attacker valid emails. Generic message leaks nothing.
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res.status(401).json({ data: null, error: 'Invalid email or password.', meta: null });
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid email or password.' });
+      return res.status(401).json({ data: null, error: 'Invalid email or password.', meta: null });
     }
 
     if (user.isBanned) {
-      return res.status(403).json({ error: 'This account has been suspended.' });
+      return res.status(403).json({ data: null, error: 'This account has been suspended.', meta: null });
     }
 
     const { accessToken, refreshToken } = generateTokens(user._id);
@@ -127,18 +131,22 @@ router.post('/login', authLimiter, async (req, res) => {
     logActivity('user.login', req, { userId: user._id });
 
     res.json({
-      accessToken,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        karma: user.karma,
-      }
+      data: {
+        accessToken,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          karma: user.karma,
+        }
+      },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ error: 'Login failed.' });
+    res.status(500).json({ data: null, error: 'Login failed.', meta: null });
   }
 });
 
@@ -149,10 +157,10 @@ router.post('/login', authLimiter, async (req, res) => {
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-passwordHash -refreshTokens');
-    if (!user) return res.status(404).json({ error: 'User not found.' });
-    res.json({ user });
+    if (!user) return res.status(404).json({ data: null, error: 'User not found.', meta: null });
+    res.json({ data: { user }, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch user.' });
+    res.status(500).json({ data: null, error: 'Failed to fetch user.', meta: null });
   }
 });
 
@@ -164,7 +172,7 @@ router.post('/refresh', async (req, res) => {
   try {
     const { refreshToken } = req.cookies;
     if (!refreshToken) {
-      return res.status(401).json({ error: 'No refresh token.' });
+      return res.status(401).json({ data: null, error: 'No refresh token.', meta: null });
     }
 
     // Why check Redis blacklist BEFORE verifying the token?
@@ -173,19 +181,19 @@ router.post('/refresh', async (req, res) => {
     // slip through the JWT verify step.
     const isBlacklisted = await redis.get(`blacklist:${refreshToken}`);
     if (isBlacklisted) {
-      return res.status(401).json({ error: 'Token revoked.' });
+      return res.status(401).json({ data: null, error: 'Token revoked.', meta: null });
     }
 
     let payload;
     try {
       payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch {
-      return res.status(401).json({ error: 'Invalid or expired refresh token.' });
+      return res.status(401).json({ data: null, error: 'Invalid or expired refresh token.', meta: null });
     }
 
     const user = await User.findById(payload.userId);
     if (!user || !user.refreshTokens.includes(refreshToken)) {
-      return res.status(401).json({ error: 'Refresh token not recognised.' });
+      return res.status(401).json({ data: null, error: 'Refresh token not recognised.', meta: null });
     }
 
     // TOKEN ROTATION: blacklist old token, issue new pair
@@ -203,10 +211,10 @@ router.post('/refresh', async (req, res) => {
     });
 
     setRefreshCookie(res, newRefreshToken);
-    res.json({ accessToken });
+    res.json({ data: { accessToken }, error: null, meta: null });
   } catch (err) {
     console.error('Refresh error:', err);
-    res.status(500).json({ error: 'Token refresh failed.' });
+    res.status(500).json({ data: null, error: 'Token refresh failed.', meta: null });
   }
 });
 
@@ -225,9 +233,9 @@ router.post('/logout', authMiddleware, async (req, res) => {
 
     // Clear the cookie from the browser
     res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' });
-    res.json({ message: 'Logged out successfully.' });
+    res.json({ data: { message: 'Logged out successfully.' }, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: 'Logout failed.' });
+    res.status(500).json({ data: null, error: 'Logout failed.', meta: null });
   }
 });
 
@@ -236,9 +244,13 @@ router.post('/logout', authMiddleware, async (req, res) => {
 // the app shows a forced-update modal and blocks usage until updated.
 router.get('/desktop/version', (req, res) => {
   res.json({
-    minimum: '1.0.0',
-    latest: '1.0.0',
-    downloadUrl: 'https://github.com/your-username/threadverse/releases/latest',
+    data: {
+      minimum: '1.0.0',
+      latest: '1.0.0',
+      downloadUrl: 'https://github.com/your-username/threadverse/releases/latest',
+    },
+    error: null,
+    meta: null,
   });
 });
 

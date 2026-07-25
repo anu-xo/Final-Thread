@@ -56,10 +56,10 @@ router.get('/stats', async (req, res) => {
       return { totalUsers, totalPosts, aiChatsToday, openReports, platformBreakdown, platformDaily };
     });
 
-    res.json({ data: stats, error: null });
+    res.json({ data: stats, error: null, meta: null });
   } catch (err) {
     console.error('admin/stats error:', err);
-    res.status(500).json({ error: 'Failed to load stats' });
+    res.status(500).json({ data: null, error: 'Failed to load stats', meta: null });
   }
 });
 
@@ -126,10 +126,10 @@ router.get('/stats/versions', async (req, res) => {
       };
     });
 
-    res.json({ data, error: null });
+    res.json({ data, error: null, meta: null });
   } catch (err) {
     console.error('admin/stats/versions error:', err);
-    res.status(500).json({ error: 'Failed to load version stats' });
+    res.status(500).json({ data: null, error: 'Failed to load version stats', meta: null });
   }
 });
 
@@ -175,10 +175,10 @@ router.get('/stats/platform', async (req, res) => {
       return { eventsByType, uniqueUsersByPlatform, desktopVersions };
     });
 
-    res.json({ data, error: null });
+    res.json({ data, error: null, meta: null });
   } catch (err) {
     console.error('admin/stats/platform error:', err);
-    res.status(500).json({ error: 'Failed to load platform stats' });
+    res.status(500).json({ data: null, error: 'Failed to load platform stats', meta: null });
   }
 });
 
@@ -196,10 +196,10 @@ router.get('/users', async (req, res) => {
       .limit(50)
       .lean();
 
-    res.json({ data: users, error: null });
+    res.json({ data: users, error: null, meta: null });
   } catch (err) {
     console.error('admin/users error:', err);
-    res.status(500).json({ error: 'Failed to load users' });
+    res.status(500).json({ data: null, error: 'Failed to load users', meta: null });
   }
 });
 
@@ -212,7 +212,7 @@ router.post('/users/:id/ban', async (req, res) => {
       { new: true }
     ).select('username isBanned banReason');
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ data: null, error: 'User not found', meta: null });
 
     // Force logout: blacklist all active refresh tokens
     const userFull = await User.findById(req.params.id).select('refreshTokens');
@@ -227,10 +227,10 @@ router.post('/users/:id/ban', async (req, res) => {
       await User.findByIdAndUpdate(req.params.id, { $set: { refreshTokens: [] } });
     }
 
-    res.json({ data: user, error: null });
+    res.json({ data: user, error: null, meta: null });
   } catch (err) {
     console.error('admin/ban error:', err);
-    res.status(500).json({ error: 'Failed to ban user' });
+    res.status(500).json({ data: null, error: 'Failed to ban user', meta: null });
   }
 });
 
@@ -242,12 +242,12 @@ router.post('/users/:id/unban', async (req, res) => {
       { new: true }
     ).select('username isBanned');
 
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) return res.status(404).json({ data: null, error: 'User not found', meta: null });
 
-    res.json({ data: user, error: null });
+    res.json({ data: user, error: null, meta: null });
   } catch (err) {
     console.error('admin/unban error:', err);
-    res.status(500).json({ error: 'Failed to unban user' });
+    res.status(500).json({ data: null, error: 'Failed to unban user', meta: null });
   }
 });
 
@@ -286,10 +286,10 @@ router.get('/ai/costs', async (req, res) => {
       estimatedCostUsd: (c.totalTokens / 1000) * COST_PER_1K_TOKENS,
     }));
 
-    res.json({ data: withCost, error: null });
+    res.json({ data: withCost, error: null, meta: null });
   } catch (err) {
     console.error('admin/ai/costs error:', err);
-    res.status(500).json({ error: 'Failed to load AI costs' });
+    res.status(500).json({ data: null, error: 'Failed to load AI costs', meta: null });
   }
 });
 
@@ -341,10 +341,11 @@ router.get('/ai/community/:communityId/breakdown', async (req, res) => {
     res.json({
       data: { ...stats, conversations: conversationIds.length, daily },
       error: null,
+      meta: null,
     });
   } catch (err) {
     console.error('admin/ai/breakdown error:', err);
-    res.status(500).json({ error: 'Failed to load AI breakdown' });
+    res.status(500).json({ data: null, error: 'Failed to load AI breakdown', meta: null });
   }
 });
 
@@ -364,10 +365,10 @@ router.get('/ai/community/:communityId/low-rated', async (req, res) => {
       .limit(50)
       .lean();
 
-    res.json({ data: messages, error: null });
+    res.json({ data: messages, error: null, meta: null });
   } catch (err) {
     console.error('admin/ai/low-rated error:', err);
-    res.status(500).json({ error: 'Failed to load low-rated messages' });
+    res.status(500).json({ data: null, error: 'Failed to load low-rated messages', meta: null });
   }
 });
 

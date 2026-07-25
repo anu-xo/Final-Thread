@@ -203,7 +203,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
     }, [selectedFiles]);
 
     const { mutate, isPending, error: submitError } = useMutation({
-        mutationFn: (data) => api.post('/posts', data).then(r => r.data),
+        mutationFn: (data) => api.post('/posts', data).then(r => r.data.data),
         onSuccess: (post) => {
             queryClient.invalidateQueries({ queryKey: ['posts', 'feed'] });
             onSuccess?.(post);

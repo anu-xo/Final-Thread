@@ -9,7 +9,7 @@ export function usePostFeed({ communityId, sort = 'hot' } = {}) {
       const { data } = await api.get('/posts', {
         params: { communityId, sort, cursor: pageParam, limit: 20 },
       });
-      return data; // expects { posts: [...], nextCursor: string | null }
+      return data.data; // { posts: [...], nextCursor: string | null, hasMore: boolean }
     },
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

@@ -77,7 +77,7 @@ export default function PostDetail() {
     queryKey: ['posts', id],
     queryFn: async () => {
       const { data: response } = await api.get(`/posts/${id}`);
-      return response.post;
+      return response.data.post;
     },
     enabled: Boolean(id),
   });

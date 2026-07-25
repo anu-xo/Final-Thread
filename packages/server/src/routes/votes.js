@@ -137,6 +137,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
     return res.json({
       data: {
+        score: updatedTarget.score,
         userVote: normalizedValue,
         ...(targetType === 'post' ? { hotScore: updatedTarget.hotScore } : {}),
       },

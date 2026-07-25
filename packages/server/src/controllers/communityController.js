@@ -31,12 +31,12 @@ export const createCommunity = async (req, res) => {
       role: 'mod',
     });
 
-    res.status(201).json({ data: community });
+    res.status(201).json({ data: community, error: null, meta: null });
   } catch (err) {
     if (err.code === 11000) {
-      return res.status(409).json({ error: 'Slug already taken.' });
+      return res.status(409).json({ data: null, error: 'Slug already taken.', meta: null });
     }
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 };
 
@@ -61,10 +61,11 @@ export const getCommunities = async (req, res) => {
 
     res.json({
       data: communities,
+      error: null,
       meta: { cursor: nextCursor, hasMore },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 };
 
@@ -76,12 +77,12 @@ export const getCommunityBySlug = async (req, res) => {
       .lean();
 
     if (!community) {
-      return res.status(404).json({ error: 'Community not found.' });
+      return res.status(404).json({ data: null, error: 'Community not found.', meta: null });
     }
 
-    res.json({ data: community });
+    res.json({ data: community, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 };
 
@@ -89,7 +90,7 @@ export const getCommunityBySlug = async (req, res) => {
 export const joinCommunity = async (req, res) => {
   try {
     const community = await Community.findOne({ slug: req.params.slug.toLowerCase() });
-    if (!community) return res.status(404).json({ error: 'Community not found.' });
+    if (!community) return res.status(404).json({ data: null, error: 'Community not found.', meta: null });
 
     // Check if banned
     const existingMembership = await CommunityMember.findOne({
@@ -98,11 +99,11 @@ export const joinCommunity = async (req, res) => {
     });
 
     if (existingMembership?.role === 'banned') {
-      return res.status(403).json({ error: 'You are banned from this community.' });
+      return res.status(403).json({ data: null, error: 'You are banned from this community.', meta: null });
     }
 
     if (existingMembership) {
-      return res.status(200).json({ data: community, message: 'Already a member.' });
+      return res.status(200).json({ data: community, error: null, meta: null });
     }
 
     // Create membership + increment counter atomically
@@ -116,9 +117,9 @@ export const joinCommunity = async (req, res) => {
     ]);
 
     const updated = await Community.findById(community._id).lean();
-    res.json({ data: updated });
+    res.json({ data: updated, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 };
 
@@ -126,7 +127,7 @@ export const joinCommunity = async (req, res) => {
 export const leaveCommunity = async (req, res) => {
   try {
     const community = await Community.findOne({ slug: req.params.slug.toLowerCase() });
-    if (!community) return res.status(404).json({ error: 'Community not found.' });
+    if (!community) return res.status(404).json({ data: null, error: 'Community not found.', meta: null });
 
     const membership = await CommunityMember.findOne({
       user: req.user._id,
@@ -134,13 +135,15 @@ export const leaveCommunity = async (req, res) => {
     });
 
     if (!membership) {
-      return res.status(400).json({ error: 'You are not a member of this community.' });
+      return res.status(400).json({ data: null, error: 'You are not a member of this community.', meta: null });
     }
 
     // Prevent sole mod from leaving
     if (membership.role === 'mod' && community.mods.length === 1) {
       return res.status(400).json({
+        data: null,
         error: 'You are the only moderator. Transfer mod rights before leaving.',
+        meta: null,
       });
     }
 
@@ -152,8 +155,8 @@ export const leaveCommunity = async (req, res) => {
       }),
     ]);
 
-    res.json({ data: { message: 'Left community successfully.' } });
+    res.json({ data: { message: 'Left community successfully.' }, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 };

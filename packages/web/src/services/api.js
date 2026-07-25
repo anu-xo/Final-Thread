@@ -56,7 +56,6 @@ api.interceptors.response.use(
           { withCredentials: true }
         );
         const newToken = data.data.accessToken;
-        useAuthStore.getState().setAuth(data.data.user, newToken);
         processQueue(null, newToken);
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);

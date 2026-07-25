@@ -28,7 +28,7 @@ export function useAuthInit() {
           signal: AbortSignal.timeout(3000),
         });
 
-        setAuth(meData.user, refreshData.data.accessToken);
+        setAuth(meData.data.user, refreshData.data.accessToken);
       } catch {
         // No session, expired session, or backend down — continue as guest
       } finally {

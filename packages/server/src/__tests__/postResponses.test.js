@@ -110,10 +110,10 @@ describe('GET /api/posts responses', () => {
       .set('Authorization', `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.posts).toHaveLength(2);
+    expect(response.body.data.posts).toHaveLength(2);
 
-    const votedResponse = response.body.posts.find((post) => post._id === String(votedPost._id));
-    const otherResponse = response.body.posts.find((post) => post._id === String(otherPost._id));
+    const votedResponse = response.body.data.posts.find((post) => post._id === String(votedPost._id));
+    const otherResponse = response.body.data.posts.find((post) => post._id === String(otherPost._id));
 
     expect(votedResponse.userVote).toBe(1);
     expect(otherResponse.userVote).toBe(0);
@@ -125,6 +125,6 @@ describe('GET /api/posts responses', () => {
       .set('Authorization', `Bearer ${authToken}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.post.userVote).toBe(1);
+    expect(response.body.data.post.userVote).toBe(1);
   });
 });

@@ -55,27 +55,27 @@ export async function createPost(req, res) {
     const normalizedMedia = Array.isArray(media) ? media.filter(Boolean) : [];
 
     if (!authorId) {
-      return res.status(401).json({ error: "Authentication required" });
+      return res.status(401).json({ data: null, error: "Authentication required", meta: null });
     }
     if (!title || !community) {
-      return res.status(400).json({ error: "title and community are required" });
+      return res.status(400).json({ data: null, error: "title and community are required", meta: null });
     }
 
     if (postType === "text" && !postBody.trim()) {
-      return res.status(400).json({ error: "body/content is required for text posts" });
+      return res.status(400).json({ data: null, error: "body/content is required for text posts", meta: null });
     }
 
     if (postType === "link" && !url) {
-      return res.status(400).json({ error: "url is required for link posts" });
+      return res.status(400).json({ data: null, error: "url is required for link posts", meta: null });
     }
 
     if (postType === "image" && normalizedMedia.length === 0) {
-      return res.status(400).json({ error: "media is required for image posts" });
+      return res.status(400).json({ data: null, error: "media is required for image posts", meta: null });
     }
 
     const communityId = await resolveCommunityId(community);
     if (!communityId) {
-      return res.status(404).json({ error: "Community not found" });
+      return res.status(404).json({ data: null, error: "Community not found", meta: null });
     }
 
     // 1. Run the moderation check on title + the resolved text body
@@ -128,10 +128,10 @@ export async function createPost(req, res) {
 
     logActivity('post.created', req, { postId: post._id, community: communityId, type: postType });
 
-    return res.status(201).json({ post: populated });
+    return res.status(201).json({ data: { post: populated }, error: null, meta: null });
   } catch (err) {
     console.error("createPost error:", err);
-    return res.status(500).json({ error: "Failed to create post" });
+    return res.status(500).json({ data: null, error: "Failed to create post", meta: null });
   }
 }
 
@@ -143,7 +143,7 @@ export async function getPosts(req, res) {
 
     const sortField = SORT_FIELDS[sort];
     if (!sortField) {
-      return res.status(400).json({ error: `sort must be one of: ${Object.keys(SORT_FIELDS).join(", ")}` });
+      return res.status(400).json({ data: null, error: `sort must be one of: ${Object.keys(SORT_FIELDS).join(", ")}`, meta: null });
     }
 
     const pageLimit = Math.min(parseInt(limit, 10) || DEFAULT_LIMIT, MAX_LIMIT);
@@ -153,7 +153,7 @@ export async function getPosts(req, res) {
     if (community) {
       const communityId = await resolveCommunityId(community);
       if (!communityId) {
-        return res.status(404).json({ error: "Community not found" });
+        return res.status(404).json({ data: null, error: "Community not found", meta: null });
       }
       query.community = communityId;
     }
@@ -168,7 +168,7 @@ export async function getPosts(req, res) {
     if (cursor) {
       const decoded = decodeCursor(cursor);
       if (!decoded || decoded.v === undefined || !decoded.id) {
-        return res.status(400).json({ error: "Invalid cursor" });
+        return res.status(400).json({ data: null, error: "Invalid cursor", meta: null });
       }
 
       const sortValue = sortField === "createdAt" ? new Date(decoded.v) : decoded.v;
@@ -212,13 +212,17 @@ export async function getPosts(req, res) {
     }
 
     return res.json({
-      posts: enrichedPageItems,
-      nextCursor,
-      hasMore,
+      data: {
+        posts: enrichedPageItems,
+        nextCursor,
+        hasMore,
+      },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error("getPosts error:", err);
-    return res.status(500).json({ error: "Failed to fetch posts" });
+    return res.status(500).json({ data: null, error: "Failed to fetch posts", meta: null });
   }
 }
 
@@ -229,7 +233,7 @@ export async function getPostById(req, res) {
     const viewerUserId = await resolveViewerUserId(req);
 
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return res.status(400).json({ data: null, error: "Invalid post id", meta: null });
     }
 
     const post = await Post.findById(id)
@@ -238,7 +242,7 @@ export async function getPostById(req, res) {
       .lean();
 
     if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+      return res.status(404).json({ data: null, error: "Post not found", meta: null });
     }
 
     const votes = viewerUserId ? await Vote.find({
@@ -250,13 +254,17 @@ export async function getPostById(req, res) {
     const voteMap = new Map(votes.map((vote) => [String(vote.target), vote.value]));
 
     return res.json({
-      post: {
-        ...post,
-        userVote: voteMap.get(String(post._id)) || 0,
+      data: {
+        post: {
+          ...post,
+          userVote: voteMap.get(String(post._id)) || 0,
+        },
       },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error("getPostById error:", err);
-    return res.status(500).json({ error: "Failed to fetch post" });
+    return res.status(500).json({ data: null, error: "Failed to fetch post", meta: null });
   }
 }

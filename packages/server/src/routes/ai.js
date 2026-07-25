@@ -22,25 +22,24 @@ router.get('/health', async (req, res) => {
 
     if (Array.isArray(testEmbedding) && testEmbedding.length > 0) {
       return res.status(200).json({
-        status: 'ok',
-        gemini: 'connected',
-        embeddingDims: testEmbedding.length,
-        timestamp: new Date().toISOString(),
+        data: { status: 'ok', gemini: 'connected', embeddingDims: testEmbedding.length, timestamp: new Date().toISOString() },
+        error: null,
+        meta: null,
       });
     }
 
     return res.status(503).json({
-      status: 'error',
-      gemini: 'unexpected response',
-      timestamp: new Date().toISOString(),
+      data: { status: 'error', gemini: 'unexpected response', timestamp: new Date().toISOString() },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error('AI health check failed:', err);
 
     return res.status(503).json({
-      status: 'error',
-      gemini: 'unreachable',
-      timestamp: new Date().toISOString(),
+      data: { status: 'error', gemini: 'unreachable', timestamp: new Date().toISOString() },
+      error: null,
+      meta: null,
     });
   }
 });
@@ -51,7 +50,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
   if (!message || !communityId) {
     return res.status(400).json({
       data: null,
-      error: { message: 'message and communityId required' },
+      error: 'message and communityId required',
       meta: {},
     });
   }
@@ -61,8 +60,8 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     const community = await Community.findById(communityId).select('aiEnabled').lean();
     if (!community?.aiEnabled) {
       return res.status(403).json({
-        data: null,
-        error: { message: 'AI chat is disabled for this community' },
+      data: null,
+      error: 'AI chat is disabled for this community',
         meta: {},
       });
     }
@@ -151,8 +150,8 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     Sentry.captureException(err);
     if (!res.headersSent) {
       return res.status(500).json({
-        data: null,
-        error: { message: 'Internal server error occurred setup phase.' },
+      data: null,
+      error: 'Internal server error occurred setup phase.',
         meta: {},
       });
     }
@@ -171,7 +170,7 @@ router.get('/conversations/:id/messages', authMiddleware, async (req, res) => {
     if (!conversation) {
       return res.status(404).json({
         data: null,
-        error: { message: 'Conversation not found' },
+        error: 'Conversation not found',
         meta: {},
       });
     }
@@ -185,7 +184,7 @@ router.get('/conversations/:id/messages', authMiddleware, async (req, res) => {
     console.error('Error fetching conversation messages:', err);
     return res.status(500).json({
       data: null,
-      error: { message: 'Failed to fetch messages' },
+      error: 'Failed to fetch messages',
       meta: {},
     });
   }
@@ -198,7 +197,7 @@ router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
   if (rating !== 1 && rating !== -1) {
     return res.status(400).json({
       data: null,
-      error: { message: 'rating must be 1 (thumbs up) or -1 (thumbs down)' },
+      error: 'rating must be 1 (thumbs up) or -1 (thumbs down)',
       meta: {},
     });
   }
@@ -208,16 +207,16 @@ router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
 
     if (!message) {
       return res.status(404).json({
-        data: null,
-        error: { message: 'Message not found' },
+      data: null,
+      error: 'Message not found',
         meta: {},
       });
     }
 
     if (message.role !== 'assistant') {
       return res.status(400).json({
-        data: null,
-        error: { message: 'Can only rate assistant messages' },
+      data: null,
+      error: 'Can only rate assistant messages',
         meta: {},
       });
     }
@@ -230,8 +229,8 @@ router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
 
     if (!conversation) {
       return res.status(403).json({
-        data: null,
-        error: { message: 'Not authorized to rate this message' },
+      data: null,
+      error: 'Not authorized to rate this message',
         meta: {},
       });
     }
@@ -244,7 +243,7 @@ router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
     console.error('Error saving feedback:', err);
     return res.status(500).json({
       data: null,
-      error: { message: 'Failed to save feedback' },
+      error: 'Failed to save feedback',
       meta: {},
     });
   }

@@ -33,9 +33,9 @@ router.get('/me', authMiddleware, async (req, res) => {
       .filter((m) => m.community) // handle deleted communities
       .map((m) => m.community);
 
-    res.json({ data: communities });
+    res.json({ data: communities, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 });
 

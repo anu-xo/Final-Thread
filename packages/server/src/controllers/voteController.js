@@ -22,18 +22,18 @@ export async function votePost(req, res) {
     const normalizedValue = Number(value ?? direction);
 
     if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
+      return res.status(401).json({ data: null, error: "Authentication required", meta: null });
     }
     if (![1, -1].includes(normalizedValue)) {
-      return res.status(400).json({ error: "value must be 1 or -1" });
+      return res.status(400).json({ data: null, error: "value must be 1 or -1", meta: null });
     }
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ error: "Invalid post id" });
+      return res.status(400).json({ data: null, error: "Invalid post id", meta: null });
     }
 
     const post = await Post.findById(id);
     if (!post) {
-      return res.status(404).json({ error: "Post not found" });
+      return res.status(404).json({ data: null, error: "Post not found", meta: null });
     }
 
     // NOTE: this assumes one vote per user isn't yet tracked elsewhere.
@@ -61,12 +61,16 @@ export async function votePost(req, res) {
     emitVoteUpdate(io, id, post.score);
 
     return res.json({
-      score: post.score,
-      hotScore: post.hotScore,
-      risingScore: post.risingScore,
+      data: {
+        score: post.score,
+        hotScore: post.hotScore,
+        risingScore: post.risingScore,
+      },
+      error: null,
+      meta: null,
     });
   } catch (err) {
     console.error("votePost error:", err);
-    return res.status(500).json({ error: "Failed to register vote" });
+    return res.status(500).json({ data: null, error: "Failed to register vote", meta: null });
   }
 }

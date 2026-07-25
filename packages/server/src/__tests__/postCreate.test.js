@@ -96,7 +96,7 @@ describe('POST /api/posts', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('title, body/content, and community are required');
+    expect(res.body.error).toBe('body/content is required for text posts');
   });
 
   it('should reject request if community does not exist', async () => {
@@ -126,13 +126,13 @@ describe('POST /api/posts', () => {
       .send(postPayload);
 
     expect(res.status).toBe(201);
-    expect(res.body.post).toBeDefined();
-    expect(res.body.post.title).toBe(postPayload.title);
-    expect(res.body.post.body).toBe(postPayload.body);
-    expect(res.body.post.author).toBeDefined();
-    expect(res.body.post.author.username).toBe('test_author');
+    expect(res.body.data.post).toBeDefined();
+    expect(res.body.data.post.title).toBe(postPayload.title);
+    expect(res.body.data.post.body).toBe(postPayload.body);
+    expect(res.body.data.post.author).toBeDefined();
+    expect(res.body.data.post.author.username).toBe('test_author');
 
-    const postId = res.body.post._id;
+    const postId = res.body.data.post._id;
 
     // Verify database record exists
     const dbPost = await Post.findById(postId);
