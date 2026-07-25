@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ThreadVerse
+Comment=Community-driven discussion platform with AI-powered features
+Exec=threadverse %U
+Icon=${SNAP}/usr/share/icons/hicolor/512x512/apps/threadverse.png
+Type=Application
+Categories=Network;InstantMessaging;Chat;
+MimeType=x-scheme-handler/threadverse;
+Keywords=community;chat;forum;discussion;ai;
+StartupWMClass=ThreadVerse

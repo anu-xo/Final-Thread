@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>threadverse</id>
+  <name>ThreadVerse</name>
+  <summary>Community platform with AI-powered RAG chat</summary>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer name="ThreadVerse Inc.">
+    <name>ThreadVerse Inc.</name>
+  </developer>
+  <description>
+    <p>
+      ThreadVerse is a modern community discussion platform with AI-powered assistance.
+      Create communities, share posts, vote on content, and get intelligent answers.
+    </p>
+  </description>
+  <launchable type="desktop-id">threadverse.desktop</launchable>
+  <url type="homepage">https://threadverse.app</url>
+  <url type="bugtracker">https://github.com/anu-xo/Final-Thread/issues</url>
+  <releases>
+    <release version="1.0.0" date="2025-01-01">
+      <description>Initial release.</description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>

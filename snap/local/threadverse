@@ -1,0 +1,21 @@
+#!/bin/sh
+# ThreadVerse snap wrapper script
+# Extracts and runs the AppImage within the snap sandbox
+
+set -e
+
+APPIMAGE="$SNAP/opt/threadverse/ThreadVerse.AppImage"
+EXTRACT_DIR="$SNAP_USER_DATA/.appimage-extract"
+
+# Make AppImage executable
+chmod +x "$APPIMAGE"
+
+# Extract AppImage on first run (AppImage FUSE is not available in snaps)
+if [ ! -d "$EXTRACT_DIR" ]; then
+  echo "Extracting ThreadVerse (first run)..."
+  "$APPIMAGE" --appimage-extract > /dev/null 2>&1
+  mv squashfs-root "$EXTRACT_DIR"
+fi
+
+# Launch the app from extracted contents
+exec "$EXTRACT_DIR/AppRun" "$@"

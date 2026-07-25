@@ -1,0 +1,66 @@
+name: threadverse
+base: core22
+version: '1.0.0'
+grade: stable
+confinement: strict
+license: MIT
+icon: snap/local/icon.png
+
+summary: Community platform with AI-powered RAG chat
+description: |
+  ThreadVerse is a modern community discussion platform that brings together
+  forums, real-time chat, and AI-powered assistance. Create communities,
+  share posts, vote on content, and get intelligent answers powered by
+  cutting-edge language models.
+
+  Key features:
+    - Create and join communities on any topic
+    - Rich text posts with voting and comments
+    - AI chat assistant that understands your community's context
+    - Real-time notifications and activity feeds
+    - Content moderation powered by AI
+    - Weekly digest emails with community highlights
+
+  Built with the MERN stack (MongoDB, Express, React, Node.js) and
+  Electron for cross-platform desktop support.
+
+architectures:
+  - build-on: amd64
+
+apps:
+  threadverse:
+    command: threadverse
+    plugs:
+      - network
+      - network-bind
+      - desktop
+      - desktop-legacy
+      - x11
+      - wayland
+      - opengl
+      - audio-playback
+      - unity7
+    environment:
+      TMPDIR: $XDG_RUNTIME_DIR
+      DISABLE_WAYLAND: 0
+
+parts:
+  threadverse:
+    plugin: dump
+    source: ThreadVerse.AppImage
+    organize:
+      ThreadVerse.AppImage: opt/threadverse/ThreadVerse.AppImage
+
+  wrapper:
+    plugin: dump
+    source: snap/local
+    organize:
+      threadverse: opt/threadverse/threadverse
+
+  desktop-integration:
+    plugin: dump
+    source: snap/local
+    organize:
+      threadverse.desktop: usr/share/applications/threadverse.desktop
+      threadverse.metainfo.xml: usr/share/metainfo/threadverse.metainfo.xml
+      icon.png: usr/share/icons/hicolor/512x512/apps/threadverse.png
