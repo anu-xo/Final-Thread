@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.threadverse.app</id>
+
+  <name>ThreadVerse</name>
+  <summary>Community-driven discussion platform with AI-powered features</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+
+  <developer id="com.threadverse">
+    <name>ThreadVerse Inc.</name>
+  </developer>
+
+  <description>
+    <p>
+      ThreadVerse is a modern community platform that brings together
+      discussion forums, real-time chat, and AI-powered assistance.
+      Create communities, share posts, vote on content, and get intelligent
+      answers powered by cutting-edge language models.
+    </p>
+    <p>Key features:</p>
+    <ul>
+      <li>Create and join communities on any topic</li>
+      <li>Rich text posts with voting and comments</li>
+      <li>AI chat assistant that understands your community's context</li>
+      <li>Real-time notifications and activity feeds</li>
+      <li>Content moderation powered by AI</li>
+      <li>Weekly digest emails with community highlights</li>
+      <li>Cross-platform: Web, Desktop (Windows, macOS, Linux), and Mobile</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.threadverse.app.desktop</launchable>
+
+  <url type="homepage">https://threadverse.app</url>
+  <url type="bugtracker">https://github.com/anu-xo/Final-Thread/issues</url>
+  <url type="help">https://github.com/anu-xo/Final-Thread#readme</url>
+  <url type="vcs-browser">https://github.com/anu-xo/Final-Thread</url>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://threadverse.app/screenshots/feed.png</image>
+      <caption>Community feed with posts and discussions</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://threadverse.app/screenshots/ai-chat.png</image>
+      <caption>AI-powered chat assistant</caption>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="language-profanity">moderate</content_attribute>
+    <content_attribute id="language-hate">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-info">intense</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+  </content_rating>
+
+  <releases>
+    <release version="1.0.0" date="2025-01-01">
+      <description>
+        <p>Initial release of ThreadVerse.</p>
+        <ul>
+          <li>Community creation and management</li>
+          <li>Posts with voting and comments</li>
+          <li>AI chat assistant with RAG-powered responses</li>
+          <li>Real-time notifications</li>
+          <li>Content moderation</li>
+          <li>Cross-platform support</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+
+  <brands>
+    <brand type="preference">GNOME</brand>
+    <brand type="preference">KDE</brand>
+  </brands>
+</component>
