@@ -140,4 +140,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('logSyncBreadcrumb', data),
 
   isOnline: () => ipcRenderer.invoke('net:isOnline'),
+
+  // Reset & Quit (clears all app data)
+  resetAndQuit: () => ipcRenderer.send('reset-and-quit'),
 });

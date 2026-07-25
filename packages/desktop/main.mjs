@@ -66,6 +66,9 @@ const ALLOWED_CHANNELS = new Set([
 
   // Theme change notification (renderer → main for macOS titlebar overlay)
   'theme:changed',
+
+  // Reset & Quit (clears all app data)
+  'reset-and-quit',
 ]);
 
 function guard(channel) {
@@ -397,6 +400,25 @@ function createTray() {
       mainWindow?.webContents.send('tray:check-updates'); // wired fully on Day 16
     }},
     { type: 'separator' },
+    { label: 'Reset & Quit', click: async () => {
+      const result = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Reset & Quit', 'Cancel'],
+        defaultId: 1,
+        cancelId: 1,
+        title: 'Reset ThreadVerse',
+        message: 'This will delete all ThreadVerse data (settings, cache, login) and quit.',
+        detail: 'The app will need to be set up again on next launch.',
+      });
+      if (result.response === 0) {
+        isQuitting = true;
+        try {
+          await fs.rm(app.getPath('userData'), { recursive: true, force: true });
+        } catch { /* best-effort cleanup */ }
+        app.quit();
+      }
+    }},
+    { type: 'separator' },
     { label: 'Quit', click: () => { isQuitting = true; app.quit(); } },
   ]);
 
@@ -458,6 +480,25 @@ safeOn('window:maximize', () => {
 safeOn('window:close', () => {
   if (mainWindow) {
     mainWindow.hide(); // minimize to tray instead of closing
+  }
+});
+
+safeOn('reset-and-quit', async () => {
+  const result = await dialog.showMessageBox(mainWindow, {
+    type: 'warning',
+    buttons: ['Reset & Quit', 'Cancel'],
+    defaultId: 1,
+    cancelId: 1,
+    title: 'Reset ThreadVerse',
+    message: 'This will delete all ThreadVerse data (settings, cache, login) and quit.',
+    detail: 'The app will need to be set up again on next launch.',
+  });
+  if (result.response === 0) {
+    isQuitting = true;
+    try {
+      await fs.rm(app.getPath('userData'), { recursive: true, force: true });
+    } catch { /* best-effort cleanup */ }
+    app.quit();
   }
 });
 
@@ -682,6 +723,8 @@ safeOn('badge:set', (_event, count) => {
     } else {
       win?.setOverlayIcon(null, '');
     }
+  } else if (process.platform === 'linux') {
+    app.setBadgeCount(count > 0 ? count : 0);
   }
 });
 
@@ -691,6 +734,8 @@ safeOn('badge:clear', () => {
   } else if (process.platform === 'win32') {
     const win = BrowserWindow.getAllWindows()[0];
     win?.setOverlayIcon(null, '');
+  } else if (process.platform === 'linux') {
+    app.setBadgeCount(0);
   }
 });
 

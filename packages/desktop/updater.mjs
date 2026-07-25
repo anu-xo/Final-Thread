@@ -8,6 +8,17 @@ function send(channel, payload) {
 }
 
 export function initAutoUpdater() {
+  // AppImage does not support auto-update via electron-updater.
+  // The running process IS the AppImage and cannot replace itself.
+  // Users must re-download the new AppImage from GitHub Releases.
+  if (process.platform === 'linux') {
+    send('linux-no-auto-update', {
+      message: 'AppImage updates require manual re-download from GitHub Releases.',
+      url: 'https://github.com/anu-xo/Final-Thread/releases/latest',
+    });
+    return;
+  }
+
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 

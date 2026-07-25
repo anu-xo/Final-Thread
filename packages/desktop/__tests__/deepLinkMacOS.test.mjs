@@ -186,6 +186,17 @@ describe('electron-builder.yml — Linux .desktop MIME handler', () => {
     assert.ok(yamlRaw.includes('linux:'), 'linux section missing');
   });
 
+  it('targets AppImage', () => {
+    assert.ok(yamlRaw.includes('target: AppImage'), 'AppImage target not found');
+  });
+
+  it('builds for x64 architecture', () => {
+    // Verify x64 appears under linux target (not just under mac)
+    const linuxIdx = yamlRaw.indexOf('linux:');
+    const x64Idx = yamlRaw.indexOf('- x64', linuxIdx);
+    assert.ok(x64Idx > linuxIdx, 'x64 arch missing under linux target');
+  });
+
   it('declares x-scheme-handler/threadverse in MimeType', () => {
     assert.ok(yamlRaw.includes('x-scheme-handler/threadverse'),
       'x-scheme-handler/threadverse MIME type not found');
@@ -197,5 +208,10 @@ describe('electron-builder.yml — Linux .desktop MIME handler', () => {
 
   it('sets StartupWMClass for Wayland/X11 matching', () => {
     assert.ok(yamlRaw.includes('StartupWMClass: ThreadVerse'));
+  });
+
+  it('declares Categories for desktop menu', () => {
+    assert.ok(yamlRaw.includes('Categories: Network;InstantMessaging;'),
+      'desktop Categories missing');
   });
 });
