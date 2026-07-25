@@ -99,27 +99,49 @@ fi
 
 echo "[PASS] AppImage: $APPIMAGE"
 
-# ── 5. Build Flatpak ─────────────────────────────────────────────────────────
+# ── 5. Generate local manifest ──────────────────────────────────────────────
 echo ""
-echo "--- Step 5: Build Flatpak ---"
+echo "--- Step 5: Generate local manifest ---"
+
+SHA256=$(sha256sum "$APPIMAGE" | cut -d' ' -f1)
+echo "  AppImage SHA256: $SHA256"
+
+LOCAL_MANIFEST="$SCRIPT_DIR/.local-manifest.yml"
+cp "$MANIFEST" "$LOCAL_MANIFEST"
+
+# Replace the remote source with local file path
+sed -i.bak \
+  -e "s|url: https://github.com/.*|url: file://$APPIMAGE|" \
+  -e "s|sha256: .*|sha256: $SHA256|" \
+  "$LOCAL_MANIFEST"
+
+# Copy AppImage to build dir so flatpak-builder can find it
+mkdir -p "$SCRIPT_DIR/.flatpak-source"
+cp "$APPIMAGE" "$SCRIPT_DIR/.flatpak-source/"
+
+echo "[PASS] Local manifest generated"
+
+# ── 6. Build Flatpak ────────────────────────────────────────────────────────
+echo ""
+echo "--- Step 6: Build Flatpak ---"
 
 flatpak-builder --force-clean --install-deps-from=flathub \
-  "$SCRIPT_DIR/.flatpak-build" "$MANIFEST"
+  "$SCRIPT_DIR/.flatpak-build" "$LOCAL_MANIFEST"
 
 echo "[PASS] Flatpak built successfully"
 
-# ── 6. Install (optional) ────────────────────────────────────────────────────
+# ── 7. Install (optional) ────────────────────────────────────────────────────
 if [ "$DO_INSTALL" = true ]; then
   echo ""
-  echo "--- Step 6: Install Flatpak ---"
-  flatpak-builder --install --user "$SCRIPT_DIR/.flatpak-build" "$MANIFEST"
+  echo "--- Step 7: Install Flatpak ---"
+  flatpak-builder --install --user "$SCRIPT_DIR/.flatpak-build" "$LOCAL_MANIFEST"
   echo "[PASS] Flatpak installed"
 fi
 
-# ── 7. Run (optional) ────────────────────────────────────────────────────────
+# ── 8. Run (optional) ────────────────────────────────────────────────────────
 if [ "$DO_RUN" = true ]; then
   echo ""
-  echo "--- Step 7: Run Flatpak ---"
+  echo "--- Step 8: Run Flatpak ---"
   flatpak run org.threadverse.app
 fi
 

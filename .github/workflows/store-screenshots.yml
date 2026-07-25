@@ -1,0 +1,141 @@
+name: Store Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Base URL for the app (default: http://localhost:5173)'
+        required: false
+        default: 'http://localhost:5173'
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  capture-screenshots:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+          - os: ubuntu-latest
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    services:
+      mongodb:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: password123
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev libusb-1.0-0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web client
+        run: pnpm --filter web build
+
+      - name: Seed database (deterministic)
+        env:
+          MONGODB_URI: mongodb://admin:password123@localhost:27017/threadverse?authSource=admin
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_secret_for_screenshots
+          JWT_REFRESH_SECRET: test_refresh_secret_for_screenshots
+          NODE_ENV: development
+        run: pnpm --filter server exec node src/scripts/seedScreenshots.js
+
+      - name: Start server
+        env:
+          MONGODB_URI: mongodb://admin:password123@localhost:27017/threadverse?authSource=admin
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_secret_for_screenshots
+          JWT_REFRESH_SECRET: test_refresh_secret_for_screenshots
+          NODE_ENV: development
+          PORT: 5000
+        run: |
+          pnpm --filter server exec node src/main.mjs &
+          sleep 5
+
+      - name: Start web client
+        run: |
+          pnpm --filter web dev &
+          sleep 10
+
+      - name: Wait for services
+        shell: bash
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5173 > /dev/null 2>&1; then
+              echo "Web client ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Install Playwright chromium
+        run: npx playwright install chromium
+
+      - name: Capture screenshots (${{ matrix.platform }})
+        env:
+          BASE_URL: http://localhost:5173
+        run: node scripts/screenshots/captureScreenshots.js --platform ${{ matrix.platform }}
+
+      - name: Verify screenshots
+        shell: bash
+        run: |
+          DIR="scripts/screenshots/output/${{ matrix.platform }}"
+          REQUIRED="01-home-feed.png 02-community-page.png 03-ai-chat.png 04-admin-dashboard.png 05-settings.png"
+          ALL_OK=true
+          for f in $REQUIRED; do
+            if [ -f "$DIR/$f" ]; then
+              echo "[OK] $f ($(du -k "$DIR/$f" | cut -f1) KB)"
+            else
+              echo "[MISSING] $f"
+              ALL_OK=false
+            fi
+          done
+          if [ "$ALL_OK" = false ]; then
+            echo "ERROR: Missing screenshots"
+            exit 1
+          fi
+          echo "All 5 screenshots captured successfully"
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-screenshots-${{ matrix.platform }}
+          path: scripts/screenshots/output/${{ matrix.platform }}/*.png
+          retention-days: 30
+          if-no-files-found: error

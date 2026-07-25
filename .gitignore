@@ -135,3 +135,11 @@ entitlements.mac.plist.local
 # Husky (keep the hooks, ignore local overrides)
 # ============================
 .husky/_/
+
+# ============================
+# Flatpak local build artifacts
+# ============================
+flatpak/.flatpak-build/
+flatpak/.flatpak-source/
+flatpak/.local-manifest.yml
+flatpak/.local-manifest.yml.bak

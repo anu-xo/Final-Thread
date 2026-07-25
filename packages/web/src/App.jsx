@@ -30,6 +30,8 @@ const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage.jsx'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
+import AdminRoute from './components/AdminRoute.jsx';
 
 function PageSkeleton() {
   return (
@@ -88,6 +90,9 @@ function AppRoutes() {
             {/* User */}
             <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
+
+            {/* Admin */}
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
             {/* Posts */}
             <Route path="/posts/:id" element={<PostDetail />} />

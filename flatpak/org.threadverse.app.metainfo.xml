@@ -40,12 +40,24 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://threadverse.app/screenshots/feed.png</image>
-      <caption>Community feed with posts and discussions</caption>
+      <image>https://threadverse.app/screenshots/01-home-feed.png</image>
+      <caption>Community home feed with posts, votes, and discussions</caption>
     </screenshot>
     <screenshot>
-      <image>https://threadverse.app/screenshots/ai-chat.png</image>
-      <caption>AI-powered chat assistant</caption>
+      <image>https://threadverse.app/screenshots/02-community-page.png</image>
+      <caption>Community page with rules, members, and post list</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://threadverse.app/screenshots/03-ai-chat.png</image>
+      <caption>AI-powered RAG chat assistant with community context</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://threadverse.app/screenshots/04-admin-dashboard.png</image>
+      <caption>Admin dashboard with platform stats and analytics</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://threadverse.app/screenshots/05-settings.png</image>
+      <caption>User settings and preferences</caption>
     </screenshot>
   </screenshots>
 

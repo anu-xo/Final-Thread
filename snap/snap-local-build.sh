@@ -95,9 +95,9 @@ echo "Size: $(du -h "$BUILT_SNAP" | cut -f1)"
 # ── 4. Install locally (optional) ────────────────────────────────────────────
 if [ "$DO_INSTALL" = true ]; then
   echo ""
-  echo "--- Step 4: Install snap locally ---"
+  echo "--- Step 4: Install snap locally (--dangerous) ---"
   sudo snap install --dangerous "$BUILT_SNAP"
-  echo "[PASS] Snap installed"
+  echo "[PASS] Snap installed via --dangerous flag"
 
   if [ "$DO_RUN" = true ]; then
     echo ""
@@ -107,17 +107,17 @@ if [ "$DO_INSTALL" = true ]; then
   fi
 fi
 
-# ── 6. Upload to Snap Store (optional) ───────────────────────────────────────
+# ── 4. Upload to Snap Store (optional) ───────────────────────────────────────
 if [ "$DO_UPLOAD" = true ]; then
   echo ""
-  echo "--- Step 6: Upload to Snap Store ---"
-  snapcraft upload "$BUILT_SNAP"
-  echo "[PASS] Snap uploaded"
+  echo "--- Step 4: Upload to Snap Store (beta channel) ---"
+  snapcraft upload --release=beta "$BUILT_SNAP"
+  echo "[PASS] Snap uploaded to beta channel"
   echo ""
   echo "Next steps:"
   echo "  1. Visit https://snapcraft.io/threadverse"
-  echo "  2. Review the listing"
-  echo "  3. Request stable channel release"
+  echo "  2. Review the listing on beta channel"
+  echo "  3. Promote to stable when ready"
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────

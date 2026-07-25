@@ -23,19 +23,25 @@ scripts/screenshots/
 │       ├── 03-ai-chat.png
 │       ├── 04-admin-dashboard.png
 │       └── 05-settings.png
-├── captureScreenshots.js # Playwright automation script
-└── README.md             # This file
+├── captureScreenshots.js     # Playwright automation script
+├── capture-all.ps1           # Master orchestrator (all platforms)
+├── capture-windows.ps1       # Windows-specific capture
+├── capture-unix.sh           # macOS/Linux capture
+├── data/                     # (reserved for static test fixtures)
+└── README.md                 # This file
 ```
 
 ## Screenshot Specifications
 
-| Property | Value |
-|----------|-------|
-| Resolution | 1280×800 (minimum), 2560×1600 (Retina) |
-| Format | PNG, lossless |
-| Background | App default (light or dark theme) |
-| Demo data | Seeded via `seedScreenshots.js` |
-| Login | admin / Demo1234! |
+| Property       | Value                                   |
+|----------------|-----------------------------------------|
+| Resolution     | 1280x800 (minimum), 2560x1600 (Retina) |
+| Format         | PNG, lossless                           |
+| Device scale   | 2x (Retina-quality screenshots)        |
+| Background     | App default (light theme)               |
+| Demo data      | Seeded via `seedScreenshots.js`         |
+| Login          | admin / Demo1234!                       |
+| Seed seed      | mulberry32(20260725) — deterministic    |
 
 ## Screenshots per Store
 
@@ -48,13 +54,12 @@ scripts/screenshots/
 ### Mac App Store (MAS)
 - Use `output/macos/` screenshots
 - Required: at least 1 screenshot per device type
-- iPhone: 6.7", 6.5", 5.5" (not applicable for desktop)
-- Mac: 1280×800 minimum
+- Mac: 1280x800 minimum
 - App Store Connect accepts up to 10 screenshots per device
 
 ### Flathub
 - Use `output/linux/` screenshots
-- Reference in `metainfo.xml` `<screenshots>` section
+- Referenced in `flatpak/org.threadverse.app.metainfo.xml` `<screenshots>` section
 - Host on a public URL (e.g., GitHub raw or your CDN)
 - Recommended: 2-5 screenshots showing key features
 
@@ -64,85 +69,70 @@ scripts/screenshots/
 - Minimum 1, recommended 3-5
 - Maximum 12 screenshots
 
-## Capture Workflow
+## Screenshots to Capture
 
-### 1. Seed demo data
-```bash
-cd packages/server
-node src/scripts/seedScreenshots.js
-```
+| #   | Screen           | URL Path              | What to show                                               |
+|-----|------------------|-----------------------|------------------------------------------------------------|
+| 01  | Home Feed        | `/home`               | Post list with votes, comments, community badges           |
+| 02  | Community Page   | `/community/reactjs`  | Community header, rules, post list                         |
+| 03  | AI Chat          | `/ai/chat?community=reactjs` | Chat panel with AI response and citations            |
+| 04  | Admin Dashboard  | `/admin`              | Stats, user management, platform overview                  |
+| 05  | Settings         | `/settings`           | User preferences, theme toggle, notification settings      |
 
-### 2. Start the server
-```bash
-cd packages/server
-node src/main.mjs
-```
+## Quick Start
 
-### 3. Start the web client
-```bash
-cd packages/web
-pnpm dev
-```
+### Automated (recommended)
 
-### 4. Run the capture script
 ```bash
-# Windows
+# Seed + capture on current platform
+cd packages/server && node src/scripts/seedScreenshots.js && cd ../..
 node scripts/screenshots/captureScreenshots.js
 
-# macOS
-node scripts/screenshots/captureScreenshots.js
+# Or use platform-specific scripts
+# Windows:
+.\scripts\screenshots\capture-windows.ps1
 
-# Linux
-node scripts/screenshots/captureScreenshots.js
+# macOS/Linux:
+./scripts/screenshots/capture-unix.sh
 ```
 
-### 5. Verify output
+### Full pipeline (all 15 screenshots)
+
 ```bash
-# Check that all 5 screenshots exist per platform
-ls -la scripts/screenshots/output/windows/
-ls -la scripts/screenshots/output/macos/
-ls -la scripts/screenshots/output/linux/
+# Capture on each platform for complete store listing set
+# Windows:
+.\scripts\screenshots\capture-all.ps1
+
+# macOS:
+./scripts/screenshots/capture-unix.sh --platform macos
+
+# Linux:
+./scripts/screenshots/capture-unix.sh --platform linux
 ```
 
-## Manual Capture (if automation fails)
+### Manual capture
 
-If Playwright automation does not work, capture manually:
+If Playwright automation does not work:
 
-1. Seed demo data: `node src/scripts/seedScreenshots.js`
-2. Start server + web client
-3. Open app in browser at `http://localhost:5173`
+1. Seed: `cd packages/server && node src/scripts/seedScreenshots.js`
+2. Start: `pnpm dev` (from root)
+3. Open browser at `http://localhost:5173`
 4. Log in as `admin` / `Demo1234!`
-5. Navigate to each screen and take a screenshot at 1280×800
+5. Navigate to each screen and take a screenshot at 1280x800
 6. Save to `scripts/screenshots/output/{platform}/`
 
-### Screenshots to capture:
+## Deterministic Seed
 
-| # | Screen | URL Path | What to show |
-|---|--------|----------|--------------|
-| 01 | Home Feed | `/feed` | Post list with votes, comments, community badges |
-| 02 | Community Page | `/community/reactjs` | Community header, rules, post list |
-| 03 | AI Chat | `/community/reactjs/chat` | Chat panel with AI response and citations |
-| 04 | Admin Dashboard | `/admin` | Stats, user management, platform overview |
-| 05 | Settings | `/settings` | User preferences, theme toggle, notification settings |
+The `seedScreenshots.js` script uses a deterministic PRNG (mulberry32 with seed `20260725`) so that the exact same data appears on every platform run. This ensures:
+
+- Same post titles, scores, and timestamps
+- Same user accounts and community structures
+- Identical UI state for coherent cross-platform store listings
 
 ## Store Listing Text
 
 ### Short Description (100 chars)
 Reddit-style community platform with AI-powered RAG chat
-
-### Long Description (4000 chars)
-ThreadVerse is a modern community discussion platform that brings together forums, real-time chat, and AI-powered assistance.
-
-Key features:
-- Create and join communities on any topic
-- Rich text posts with voting and comments
-- AI chat assistant that understands your community's context
-- Real-time notifications and activity feeds
-- Content moderation powered by AI
-- Weekly digest emails with community highlights
-- Cross-platform: Web, Desktop (Windows, macOS, Linux), and Mobile
-
-Built with the MERN stack (MongoDB, Express, React, Node.js) and Electron for cross-platform desktop support.
 
 ### Keywords
 community, chat, forum, discussion, reddit, ai, chatgpt, moderation, discussion-board, open-source

@@ -1,15 +1,20 @@
 /**
  * captureScreenshots.js — Automated screenshot capture for store listings.
  *
- * Uses Playwright to launch the Electron app, navigate to key screens,
+ * Uses Playwright to launch a headless Chromium browser, navigate to key screens,
  * and capture 1280×800 PNGs. Run AFTER seeding with seedScreenshots.js.
  *
  * Prerequisites:
- *   npm install -g playwright (or pnpm add -D playwright in the desktop package)
- *   npx playwright install chromium
+ *   1. Seed demo data:   cd packages/server && node src/scripts/seedScreenshots.js
+ *   2. Start server:     cd packages/server && node src/main.mjs
+ *   3. Start web client: cd packages/web && pnpm dev
+ *   4. Install Playwright: pnpm add -D playwright @playwright/test (root or desktop)
+ *      npx playwright install chromium
  *
  * Usage:
- *   cd packages/desktop && node ../../scripts/screenshots/captureScreenshots.js
+ *   node scripts/screenshots/captureScreenshots.js
+ *   node scripts/screenshots/captureScreenshots.js --platform windows
+ *   node scripts/screenshots/captureScreenshots.js --base-url http://localhost:5173
  *
  * Output:
  *   scripts/screenshots/output/{platform}/
@@ -23,13 +28,20 @@
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import { mkdirSync, existsSync } from 'fs';
-import { execSync } from 'child_process';
+import { mkdirSync, readdirSync, statSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// ── CLI args ─────────────────────────────────────────────────────────────────
+const args = process.argv.slice(2);
+function getArg(name) {
+  const idx = args.indexOf(`--${name}`);
+  return idx !== -1 && args[idx + 1] ? args[idx + 1] : null;
+}
+
 // ── Platform detection ───────────────────────────────────────────────────────
 function detectPlatform() {
+  if (getArg('platform')) return getArg('platform');
   const p = process.platform;
   if (p === 'win32') return 'windows';
   if (p === 'darwin') return 'macos';
@@ -42,94 +54,119 @@ mkdirSync(OUTPUT_DIR, { recursive: true });
 
 const WIDTH = 1280;
 const HEIGHT = 800;
+const SCALE_FACTOR = 2; // Retina-quality
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5173';
+const BASE_URL = getArg('base-url') || process.env.BASE_URL || 'http://localhost:5173';
 const ADMIN_USER = 'admin';
 const ADMIN_PASS = 'Demo1234!';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-async function screenshot(page, name, opts = {}) {
+async function screenshot(page, name) {
   const path = resolve(OUTPUT_DIR, `${name}.png`);
   await page.screenshot({
     path,
     fullPage: false,
     clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },
-    ...opts,
   });
-  console.log(`  [${PLATFORM}] ${name}.png`);
+  const size = statSync(path).size;
+  console.log(`  [${PLATFORM}] ${name}.png  (${(size / 1024).toFixed(0)} KB)`);
 }
 
-async function waitForSelector(page, selector, timeout = 10000) {
-  await page.waitForSelector(selector, { timeout });
+async function waitAndVerify(page, url, timeout = 15000) {
+  await page.waitForURL(`**${url}*`, { timeout }).catch(() => {});
+  await page.waitForLoadState('networkidle').catch(() => {});
+  // Extra settle time for React lazy loads, animations, and data fetches
+  await page.waitForTimeout(1500);
 }
 
 // ── Screenshots ──────────────────────────────────────────────────────────────
 async function captureScreenshots() {
-  console.log(`\n=== Capturing screenshots for ${PLATFORM} ===\n`);
+  console.log(`\n=== Capturing screenshots for ${PLATFORM} ===`);
+  console.log(`Resolution: ${WIDTH}×${HEIGHT} @${SCALE_FACTOR}x`);
+  console.log(`Base URL:   ${BASE_URL}`);
+  console.log(`Output:     ${OUTPUT_DIR}\n`);
 
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
     args: [
       `--window-size=${WIDTH},${HEIGHT}`,
       '--no-sandbox',
       '--disable-gpu',
+      '--disable-dev-shm-usage',
     ],
   });
 
   const context = await browser.newContext({
     viewport: { width: WIDTH, height: HEIGHT },
-    deviceScaleFactor: 2, // Retina-quality screenshots
+    deviceScaleFactor: SCALE_FACTOR,
+    locale: 'en-US',
+    timezoneId: 'America/New_York',
   });
 
   const page = await context.newPage();
-  page.setDefaultTimeout(15000);
+  page.setDefaultTimeout(20000);
 
   // ── 1. Login ───────────────────────────────────────────────────────────────
-  console.log('1. Logging in...');
+  console.log('1. Logging in as admin...');
   await page.goto(`${BASE_URL}/login`);
   await page.waitForLoadState('networkidle');
 
-  // Fill login form
-  const usernameInput = page.locator('input[name="username"], input[placeholder*="username"], input[type="text"]').first();
-  const passwordInput = page.locator('input[name="password"], input[placeholder*="password"], input[type="password"]').first();
+  // Fill login form — try multiple selectors for robustness
+  const usernameInput = page.locator(
+    'input[name="username"], input[placeholder*="username" i], input[type="text"]'
+  ).first();
+  const passwordInput = page.locator(
+    'input[name="password"], input[placeholder*="password" i], input[type="password"]'
+  ).first();
 
   await usernameInput.fill(ADMIN_USER);
   await passwordInput.fill(ADMIN_PASS);
 
-  // Submit
-  const submitBtn = page.locator('button[type="submit"], button:has-text("Log in"), button:has-text("Sign in")').first();
+  const submitBtn = page.locator(
+    'button[type="submit"], button:has-text("Log in"), button:has-text("Sign in"), button:has-text("Login")'
+  ).first();
   await submitBtn.click();
-  await page.waitForURL('**/feed**', { timeout: 10000 }).catch(() => {});
-  await page.waitForTimeout(2000); // Let animations settle
+
+  // Wait for redirect to home or feed
+  await page.waitForTimeout(3000);
+  await page.waitForLoadState('networkidle').catch(() => {});
+  console.log('  Logged in.\n');
 
   // ── 2. Home Feed ───────────────────────────────────────────────────────────
   console.log('2. Capturing home feed...');
-  await page.goto(`${BASE_URL}/feed`);
+  await page.goto(`${BASE_URL}/home`);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000); // Let posts render, images load
   await screenshot(page, '01-home-feed');
 
   // ── 3. Community Page ──────────────────────────────────────────────────────
   console.log('3. Capturing community page...');
   await page.goto(`${BASE_URL}/community/reactjs`);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000);
   await screenshot(page, '02-community-page');
 
   // ── 4. AI Chat Panel ───────────────────────────────────────────────────────
   console.log('4. Capturing AI chat...');
-  await page.goto(`${BASE_URL}/community/reactjs/chat`);
+  await page.goto(`${BASE_URL}/ai/chat?community=reactjs`);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(1500);
 
-  // Type a question to trigger the AI response
-  const chatInput = page.locator('textarea, input[placeholder*="message"], input[placeholder*="chat"], input[placeholder*="ask"]').first();
-  if (await chatInput.isVisible()) {
+  // Type a question to trigger the AI response for a more compelling screenshot
+  const chatInput = page.locator(
+    'textarea, input[placeholder*="message" i], input[placeholder*="chat" i], input[placeholder*="ask" i], input[placeholder*="type" i]'
+  ).first();
+
+  if (await chatInput.isVisible().catch(() => false)) {
     await chatInput.fill('What are the best practices for React hooks?');
-    const sendBtn = page.locator('button:has-text("Send"), button[type="submit"]').first();
-    if (await sendBtn.isVisible()) {
+    const sendBtn = page.locator(
+      'button:has-text("Send"), button[type="submit"], button[aria-label*="send" i]'
+    ).first();
+
+    if (await sendBtn.isVisible().catch(() => false)) {
       await sendBtn.click();
-      await page.waitForTimeout(4000); // Wait for AI response
+      // Wait for streaming AI response to populate
+      await page.waitForTimeout(5000);
     }
   }
   await screenshot(page, '03-ai-chat');
@@ -138,7 +175,7 @@ async function captureScreenshots() {
   console.log('5. Capturing admin dashboard...');
   await page.goto(`${BASE_URL}/admin`);
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000); // Let charts and stats load
   await screenshot(page, '04-admin-dashboard');
 
   // ── 6. Settings ────────────────────────────────────────────────────────────
@@ -150,13 +187,28 @@ async function captureScreenshots() {
 
   // ── Done ───────────────────────────────────────────────────────────────────
   await browser.close();
-  console.log(`\nDone! Screenshots saved to ${OUTPUT_DIR}`);
-  console.log('Files:');
-  const { readdirSync } = await import('fs');
+
+  console.log(`\nDone! ${5} screenshots saved to ${OUTPUT_DIR}`);
+  console.log('\nFiles:');
   for (const f of readdirSync(OUTPUT_DIR).filter((f) => f.endsWith('.png'))) {
-    const stats = await import('fs').then((fs) => fs.statSync(resolve(OUTPUT_DIR, f)));
+    const stats = statSync(resolve(OUTPUT_DIR, f));
     console.log(`  ${f} — ${(stats.size / 1024).toFixed(0)} KB`);
   }
+
+  // Verify all 5 are present
+  const required = [
+    '01-home-feed.png',
+    '02-community-page.png',
+    '03-ai-chat.png',
+    '04-admin-dashboard.png',
+    '05-settings.png',
+  ];
+  const missing = required.filter((f) => !readdirSync(OUTPUT_DIR).includes(f));
+  if (missing.length > 0) {
+    console.error(`\n[ERROR] Missing screenshots: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+  console.log('\nAll 5 screenshots captured successfully.');
 }
 
 captureScreenshots().catch((err) => {
