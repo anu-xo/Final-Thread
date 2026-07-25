@@ -106,6 +106,34 @@ router.get('/unread-count', async (req, res) => {
 });
 
 // PUT /notifications/read  { ids: [...] }
+/**
+ * @openapi
+ * /notifications/read:
+ *   put:
+ *     tags: [Notifications]
+ *     summary: Mark specific notifications as read
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [ids]
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Notifications marked as read
+ *       400:
+ *         description: ids array required
+ *       401:
+ *         description: Not authenticated
+ */
 router.put('/read', async (req, res) => {
   try {
     const { ids } = req.body;
@@ -123,6 +151,32 @@ router.put('/read', async (req, res) => {
 });
 
 // PUT /notifications/read-all
+/**
+ * @openapi
+ * /notifications/read-all:
+ *   put:
+ *     tags: [Notifications]
+ *     summary: Mark all notifications as read
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         updated:
+ *                           type: integer
+ *       401:
+ *         description: Not authenticated
+ */
 router.put('/read-all', async (req, res) => {
   try {
     const result = await Notification.updateMany(

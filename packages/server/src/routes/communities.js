@@ -117,6 +117,32 @@ router.get('/', getCommunities);
  */
 // GET /communities/me — subscribed communities 
 // (Placed above dynamic routes to avoid slug conflict)
+// GET /communities/me — list communities the authenticated user has joined
+/**
+ * @openapi
+ * /communities/me:
+ *   get:
+ *     tags: [Communities]
+ *     summary: Get communities the current user has joined
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of joined communities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/CommunitySummary'
+ *       401:
+ *         description: Not authenticated
+ */
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const memberships = await CommunityMember.find({
@@ -215,6 +241,44 @@ router.post('/:slug/join', authMiddleware, joinCommunity);
 router.post('/:slug/leave', authMiddleware, leaveCommunity);
 
 // PUT /communities/:slug/rules — mod only
+/**
+ * @openapi
+ * /communities/{slug}/rules:
+ *   put:
+ *     tags: [Communities]
+ *     summary: Update community rules (mod only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               rules:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Updated community
+ *       403:
+ *         description: Not a moderator
+ *       404:
+ *         description: Community not found
+ */
 router.put('/:slug/rules', authMiddleware, async (req, res, next) => {
   try {
     const community = await Community.findOne({ slug: req.params.slug });
@@ -241,6 +305,37 @@ router.put('/:slug/rules', authMiddleware, async (req, res, next) => {
 // POST /communities/:slug/flairs — mod only
 // PUT /communities/:slug (mod-only, existing middleware from Day 8)
 // PUT /communities/:slug (mod-only, existing middleware from Day 8)
+/**
+ * @openapi
+ * /communities/{slug}:
+ *   put:
+ *     tags: [Communities]
+ *     summary: Update community settings (mod only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               aiEnabled:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated community
+ *       403:
+ *         description: Not a moderator
+ *       404:
+ *         description: Community not found
+ */
 router.put('/:slug', authMiddleware, modGuard, async (req, res, next) => {
   try {
     const { aiEnabled } = req.body;
@@ -269,6 +364,39 @@ router.put('/:slug', authMiddleware, modGuard, async (req, res, next) => {
   }
 });
 // POST /communities/:slug/flairs — mod only
+/**
+ * @openapi
+ * /communities/{slug}/flairs:
+ *   post:
+ *     tags: [Communities]
+ *     summary: Add a flair to a community (mod only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               color:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Flair added
+ *       403:
+ *         description: Not a moderator
+ *       404:
+ *         description: Community not found
+ */
 router.post('/:slug/flairs', authMiddleware, async (req, res, next) => {
   try {
     const community = await Community.findOne({

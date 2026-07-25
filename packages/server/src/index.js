@@ -1,11 +1,8 @@
 import http from 'http';
 import { Server } from 'socket.io';
 import app from './app.js';
-import aiRoutes from './routes/ai.js';
 import { initIO } from './socket.js';
 import CORS_ORIGINS from './config/corsOrigins.js';
-
-app.use('/api/ai', aiRoutes);
 
 const PORT = process.env.PORT || 5000;
 

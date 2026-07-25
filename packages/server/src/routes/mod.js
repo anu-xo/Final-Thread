@@ -12,6 +12,44 @@ import ModerationLog from '../models/ModerationLog.js'; // create if not present
 const router = express.Router();
 
 // GET /mod/queue?communityId=&cursor=
+/**
+ * @openapi
+ * /mod/queue:
+ *   get:
+ *     tags: [Moderation]
+ *     summary: Get pending moderation reports for communities you moderate
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: communityId
+ *         schema:
+ *           type: string
+ *         description: Filter to a specific community
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Pagination cursor
+ *     responses:
+ *       200:
+ *         description: List of pending reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Report'
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a moderator of the specified community
+ */
 router.get('/mod/queue', authMiddleware, async (req, res, next) => {
   try {
     const { communityId, cursor } = req.query;
@@ -54,6 +92,48 @@ router.get('/mod/queue', authMiddleware, async (req, res, next) => {
 });
 
 // POST /mod/action  { type: 'approve'|'remove'|'ban', targetId, targetType, communityId, userId? }
+/**
+ * @openapi
+ * /mod/action:
+ *   post:
+ *     tags: [Moderation]
+ *     summary: Execute a moderation action (approve, remove, or ban)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [type, targetType]
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [approve, remove, ban]
+ *               targetId:
+ *                 type: string
+ *               targetType:
+ *                 type: string
+ *                 enum: [post, comment]
+ *               communityId:
+ *                 type: string
+ *               userId:
+ *                 type: string
+ *               reportId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Action executed successfully
+ *       400:
+ *         description: Invalid action type or missing required fields
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a moderator
+ */
 router.post('/mod/action', authMiddleware, modGuard, async (req, res, next) => {
   try {
     const { type, targetId, targetType, communityId, userId, reportId } = req.body;

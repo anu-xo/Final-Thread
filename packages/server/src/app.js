@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { randomUUID } from 'crypto';
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
@@ -9,6 +10,7 @@ import compression from 'compression';
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
+import * as Sentry from '@sentry/node';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import CORS_ORIGINS from './config/corsOrigins.js';
@@ -45,6 +47,24 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 const app = express();
 app.set('io', null);
 
+// ── Sentry (must be before any other middleware) ─────────────────────────────
+if (process.env.SENTRY_DSN && !process.env.SENTRY_DSN.includes('your-key')) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
+  });
+}
+
+// ── Request ID ───────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  const id = req.headers['x-request-id'] || randomUUID();
+  req.requestId = id;
+  res.setHeader('x-request-id', id);
+  Sentry.setTag('request_id', id);
+  next();
+});
+
 // ── Security & Logging Middleware ──────────────────────────────────────────
 app.use(
   helmet({
@@ -79,7 +99,8 @@ app.use(platformTag);
 
 morgan.token('platform', (req) => req.platform || 'unknown');
 morgan.token('appVersion', (req) => req.appVersion || '-');
-app.use(morgan(':method :url :status :res[content-length] - :response-time ms [platform=:platform version=:appVersion]'));
+morgan.token('requestId', (req) => req.requestId || '-');
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms [id=:requestId platform=:platform version=:appVersion]'));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -165,7 +186,7 @@ app.use('/api/admin', adminRouter, adminRoutes);
 
 // ── Debug echo (used by integration tests to verify platformTag) ─────────────
 app.get('/api/debug/platform', (req, res) => {
-  res.json({ platform: req.platform, appVersion: req.appVersion });
+  res.json({ data: { platform: req.platform, appVersion: req.appVersion }, error: null, meta: null });
 });
 
 // ── Debug: trigger weekly digest manually (remove before shipping) ───────────
@@ -174,10 +195,10 @@ import { sendWeeklyDigest } from './services/emailService.js';
 app.post('/api/debug/test-digest', async (req, res) => {
   try {
     const result = await sendWeeklyDigest();
-    res.json({ ok: true, ...result });
+    res.json({ data: result, error: null, meta: null });
   } catch (err) {
     console.error('[debug/test-digest] error:', err);
-    res.status(500).json({ ok: false, error: err.message });
+    res.status(500).json({ data: null, error: err.message, meta: null });
   }
 });
 
@@ -186,13 +207,17 @@ app.use('/', sitemapRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({ status: 'ok', message: 'ThreadVerse API is running', docs: '/api/health' });
+  res.status(404).json({ data: null, error: 'Not found', meta: null });
 });
+
+// ── Sentry Express error handler (must be after routes, before custom error handlers) ──
+Sentry.setupExpressErrorHandler(app);
 
 // ── Global Error Handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+  console.error(`[id=${req.requestId}]`, err.stack);
+  Sentry.captureException(err);
+  res.status(err.status || 500).json({ data: null, error: err.message || 'Internal Server Error', meta: null });
 });
 
 export { redis };

@@ -14,6 +14,22 @@ const router = Router();
 router.use(authMiddleware);
 router.use(adminGuard);
 
+/**
+ * @openapi
+ * /admin/stats:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get dashboard stats (users, posts, AI chats, open reports)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Platform statistics
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not an admin
+ */
 router.get('/stats', async (req, res) => {
   try {
     const stats = await cacheWrap('admin:stats', 300, async () => {
@@ -63,6 +79,18 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/stats/versions:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get desktop app version adoption stats (7-day window)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Version adoption breakdown
+ */
 router.get('/stats/versions', async (req, res) => {
   try {
     const data = await cacheWrap('admin:stats:versions', 300, async () => {
@@ -133,6 +161,18 @@ router.get('/stats/versions', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/stats/platform:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get platform-specific activity stats (30-day window)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Platform event and user breakdown
+ */
 router.get('/stats/platform', async (req, res) => {
   try {
     const data = await cacheWrap('admin:stats:platform', 300, async () => {
@@ -182,6 +222,28 @@ router.get('/stats/platform', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/users:
+ *   get:
+ *     tags: [Admin]
+ *     summary: List users with optional search and ban filter
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: banned
+ *         schema:
+ *           type: string
+ *           enum: ["true", "false"]
+ *     responses:
+ *       200:
+ *         description: List of users
+ */
 router.get('/users', async (req, res) => {
   try {
     const { search, banned } = req.query;
@@ -203,6 +265,34 @@ router.get('/users', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/users/{id}/ban:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Ban a user and force-logout all sessions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User banned
+ *       404:
+ *         description: User not found
+ */
 router.post('/users/:id/ban', async (req, res) => {
   try {
     const { reason } = req.body;
@@ -234,6 +324,26 @@ router.post('/users/:id/ban', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/users/{id}/unban:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Unban a user
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User unbanned
+ *       404:
+ *         description: User not found
+ */
 router.post('/users/:id/unban', async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -254,6 +364,18 @@ router.post('/users/:id/unban', async (req, res) => {
 // Gemini text-embedding-004 + 2.5 Flash pricing — update when you outgrow free tier
 const COST_PER_1K_TOKENS = 0.000075;
 
+/**
+ * @openapi
+ * /admin/ai/costs:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get AI usage costs broken down by day and community
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Daily AI token usage with estimated cost
+ */
 router.get('/ai/costs', async (req, res) => {
   try {
     const costs = await cacheWrap('admin:ai:costs', 300, async () => {
@@ -295,6 +417,24 @@ router.get('/ai/costs', async (req, res) => {
 
 // ── AI Community Analytics ─────────────────────────────────────────────────────
 
+/**
+ * @openapi
+ * /admin/ai/community/{communityId}/breakdown:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get AI message breakdown for a specific community
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Message counts, token usage, ratings, and daily trend
+ */
 router.get('/ai/community/:communityId/breakdown', async (req, res) => {
   try {
     const { communityId } = req.params;
@@ -349,6 +489,24 @@ router.get('/ai/community/:communityId/breakdown', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /admin/ai/community/{communityId}/low-rated:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get downvoted AI messages for a specific community
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: communityId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of low-rated AI messages
+ */
 router.get('/ai/community/:communityId/low-rated', async (req, res) => {
   try {
     const { communityId } = req.params;

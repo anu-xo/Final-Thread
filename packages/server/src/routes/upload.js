@@ -5,6 +5,42 @@ import cloudinary from '../config/cloudinary.js';
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /upload/sign:
+ *   post:
+ *     tags: [Upload]
+ *     summary: Generate a signed upload token for Cloudinary
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Signed upload credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         signature:
+ *                           type: string
+ *                         timestamp:
+ *                           type: integer
+ *                         apiKey:
+ *                           type: string
+ *                         cloudName:
+ *                           type: string
+ *                         folder:
+ *                           type: string
+ *       401:
+ *         description: Not authenticated
+ *       500:
+ *         description: Cloudinary not configured
+ */
 router.post('/sign', authMiddleware, (req, res) => {
   try {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;

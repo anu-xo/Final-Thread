@@ -52,16 +52,16 @@ describe('Platform headers & CORS', () => {
         .set('X-App-Version', '1.0.0');
 
       expect(res.status).toBe(200);
-      expect(res.body.platform).toBe('desktop');
-      expect(res.body.appVersion).toBe('1.0.0');
+      expect(res.body.data.platform).toBe('desktop');
+      expect(res.body.data.appVersion).toBe('1.0.0');
     });
 
     it('resolves to "web" when X-App-Platform header is absent', async () => {
       const res = await request(app).get('/api/debug/platform');
 
       expect(res.status).toBe(200);
-      expect(res.body.platform).toBe('web');
-      expect(res.body.appVersion).toBeNull();
+      expect(res.body.data.platform).toBe('web');
+      expect(res.body.data.appVersion).toBeNull();
     });
 
     it('resolves to "web" when X-App-Platform is an unexpected value', async () => {
@@ -70,7 +70,7 @@ describe('Platform headers & CORS', () => {
         .set('X-App-Platform', 'ios');
 
       expect(res.status).toBe(200);
-      expect(res.body.platform).toBe('web');
+      expect(res.body.data.platform).toBe('web');
     });
   });
 

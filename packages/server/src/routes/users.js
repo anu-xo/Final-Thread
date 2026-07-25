@@ -120,6 +120,33 @@ router.get('/:username', async (req, res) => {
 });
 
 // GET /users/:username/posts
+/**
+ * @openapi
+ * /users/{username}/posts:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get posts by a user with pagination
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           maximum: 25
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Paginated list of user's posts
+ *       404:
+ *         description: User not found
+ */
 router.get('/:username/posts', async (req, res) => {
   try {
     const user = await loadUser(req.params.username);
@@ -163,6 +190,33 @@ router.get('/:username/posts', async (req, res) => {
 });
 
 // GET /users/:username/comments
+/**
+ * @openapi
+ * /users/{username}/comments:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get comments by a user with pagination
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           maximum: 25
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Paginated list of user's comments
+ *       404:
+ *         description: User not found
+ */
 router.get('/:username/comments', async (req, res) => {
   try {
     const user = await loadUser(req.params.username);
