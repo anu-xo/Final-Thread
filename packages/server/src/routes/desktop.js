@@ -2,10 +2,17 @@ import { Router } from 'express';
 
 const router = Router();
 
+const GITHUB_REPO = 'https://github.com/anu-xo/Final-Thread/releases/download';
+
 const VERSION_INFO = {
   minimum: '1.0.0',
   latest: '1.0.0',
-  downloadUrl: 'https://github.com/anu-xo/Final-Thread.git/releases/latest',
+  downloadUrl: `${GITHUB_REPO}/v1.0.0`,
+  platforms: {
+    windows: `${GITHUB_REPO}/v1.0.0/ThreadVerse-Setup-1.0.0.exe`,
+    mac: `${GITHUB_REPO}/v1.0.0/ThreadVerse-1.0.0.dmg`,
+    linux: `${GITHUB_REPO}/v1.0.0/ThreadVerse-1.0.0.AppImage`,
+  },
 };
 
 router.get('/version', (req, res) => {

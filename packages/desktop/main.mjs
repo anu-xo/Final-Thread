@@ -850,7 +850,7 @@ safeHandle('notification:ping-test', async () => {
 
 
 // ── Connectivity Detection ──────────────────────────────────────────────────
-const API_BASE = isDev ? 'http://localhost:5000' : 'https://your-production-api.com';
+const API_BASE = isDev ? 'http://localhost:5000' : 'https://api.threadverse.app';
 const CONNECTIVITY_INTERVAL = 10_000;
 
 let lastOnlineState = null;

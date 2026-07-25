@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import compression from 'vite-plugin-compression'
+import { VitePWA } from 'vite-plugin-pwa'
 
 function nonBlockingCss() {
   return {
@@ -21,6 +22,31 @@ export default defineConfig({
     tailwindcss(),
     compression({ algorithm: 'gzip' }),
     compression({ algorithm: 'brotliCompress', ext: '.br' }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'icons/*.png'],
+      manifest: false, // using static manifest.json in public/
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/auth\//],
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/posts\?/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'posts-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 300 },
+            },
+          },
+          {
+            urlPattern: /\/api\/communities/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'communities-cache' },
+          },
+        ],
+      },
+    }),
     nonBlockingCss(),
   ],
   build: {

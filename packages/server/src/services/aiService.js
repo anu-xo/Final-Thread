@@ -324,6 +324,56 @@ export async function buildRagPrompt({ message, communityId }) {
   return { prompt, sources };
 }
 
+// 12. Stream chat response — used by POST /ai/chat route
+// Returns { stream: ReadableStream, sources: Array, tokenCount: number }
+export async function streamChatResponse({ message, communityId, conversationId }) {
+  const community = await Community.findById(communityId).select('name');
+  if (!community) throw new Error(`Community not found: ${communityId}`);
+
+  const queryEmbedding = await embedQuery(message);
+  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+
+  const history = await AIMessage.find({ conversation: conversationId })
+    .sort({ createdAt: -1 })
+    .limit(6)
+    .lean();
+
+  const { prompt, tokenCount } = await buildPromptWithinBudget({
+    systemPrompt: SYSTEM_PROMPT_V1.replace('{community}', community.name),
+    contextChunks: contextChunks.map((c) => c.text),
+    history: history.reverse(),
+    userMessage: message,
+  });
+
+  const postIds = [...new Set(contextChunks.map((c) => c.postId.toString()))];
+  const posts = await Post.find({ _id: { $in: postIds } }).select('title').lean();
+  const postTitleMap = posts.reduce((map, post) => {
+    map[post._id.toString()] = post.title;
+    return map;
+  }, {});
+
+  const sources = contextChunks.map((c) => ({
+    postId: c.postId,
+    title: postTitleMap[c.postId.toString()] || 'Untitled',
+  }));
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        await generateWithFallback(prompt, (token) => {
+          controller.enqueue(token);
+        });
+      } catch (err) {
+        controller.error(err);
+      } finally {
+        controller.close();
+      }
+    },
+  });
+
+  return { stream, sources, tokenCount };
+}
+
 // 11. Get non-streaming response (fallback to Groq if Gemini rate-limited)
 export async function getNonStreamingResponse(prompt) {
   try {
@@ -351,6 +401,7 @@ export default {
   buildRagPrompt,
   getNonStreamingResponse,
   streamResponse,
+  streamChatResponse,
   generateWithFallback,
   geminiGenerateStream,
   groqGenerateStream,

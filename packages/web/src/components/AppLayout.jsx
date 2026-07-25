@@ -18,10 +18,12 @@ function OfflineBanner() {
   if (isOnline) return null;
   return (
     <div
-      className="fixed inset-x-0 z-50 bg-yellow-500 text-yellow-950 text-center text-sm font-medium py-1.5"
+      className="fixed inset-x-0 z-50 flex justify-center px-4"
       style={{ top: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
     >
-      You are offline — some features may be unavailable
+      <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 px-4 py-2.5 text-sm text-yellow-800 dark:text-yellow-300 mt-3 shadow-sm">
+        You're offline — showing cached content
+      </div>
     </div>
   );
 }

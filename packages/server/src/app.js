@@ -157,6 +157,19 @@ app.get('/api/debug/platform', (req, res) => {
   res.json({ platform: req.platform, appVersion: req.appVersion });
 });
 
+// ── Debug: trigger weekly digest manually (remove before shipping) ───────────
+import { sendWeeklyDigest } from './services/emailService.js';
+
+app.post('/api/debug/test-digest', async (req, res) => {
+  try {
+    const result = await sendWeeklyDigest();
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[debug/test-digest] error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ── Sitemap (mounted at / so crawlers find /sitemap.xml) ─────────────────────
 app.use('/', sitemapRoutes);
 

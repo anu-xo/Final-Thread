@@ -160,6 +160,94 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
   }
 });
 
-// ... your /conversations, /messages/:id/feedback routes stay exactly as they are ...
+// GET /ai/conversations/:id/messages — retrieve message history for a conversation
+router.get('/conversations/:id/messages', authMiddleware, async (req, res) => {
+  try {
+    const conversation = await AIConversation.findOne({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        data: null,
+        error: { message: 'Conversation not found' },
+        meta: {},
+      });
+    }
+
+    const messages = await AIMessage.find({ conversation: conversation._id })
+      .sort({ createdAt: 1 })
+      .lean();
+
+    return res.json({ data: messages, error: null, meta: {} });
+  } catch (err) {
+    console.error('Error fetching conversation messages:', err);
+    return res.status(500).json({
+      data: null,
+      error: { message: 'Failed to fetch messages' },
+      meta: {},
+    });
+  }
+});
+
+// POST /ai/messages/:id/feedback — rate an AI message (1 = thumbs up, -1 = thumbs down)
+router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
+  const { rating } = req.body;
+
+  if (rating !== 1 && rating !== -1) {
+    return res.status(400).json({
+      data: null,
+      error: { message: 'rating must be 1 (thumbs up) or -1 (thumbs down)' },
+      meta: {},
+    });
+  }
+
+  try {
+    const message = await AIMessage.findById(req.params.id);
+
+    if (!message) {
+      return res.status(404).json({
+        data: null,
+        error: { message: 'Message not found' },
+        meta: {},
+      });
+    }
+
+    if (message.role !== 'assistant') {
+      return res.status(400).json({
+        data: null,
+        error: { message: 'Can only rate assistant messages' },
+        meta: {},
+      });
+    }
+
+    // Verify the message belongs to a conversation owned by this user
+    const conversation = await AIConversation.findOne({
+      _id: message.conversation,
+      user: req.user.id,
+    });
+
+    if (!conversation) {
+      return res.status(403).json({
+        data: null,
+        error: { message: 'Not authorized to rate this message' },
+        meta: {},
+      });
+    }
+
+    message.rating = rating;
+    await message.save();
+
+    return res.json({ data: { rating }, error: null, meta: {} });
+  } catch (err) {
+    console.error('Error saving feedback:', err);
+    return res.status(500).json({
+      data: null,
+      error: { message: 'Failed to save feedback' },
+      meta: {},
+    });
+  }
+});
 
 export default router;
