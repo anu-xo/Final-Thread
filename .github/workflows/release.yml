@@ -66,12 +66,14 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       - name: Build Electron app (MAS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && secrets.MAS_CERTIFICATE != ''
         run: pnpm --filter desktop exec electron-builder --publish never --mac mas
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
-          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          CSC_LINK: ${{ secrets.MAS_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAS_CERTIFICATE_PASSWORD }}
+          MAS_PROVISIONING_PROFILE: ${{ secrets.MAS_PROVISIONING_PROFILE }}
+        continue-on-error: true
 
       - name: Build Electron app (Windows)
         if: runner.os == 'Windows'
@@ -125,6 +127,47 @@ jobs:
             echo "MAS signature verification failed"
             exit 1
           }
+
+      - name: Upload MAS to App Store Connect
+        if: runner.os == 'macOS' && env.APPSTORE_API_KEY_ID != ''
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER: ${{ secrets.APPSTORE_API_ISSUER }}
+          APPSTORE_API_KEY_P8: ${{ secrets.APPSTORE_API_KEY_P8 }}
+        run: |
+          PKG_PATH=$(find dist -name "*.pkg" -maxdepth 2 | head -1)
+          if [ -z "$PKG_PATH" ]; then
+            echo "No .pkg found, skipping App Store upload"
+            exit 0
+          fi
+
+          echo "=== Uploading MAS .pkg to App Store Connect ==="
+          echo "Package: $PKG_PATH"
+          echo "Size: $(du -h "$PKG_PATH" | cut -f1)"
+
+          # Write API key to a temp file for xcrun altool
+          mkdir -p ~/private_keys
+          echo "$APPSTORE_API_KEY_P8" > ~/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8
+
+          xcrun altool --upload-app \
+            --type macos \
+            --file "$PKG_PATH" \
+            --apiKey "$APPSTORE_API_KEY_ID" \
+            --apiIssuer "$APPSTORE_API_ISSUER"
+
+          echo "=== MAS upload complete ==="
+
+      - name: Verify MAS upload succeeded
+        if: runner.os == 'macOS' && env.APPSTORE_API_KEY_ID != ''
+        env:
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_ISSUER: ${{ secrets.APPSTORE_API_ISSUER }}
+        run: |
+          echo "=== Checking App Store Connect for uploaded build ==="
+          xcrun altool --list-apps \
+            --type macos \
+            --apiKey "$APPSTORE_API_KEY_ID" \
+            --apiIssuer "$APPSTORE_API_ISSUER" | head -20
 
       - name: Verify Windows code signature
         if: runner.os == 'Windows'
@@ -270,5 +313,8 @@ jobs:
           TAG="${GITHUB_REF#refs/tags/}"
           gh release create "$TAG" --title "Release $TAG" --generate-notes || true
           for f in dist/*; do
+            # Skip .pkg (MAS) and .blockmap files — MAS goes to App Store Connect, not GitHub
+            [[ "$f" == *.pkg ]] && continue
+            [[ "$f" == *.blockmap ]] && continue
             [ -f "$f" ] && gh release upload "$TAG" "$f" --clobber
           done

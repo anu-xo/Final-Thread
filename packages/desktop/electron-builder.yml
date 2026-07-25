@@ -74,7 +74,8 @@ mas:
   entitlementsInherit: build/entitlements.mas.inherit.plist
   hardenedRuntime: false
   # MAS requires app sandbox — no hardened runtime
-  # provisioningProfile is provided via CSC_LINK / CSC_KEY_PASSWORD env vars
+  # provisioningProfile is provided via MAS_PROVISIONING_PROFILE env var
+  # CSC_LINK / CSC_KEY_PASSWORD are set to MAS-specific certificate in CI
   extraResources:
     - from: ../web/dist
       to: web/dist
