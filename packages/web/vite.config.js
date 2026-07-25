@@ -44,6 +44,14 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'communities-cache' },
           },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|webp|gif|svg)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: { maxEntries: 100, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
         ],
       },
     }),

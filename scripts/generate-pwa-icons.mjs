@@ -3,7 +3,7 @@
  * scripts/generate-pwa-icons.mjs
  *
  * Generates PWA icons from the master icon source.
- * Outputs 192×192, 512×512, and maskable 512×512 variants.
+ * Outputs 180×180 (apple-touch-icon), 192×192, 512×512, and maskable 512×512 variants.
  *
  * Usage:
  *   node scripts/generate-pwa-icons.mjs
@@ -12,6 +12,7 @@
  *   packages/desktop/build-assets/icon-source.png
  *
  * Output (packages/web/public/icons/):
+ *   icon-180.png          180×180  (apple-touch-icon)
  *   icon-192.png          192×192  (standard PWA)
  *   icon-512.png          512×512  (standard PWA)
  *   icon-maskable-512.png 512×512  (Android adaptive — 80% safe zone)
@@ -41,7 +42,7 @@ async function generate() {
   await mkdir(OUTPUT_DIR, { recursive: true });
 
   // ── Standard PWA icons (contain fit — icon sized to fit within canvas) ────
-  for (const size of [192, 512]) {
+  for (const size of [180, 192, 512]) {
     const buf = await sharp(input)
       .resize(size, size, {
         fit: 'contain',
@@ -89,7 +90,7 @@ async function generate() {
   await writeFile(maskablePath, maskableBuf);
   console.log(`→ icon-maskable-512.png  (${maskableSize}×${maskableSize}, 80% safe zone)`);
 
-  console.log(`\nDone. 3 PWA icons generated in ${OUTPUT_DIR}`);
+  console.log(`\nDone. 4 PWA icons generated in ${OUTPUT_DIR}`);
 }
 
 generate().catch((err) => {

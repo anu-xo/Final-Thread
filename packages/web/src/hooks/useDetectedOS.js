@@ -20,8 +20,23 @@ export function useDetectedOS() {
   const [os, setOs] = useState(detectOS);
 
   useEffect(() => {
-    if (navigator.userAgentData?.platform) return;
-    setOs(detectOS());
+    if (!navigator.userAgentData?.getHighEntropyValues) {
+      setOs(detectOS());
+      return;
+    }
+
+    navigator.userAgentData
+      .getHighEntropyValues(['platform', 'platformVersion'])
+      .then((values) => {
+        const p = (values.platform || '').toLowerCase();
+        if (p.includes('win')) setOs('windows');
+        else if (p.includes('mac') || p.includes('darwin')) setOs('mac');
+        else if (p.includes('linux') || p.includes('cros')) setOs('linux');
+        else setOs(detectOS());
+      })
+      .catch(() => {
+        setOs(detectOS());
+      });
   }, []);
 
   return os;

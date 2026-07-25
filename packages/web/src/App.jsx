@@ -29,6 +29,7 @@ const AIChatPage = lazy(() => import('./pages/AIChatPage.jsx'));
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
+const DownloadPage = lazy(() => import('./pages/DownloadPage.jsx'));
 
 function PageSkeleton() {
   return (
@@ -68,6 +69,7 @@ function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/download" element={<DownloadPage />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
