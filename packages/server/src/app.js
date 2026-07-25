@@ -9,7 +9,10 @@ import compression from 'compression';
 import mongoose from 'mongoose';
 import { Redis } from 'ioredis';
 import cookieParser from 'cookie-parser';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import CORS_ORIGINS from './config/corsOrigins.js';
+import swaggerOptions from './config/swagger.js';
 
 // Route Imports
 import authRoutes from './routes/auth.js';
@@ -115,6 +118,14 @@ redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
+// Swagger docs (before version gate so it's always reachable)
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'ThreadVerse API Docs',
+}));
+app.get('/api/docs.json', (req, res) => res.json(swaggerSpec));
+
 // Ungated — health & version must stay reachable for outdated clients.
 app.get('/api/health', async (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';

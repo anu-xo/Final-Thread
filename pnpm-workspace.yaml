@@ -1,6 +1,7 @@
 packages:
   - 'packages/*'
 allowBuilds:
+  '@scarf/scarf': false
   bcrypt: true
   electron: true
   esbuild: false

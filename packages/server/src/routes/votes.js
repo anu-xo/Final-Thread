@@ -12,6 +12,42 @@ const router = express.Router();
 /**
  * POST / - Handle voting for posts and comments
  */
+/**
+ * @openapi
+ * /votes:
+ *   post:
+ *     tags: [Votes]
+ *     summary: Vote on a post or comment (toggle-aware)
+ *     description: >
+ *       If the user already cast the same value, the vote is removed (value → 0).
+ *       Supports toggling between upvote, downvote, and no-vote.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VoteInput'
+ *     responses:
+ *       200:
+ *         description: Vote recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/VoteResponse'
+ *       400:
+ *         description: Invalid targetType, value, or target ID
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: Target not found
+ */
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { targetId, targetType, value } = req.body;

@@ -14,6 +14,46 @@ const MAX_DEPTH = 5;
 // Create Comment
 // POST /:id/comments
 // ==========================
+/**
+ * @openapi
+ * /posts/{id}/comments:
+ *   post:
+ *     tags: [Comments]
+ *     summary: Create a comment on a post
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Post ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommentInput'
+ *     responses:
+ *       201:
+ *         description: Comment created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Comment'
+ *       400:
+ *         description: Missing body or invalid parent
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: Post or parent comment not found
+ */
 router.post('/:id/comments', authMiddleware, async (req, res) => {
   try {
     const { id: postId } = req.params;
@@ -117,6 +157,39 @@ router.post('/:id/comments', authMiddleware, async (req, res) => {
 // Get Comments
 // GET /:id/comments
 // ==========================
+/**
+ * @openapi
+ * /posts/{id}/comments:
+ *   get:
+ *     tags: [Comments]
+ *     summary: Get nested comment tree for a post
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Nested comment tree sorted by score
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Comment'
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         total:
+ *                           type: integer
+ */
 router.get('/:id/comments', async (req, res) => {
   try {
     const { id: postId } = req.params;

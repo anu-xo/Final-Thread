@@ -18,6 +18,58 @@ function getSortStage(sort) {
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /feed:
+ *   get:
+ *     tags: [Feed]
+ *     summary: Personalized feed from subscribed communities
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [hot, new, top, rising]
+ *           default: hot
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Feed posts from subscribed communities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Post'
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         cursor:
+ *                           type: string
+ *                           nullable: true
+ *                         hasMore:
+ *                           type: boolean
+ *                         noSubscriptions:
+ *                           type: boolean
+ *                           description: True if user has no community subscriptions
+ *       401:
+ *         description: Not authenticated
+ */
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { sort = 'hot', cursor, limit = 20 } = req.query;

@@ -64,6 +64,33 @@ async function addVoteMapForTargets(viewerUserId, targetType, documents) {
 }
 
 // GET /users/:username
+/**
+ * @openapi
+ * /users/{username}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get public user profile with computed karma
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/UserPublic'
+ *       404:
+ *         description: User not found
+ */
 router.get('/:username', async (req, res) => {
   const user = await loadUser(req.params.username);
 
@@ -183,6 +210,31 @@ router.get('/:username/comments', async (req, res) => {
 });
 
 // GET /users/me — returns the authenticated user's profile + preferences
+/**
+ * @openapi
+ * /users/me:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get current user's full profile and preferences
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Full user profile (excluding password and refresh tokens)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: User not found
+ */
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
@@ -196,6 +248,56 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // PUT /users/me — update profile + shared preferences
+/**
+ * @openapi
+ * /users/me:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update current user's profile and preferences
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               bio:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *                 description: Cloudinary URL
+ *               theme:
+ *                 type: object
+ *                 properties:
+ *                   mode:
+ *                     type: string
+ *                     enum: [light, dark, system]
+ *               notifPrefs:
+ *                 type: object
+ *                 properties:
+ *                   digest:
+ *                     type: boolean
+ *                   replies:
+ *                     type: boolean
+ *                   mentions:
+ *                     type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Not authenticated
+ */
 router.put('/me', authMiddleware, async (req, res) => {
   try {
     const { bio, avatar, theme, notifPrefs } = req.body;

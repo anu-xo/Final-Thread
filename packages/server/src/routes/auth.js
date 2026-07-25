@@ -43,6 +43,52 @@ const setRefreshCookie = (res, refreshToken) => {
 };
 
 // ─── POST /auth/register ──────────────────────────────────────────────────────
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Register a new user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, email, password]
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 minLength: 3
+ *                 maxLength: 30
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *     responses:
+ *       201:
+ *         description: Account created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         accessToken:
+ *                           type: string
+ *                         user:
+ *                           $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Missing fields or weak password
+ *       409:
+ *         description: Username or email already taken
+ */
 router.post('/register', authLimiter, async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -101,6 +147,47 @@ router.post('/register', authLimiter, async (req, res) => {
 });
 
 // ─── POST /auth/login ─────────────────────────────────────────────────────────
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Login with email and password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         accessToken:
+ *                           type: string
+ *                         user:
+ *                           $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid email or password
+ *       403:
+ *         description: Account suspended
+ */
 router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -151,6 +238,34 @@ router.post('/login', authLimiter, async (req, res) => {
 });
 
 // ─── GET /auth/me ─────────────────────────────────────────────────────────────
+/**
+ * @openapi
+ * /auth/me:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get current user profile
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         user:
+ *                           $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: User not found
+ */
 // Why: On every page refresh, Zustand state (which held the access token in memory)
 // is wiped. The client calls /auth/me with the refresh cookie to re-establish session.
 // authMiddleware verifies the access token from the Authorization header.
@@ -165,6 +280,34 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // ─── POST /auth/refresh ───────────────────────────────────────────────────────
+/**
+ * @openapi
+ * /auth/refresh:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Rotate refresh token and get new access token
+ *     description: >
+ *       Called by the Axios 401 interceptor when the access token expires.
+ *       Reads the refreshToken from an httpOnly cookie, blacklists it,
+ *       and issues a new token pair.
+ *     responses:
+ *       200:
+ *         description: New access token issued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         accessToken:
+ *                           type: string
+ *       401:
+ *         description: No refresh token, revoked, or expired
+ */
 // Why: Called automatically by the Axios 401 interceptor (built on Day 2).
 // When the access token expires, the interceptor hits this endpoint, gets a fresh
 // access token, and retries the original request — invisible to the user.
@@ -219,6 +362,20 @@ router.post('/refresh', async (req, res) => {
 });
 
 // ─── POST /auth/logout ────────────────────────────────────────────────────────
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Logout and blacklist refresh token
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *       401:
+ *         description: Not authenticated
+ */
 router.post('/logout', authMiddleware, async (req, res) => {
   try {
     const { refreshToken } = req.cookies;

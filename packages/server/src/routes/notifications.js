@@ -7,6 +7,42 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // GET /notifications?cursor=&limit=20
+/**
+ * @openapi
+ * /notifications:
+ *   get:
+ *     tags: [Notifications]
+ *     summary: Get paginated notification feed
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Last notification ID from previous page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Paginated notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Notification'
+ *       401:
+ *         description: Not authenticated
+ */
 router.get('/', async (req, res) => {
   try {
     const { cursor, limit = 20 } = req.query;
@@ -36,6 +72,30 @@ router.get('/', async (req, res) => {
 });
 
 // GET /notifications/unread-count
+/**
+ * @openapi
+ * /notifications/unread-count:
+ *   get:
+ *     tags: [Notifications]
+ *     summary: Get count of unread notifications
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Unread count
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         count:
+ *                           type: integer
+ */
 router.get('/unread-count', async (req, res) => {
   try {
     const count = await Notification.countDocuments({ user: req.user.id, read: false });

@@ -75,6 +75,62 @@ function buildUserPipeline(query, limit) {
   });
 }
 
+/**
+ * @openapi
+ * /search:
+ *   get:
+ *     tags: [Search]
+ *     summary: Full-text search across posts, communities, and users
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *           minLength: 2
+ *         description: Search query (min 2 characters)
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [all, posts, communities, users]
+ *           default: all
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 25
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Search results by type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         posts:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Post'
+ *                         communities:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Community'
+ *                         users:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/UserPublic'
+ *       401:
+ *         description: Not authenticated
+ */
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { q, type = 'all', limit = 10 } = req.query;

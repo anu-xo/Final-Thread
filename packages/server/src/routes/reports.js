@@ -5,6 +5,53 @@ import {authMiddleware} from '../middleware/auth.js';
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /reports:
+ *   post:
+ *     tags: [Moderation]
+ *     summary: Submit a content report
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [target, targetType, reason, community]
+ *             properties:
+ *               target:
+ *                 type: string
+ *                 description: Post or comment ID
+ *               targetType:
+ *                 type: string
+ *                 enum: [post, comment]
+ *               reason:
+ *                 type: string
+ *               detail:
+ *                 type: string
+ *                 maxLength: 1000
+ *               community:
+ *                 type: string
+ *                 description: Community ID
+ *     responses:
+ *       201:
+ *         description: Report submitted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Report'
+ *       400:
+ *         description: Missing required fields or invalid targetType
+ *       401:
+ *         description: Not authenticated
+ */
 router.post('/reports', authMiddleware, async (req, res, next) => {
   try {
     const { target, targetType, reason, detail, community } = req.body;

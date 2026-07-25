@@ -16,6 +16,38 @@ const router = express.Router();
 // GET /ai/health
 // Verifies Gemini connectivity independent of user auth.
 // Useful for uptime monitoring and quick manual checks.
+/**
+ * @openapi
+ * /ai/health:
+ *   get:
+ *     tags: [AI]
+ *     summary: Check Gemini API connectivity
+ *     responses:
+ *       200:
+ *         description: Gemini connected
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         status:
+ *                           type: string
+ *                           enum: [ok, error]
+ *                         gemini:
+ *                           type: string
+ *                         embeddingDims:
+ *                           type: integer
+ *                         timestamp:
+ *                           type: string
+ *                           format: date-time
+ *       503:
+ *         description: Gemini unreachable
+ */
 router.get('/health', async (req, res) => {
   try {
     const testEmbedding = await aiService.embedQuery('health check');
@@ -44,6 +76,49 @@ router.get('/health', async (req, res) => {
   }
 });
 // POST /ai/chat — Handle interactive streaming sessions via SSE
+/**
+ * @openapi
+ * /ai/chat:
+ *   post:
+ *     tags: [AI]
+ *     summary: Stream AI chat response via SSE (RAG + Gemini)
+ *     description: >
+ *       Returns a `text/event-stream` response. Events:
+ *       - `{ type: "warning", message }` — if fewer than 3 sources found
+ *       - `{ type: "token", text }` — each generated token chunk
+ *       - `{ type: "done", conversationId, sources }` — stream complete
+ *       - `{ type: "error", message }` — error during generation
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [message, communityId]
+ *             properties:
+ *               message:
+ *                 type: string
+ *               communityId:
+ *                 type: string
+ *               conversationId:
+ *                 type: string
+ *                 description: Existing conversation ID to continue
+ *     responses:
+ *       200:
+ *         description: SSE stream of AI tokens
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *       400:
+ *         description: Missing message or communityId
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: AI chat disabled for this community
+ */
 router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
   const { message, communityId, conversationId } = req.body;
 
@@ -190,7 +265,90 @@ router.get('/conversations/:id/messages', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /ai/conversations/{id}/messages:
+ *   get:
+ *     tags: [AI]
+ *     summary: Get conversation message history
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Conversation ID
+ *     responses:
+ *       200:
+ *         description: Messages sorted by creation time
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/AIMessage'
+ *       401:
+ *         description: Not authenticated
+ *       404:
+ *         description: Conversation not found or not owned by user
+ */
 // POST /ai/messages/:id/feedback — rate an AI message (1 = thumbs up, -1 = thumbs down)
+/**
+ * @openapi
+ * /ai/messages/{id}/feedback:
+ *   post:
+ *     tags: [AI]
+ *     summary: Rate an AI message (thumbs up/down)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: AIMessage ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rating]
+ *             properties:
+ *               rating:
+ *                 type: integer
+ *                 enum: [1, -1]
+ *                 description: 1 = thumbs up, -1 = thumbs down
+ *     responses:
+ *       200:
+ *         description: Feedback recorded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         rating:
+ *                           type: integer
+ *       400:
+ *         description: Invalid rating or not an assistant message
+ *       403:
+ *         description: Not authorized to rate this message
+ *       404:
+ *         description: Message not found
+ */
 router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
   const { rating } = req.body;
 

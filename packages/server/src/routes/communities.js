@@ -15,9 +15,106 @@ import {
 const router = express.Router();
 
 // --- Static / Creation Routes ---
+/**
+ * @openapi
+ * /communities:
+ *   post:
+ *     tags: [Communities]
+ *     summary: Create a new community
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CommunityInput'
+ *     responses:
+ *       201:
+ *         description: Community created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Community'
+ *       409:
+ *         description: Slug already taken
+ */
 router.post('/', authMiddleware, createCommunity);
+
+/**
+ * @openapi
+ * /communities:
+ *   get:
+ *     tags: [Communities]
+ *     summary: List communities with pagination
+ *     parameters:
+ *       - in: query
+ *         name: cursor
+ *         schema:
+ *           type: string
+ *         description: Last community ID from previous page
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Paginated list of communities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Community'
+ *                     meta:
+ *                       type: object
+ *                       properties:
+ *                         cursor:
+ *                           type: string
+ *                           nullable: true
+ *                         hasMore:
+ *                           type: boolean
+ */
 router.get('/', getCommunities);
 
+/**
+ * @openapi
+ * /communities/me:
+ *   get:
+ *     tags: [Communities]
+ *     summary: Get current user's subscribed communities
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Subscribed communities
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Community'
+ *       401:
+ *         description: Not authenticated
+ */
 // GET /communities/me — subscribed communities 
 // (Placed above dynamic routes to avoid slug conflict)
 router.get('/me', authMiddleware, async (req, res) => {
@@ -40,8 +137,81 @@ router.get('/me', authMiddleware, async (req, res) => {
 });
 
 // --- Dynamic Slug Routes ---
+/**
+ * @openapi
+ * /communities/{slug}:
+ *   get:
+ *     tags: [Communities]
+ *     summary: Get community by slug
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Community detail with populated mods
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Community'
+ *       404:
+ *         description: Community not found
+ */
 router.get('/:slug', getCommunityBySlug);
+
+/**
+ * @openapi
+ * /communities/{slug}/join:
+ *   post:
+ *     tags: [Communities]
+ *     summary: Join a community
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Joined successfully (or already a member)
+ *       403:
+ *         description: Banned from this community
+ *       404:
+ *         description: Community not found
+ */
 router.post('/:slug/join', authMiddleware, joinCommunity);
+
+/**
+ * @openapi
+ * /communities/{slug}/leave:
+ *   post:
+ *     tags: [Communities]
+ *     summary: Leave a community
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Left successfully
+ *       400:
+ *         description: Not a member, or sole mod cannot leave
+ *       404:
+ *         description: Community not found
+ */
 router.post('/:slug/leave', authMiddleware, leaveCommunity);
 
 // PUT /communities/:slug/rules — mod only
