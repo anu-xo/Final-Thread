@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { authMiddleware } from '../middleware/auth.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
 import Comment from '../models/Comment.js';
 import Post from '../models/Post.js';
 import Vote from '../models/Vote.js';
@@ -54,7 +55,7 @@ const MAX_DEPTH = 5;
  *       404:
  *         description: Post or parent comment not found
  */
-router.post('/:id/comments', authMiddleware, async (req, res) => {
+router.post('/:id/comments', authMiddleware, writeLimiter, async (req, res) => {
   try {
     const { id: postId } = req.params;
     const { body, parentId } = req.body;

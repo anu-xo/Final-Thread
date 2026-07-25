@@ -2,6 +2,7 @@
 import express from 'express';
 import * as Sentry from '@sentry/node';
 import { authMiddleware } from '../middleware/auth.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
 import aiRateLimiter from '../middleware/aiRateLimit.js';
 // import aiService from '../services/aiService.js';
 import AIConversation from '../models/AIConversation.js';
@@ -349,7 +350,7 @@ router.get('/conversations/:id/messages', authMiddleware, async (req, res) => {
  *       404:
  *         description: Message not found
  */
-router.post('/messages/:id/feedback', authMiddleware, async (req, res) => {
+router.post('/messages/:id/feedback', authMiddleware, writeLimiter, async (req, res) => {
   const { rating } = req.body;
 
   if (rating !== 1 && rating !== -1) {

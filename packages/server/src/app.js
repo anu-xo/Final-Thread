@@ -36,6 +36,8 @@ import emailRoutes from './routes/email.js';
 import { adminRouter } from './middleware/adminGuard.js';
 import { platformTag } from './middleware/platformTag.js';
 import { versionGate } from './middleware/versionGate.js';
+import { sanitizeError } from './utils/sanitizeError.js';
+import { sendWeeklyDigest } from './services/emailService.js';
 
 console.log("script start");
 // ── ESM Paths Configuration ──────────────────────────────────────────────────
@@ -68,17 +70,52 @@ app.use((req, res, next) => {
 // ── Security & Logging Middleware ──────────────────────────────────────────
 app.use(
   helmet({
+    // ── Content-Security-Policy ────────────────────────────────────────────
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: ["'self'", 'https://api.threadverse.app', 'wss://api.threadverse.app'],
-        imgSrc: ["'self'", 'https://res.cloudinary.com', 'data:'],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+        fontSrc: ["'self'"],
+        connectSrc: [
+          "'self'",
+          'https://api.threadverse.app',
+          'wss://api.threadverse.app',
+          'https://api.cloudinary.com',
+          'https://*.sentry.io',
+        ],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        upgradeInsecureRequests: [],
       },
     },
+
+    // ── HSTS (2 years + includeSubDomains + preload) ──────────────────────
+    hsts: {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true,
+    },
+
+    // ── X-Frame-Options ───────────────────────────────────────────────────
     frameguard: { action: 'deny' },
+
+    // ── Referrer-Policy ───────────────────────────────────────────────────
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   })
 );
+
+// ── Permissions-Policy (Helmet 7.x dropped built-in support) ─────────────
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
+  );
+  next();
+});
 
 app.use(
   cors({
@@ -190,15 +227,13 @@ app.get('/api/debug/platform', (req, res) => {
 });
 
 // ── Debug: trigger weekly digest manually (remove before shipping) ───────────
-import { sendWeeklyDigest } from './services/emailService.js';
-
-app.post('/api/debug/test-digest', async (req, res) => {
+app.post('/api/debug/test-digest', adminRouter, async (req, res) => {
   try {
     const result = await sendWeeklyDigest();
     res.json({ data: result, error: null, meta: null });
   } catch (err) {
     console.error('[debug/test-digest] error:', err);
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err, 'Digest failed'), meta: null });
   }
 });
 
@@ -217,7 +252,11 @@ Sentry.setupExpressErrorHandler(app);
 app.use((err, req, res, next) => {
   console.error(`[id=${req.requestId}]`, err.stack);
   Sentry.captureException(err);
-  res.status(err.status || 500).json({ data: null, error: err.message || 'Internal Server Error', meta: null });
+  res.status(err.status || 500).json({
+    data: null,
+    error: sanitizeError(err, 'Internal server error'),
+    meta: null,
+  });
 });
 
 export { redis };

@@ -2,6 +2,7 @@
 import express from 'express';
 import Report from '../models/Report.js';
 import {authMiddleware} from '../middleware/auth.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
 
 const router = express.Router();
 
@@ -52,7 +53,7 @@ const router = express.Router();
  *       401:
  *         description: Not authenticated
  */
-router.post('/reports', authMiddleware, async (req, res, next) => {
+router.post('/reports', authMiddleware, writeLimiter, async (req, res, next) => {
   try {
     const { target, targetType, reason, detail, community } = req.body;
 

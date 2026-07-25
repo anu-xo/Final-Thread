@@ -1,6 +1,8 @@
 // packages/server/src/routes/communities.js
 import express from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { writeLimiter } from '../middleware/rateLimiter.js';
+import { sanitizeError } from '../utils/sanitizeError.js';
 import CommunityMember from '../models/CommunityMember.js';
 import Community from '../models/Community.js'; // Added since rules/flairs modify the Community document
 import modGuard from '../middleware/modGuard.js';
@@ -44,7 +46,7 @@ const router = express.Router();
  *       409:
  *         description: Slug already taken
  */
-router.post('/', authMiddleware, createCommunity);
+router.post('/', authMiddleware, writeLimiter, createCommunity);
 
 /**
  * @openapi
@@ -158,7 +160,7 @@ router.get('/me', authMiddleware, async (req, res) => {
 
     res.json({ data: communities, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 });
 

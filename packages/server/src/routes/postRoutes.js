@@ -4,6 +4,7 @@ import express from "express";
 import { createPost, getPosts, getPostById } from "../controllers/postController.js";
 import { votePost } from "../controllers/voteController.js";
 import { authMiddleware } from "../middleware/auth.js";
+import { writeLimiter, voteLimiter } from "../middleware/rateLimiter.js";
 import commentsRouter from './comments.js';
 
 const router = express.Router();
@@ -48,7 +49,7 @@ router.use('/', commentsRouter);
  *       422:
  *         description: Content flagged by moderation
  */
-router.post("/", authMiddleware, createPost);
+router.post("/", authMiddleware, writeLimiter, createPost);
 
 /**
  * @openapi
@@ -183,6 +184,6 @@ router.get("/:id", getPostById);
  *       404:
  *         description: Post not found
  */
-router.post("/:id/vote", authMiddleware, votePost);
+router.post("/:id/vote", authMiddleware, voteLimiter, votePost);
 
 export default router;

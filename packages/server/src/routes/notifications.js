@@ -1,6 +1,7 @@
 import express from 'express';
 import Notification from '../models/Notification.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { sanitizeError } from '../utils/sanitizeError.js';
 
 const router = express.Router();
 
@@ -67,7 +68,7 @@ router.get('/', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: {} });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: {} });
   }
 });
 
@@ -101,7 +102,7 @@ router.get('/unread-count', async (req, res) => {
     const count = await Notification.countDocuments({ user: req.user.id, read: false });
     res.json({ data: { count }, error: null, meta: {} });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: {} });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: {} });
   }
 });
 
@@ -146,7 +147,7 @@ router.put('/read', async (req, res) => {
     );
     res.json({ data: { updated: ids.length }, error: null, meta: {} });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: {} });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: {} });
   }
 });
 
@@ -185,7 +186,7 @@ router.put('/read-all', async (req, res) => {
     );
     res.json({ data: { updated: result.modifiedCount }, error: null, meta: {} });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: {} });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: {} });
   }
 });
 

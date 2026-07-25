@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { authMiddleware } from '../middleware/auth.js';
+import { voteLimiter } from '../middleware/rateLimiter.js';
 import Vote from '../models/Vote.js';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
@@ -48,7 +49,7 @@ const router = express.Router();
  *       404:
  *         description: Target not found
  */
-router.post('/', authMiddleware, async (req, res) => {
+router.post('/', authMiddleware, voteLimiter, async (req, res) => {
   try {
     const { targetId, targetType, value } = req.body;
 

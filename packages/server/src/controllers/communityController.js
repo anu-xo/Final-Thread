@@ -1,6 +1,7 @@
 import Community from '../models/Community.js';
 import CommunityMember from '../models/CommunityMember.js';
 import mongoose from 'mongoose';
+import { sanitizeError } from '../utils/sanitizeError.js';
 
 // POST /communities
 export const createCommunity = async (req, res) => {
@@ -36,7 +37,7 @@ export const createCommunity = async (req, res) => {
     if (err.code === 11000) {
       return res.status(409).json({ data: null, error: 'Slug already taken.', meta: null });
     }
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 };
 
@@ -65,7 +66,7 @@ export const getCommunities = async (req, res) => {
       meta: { cursor: nextCursor, hasMore },
     });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 };
 
@@ -82,7 +83,7 @@ export const getCommunityBySlug = async (req, res) => {
 
     res.json({ data: community, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 };
 
@@ -119,7 +120,7 @@ export const joinCommunity = async (req, res) => {
     const updated = await Community.findById(community._id).lean();
     res.json({ data: updated, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 };
 
@@ -157,6 +158,6 @@ export const leaveCommunity = async (req, res) => {
 
     res.json({ data: { message: 'Left community successfully.' }, error: null, meta: null });
   } catch (err) {
-    res.status(500).json({ data: null, error: err.message, meta: null });
+    res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
   }
 };

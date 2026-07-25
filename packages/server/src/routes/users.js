@@ -6,6 +6,7 @@ import Comment from '../models/Comment.js';
 import Vote from '../models/Vote.js';
 import { resolveViewerUserId } from '../utils/voteResponse.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { sanitizeError } from '../utils/sanitizeError.js';
 
 const router = express.Router();
 
@@ -185,7 +186,7 @@ router.get('/:username/posts', async (req, res) => {
     });
   } catch (err) {
     const status = err.status || 500;
-    return res.status(status).json({ data: null, error: err.message || 'Failed to fetch posts', meta: null });
+    return res.status(status).json({ data: null, error: sanitizeError(err, 'Failed to fetch posts'), meta: null });
   }
 });
 
@@ -259,7 +260,7 @@ router.get('/:username/comments', async (req, res) => {
     });
   } catch (err) {
     const status = err.status || 500;
-    return res.status(status).json({ data: null, error: err.message || 'Failed to fetch comments', meta: null });
+    return res.status(status).json({ data: null, error: sanitizeError(err, 'Failed to fetch comments'), meta: null });
   }
 });
 

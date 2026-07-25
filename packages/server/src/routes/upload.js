@@ -1,6 +1,7 @@
 // packages/server/src/routes/upload.js
 import express from 'express';
 import { authMiddleware } from '../middleware/auth.js';
+import { uploadLimiter } from '../middleware/rateLimiter.js';
 import cloudinary from '../config/cloudinary.js';
 
 const router = express.Router();
@@ -41,7 +42,7 @@ const router = express.Router();
  *       500:
  *         description: Cloudinary not configured
  */
-router.post('/sign', authMiddleware, (req, res) => {
+router.post('/sign', authMiddleware, uploadLimiter, (req, res) => {
   try {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
     const apiKey = process.env.CLOUDINARY_API_KEY;
