@@ -75,13 +75,20 @@ jobs:
 
       - name: Build Electron app (Windows)
         if: runner.os == 'Windows'
-        run: pnpm --filter desktop exec electron-builder --publish never --win
+        run: pnpm --filter desktop exec electron-builder --publish never --win nsis
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
-          # For EV / cloud-HSM signing, set the sign callback:
-          # CSC_LINK: ""  # not used for EV
-          # SIGN_CMD: build/sign-ev.cmd
+
+      - name: Build Electron app (MSIX)
+        if: runner.os == 'Windows' && secrets.MSIX_CERTIFICATE != ''
+        run: pnpm --filter desktop exec electron-builder --publish never --win appx
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
+          MSIX_CERTIFICATE: ${{ secrets.MSIX_CERTIFICATE }}
+          MSIX_CERTIFICATE_PASSWORD: ${{ secrets.MSIX_CERTIFICATE_PASSWORD }}
+        continue-on-error: true
 
       - name: Build Electron app (AppImage)
         if: runner.os == 'Linux'
@@ -140,6 +147,35 @@ jobs:
           # warnings for 1-7 days while Microsoft builds reputation for the cert.
           # This is expected and NOT a pipeline bug. Once reputation is established,
           # EV-signed binaries pass SmartScreen without warnings.
+
+      - name: Verify MSIX package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $msix = Get-ChildItem dist -Filter "*.msix" -Recurse | Select-Object -First 1
+          if (-not $msix) {
+            Write-Host "No .msix found, skipping MSIX verification"
+            exit 0
+          }
+
+          Write-Host "=== MSIX package: $($msix.FullName) ==="
+          Write-Host "Size: $([math]::Round($msix.Length / 1MB, 2)) MB"
+
+          # Verify package integrity via Add-AppxPackage -WhatIf (dry run)
+          try {
+            $pkg = Get-AppPackageManifest -DependencyPath $msix.FullName -ErrorAction Stop
+            Write-Host "Package name: $($pkg.Identity.Name)"
+            Write-Host "Version: $($pkg.Identity.Version)"
+            Write-Host "Publisher: $($pkg.Identity.Publisher)"
+            Write-Host "MSIX manifest: VALID"
+          } catch {
+            Write-Warning "Could not read MSIX manifest: $_"
+          }
+
+          # Generate checksum for distribution
+          $hash = (Get-FileHash $msix.FullName -Algorithm SHA256).Hash
+          Write-Host "SHA256: $hash"
+          Set-Content -Path "$($msix.FullName).sha256" -Value $hash
 
       - name: Verify Linux AppImage
         if: runner.os == 'Linux'

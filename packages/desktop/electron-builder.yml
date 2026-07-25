@@ -15,6 +15,9 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: appx
+      arch:
+        - x64
   signingHashAlgorithms:
     - sha256
   # certificateFile / certificatePassword are read from WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD env vars.
@@ -36,6 +39,13 @@ nsis:
   installerIcon: build/icons/icon.ico
   uninstallerIcon: build/icons/icon.ico
   installerHeader: build/icons/icon.ico
+
+appx:
+  applicationId: ThreadVerse
+  identityName: YourPublisher.ThreadVerse
+  publisher: CN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  publisherDisplayName: ThreadVerse Inc.
+  languages: [en-US]
 
 mac:
   target:
