@@ -176,13 +176,33 @@ redis.on('error', (err) => console.error('❌ Redis error:', err.message));
 app.set('redis', redis);
 
 // ── Routes ──────────────────────────────────────────────────────────────────
-// Swagger docs (before version gate so it's always reachable)
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'ThreadVerse API Docs',
-}));
-app.get('/api/docs.json', (req, res) => res.json(swaggerSpec));
+// Swagger docs — gated behind API_DOCS_ENABLED env flag.
+//   staging:  set API_DOCS_ENABLED=true  → docs accessible at /api/docs
+//   production: env not set → 404 (API surface not exposed publicly)
+// All docs responses include X-Robots-Tag: noindex to exclude from search engines.
+const docsEnabled = process.env.API_DOCS_ENABLED === 'true';
+
+if (docsEnabled) {
+  const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+  // noindex header on every docs response
+  app.use('/api/docs', (req, res, next) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    next();
+  });
+  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'ThreadVerse API Docs',
+  }));
+  app.get('/api/docs.json', (req, res) => {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    res.json(swaggerSpec);
+  });
+} else {
+  // Production: return 404 for docs routes
+  app.use('/api/docs', (req, res) => res.status(404).json({ data: null, error: 'Not found', meta: null }));
+  app.get('/api/docs.json', (req, res) => res.status(404).json({ data: null, error: 'Not found', meta: null }));
+}
 
 // Ungated — health & version must stay reachable for outdated clients.
 app.get('/api/health', async (req, res) => {

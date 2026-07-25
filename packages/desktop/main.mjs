@@ -4,80 +4,14 @@ import fs from 'fs/promises';
 import { execFile } from 'child_process';
 import { fileURLToPath } from 'url';
 import Store from 'electron-store';
+import { guard } from './ipc-guard.js';
 import './sync.mjs';
 import { initAutoUpdater, autoUpdater } from './updater.mjs';
 
 // ── IPC Channel Whitelist ──────────────────────────────────────────────────
 // Every channel the renderer is allowed to call must appear here.
+// Whitelist is defined in ipc-guard.js so sync.mjs can also use it.
 // If an unregistered channel fires, the handler is rejected and logged.
-const ALLOWED_CHANNELS = new Set([
-  // Window controls (frameless title-bar)
-  'window:minimize',
-  'window:maximize',
-  'window:close',
-
-  // Settings & persistent store
-  'settings:get',
-  'get-settings',            // legacy alias
-  'settings:set',
-  'set-settings',            // legacy alias
-  'settings:get-key',
-  'settings:set-key',
-  'set-last-community',
-  'set-subscribed-communities',
-  'get-subscribed-communities',
-
-  // Theme (synchronous)
-  'theme:get-sync',
-
-  // Notifications
-  'show-notification',
-  'notification:show',
-  'notification:ping-test',
-  'ai-response-ready',
-
-  // File picker & upload helpers
-  'select-file',
-  'read-file-for-upload',
-
-  // Navigation (main ↔ renderer)
-  'navigate',
-
-  // Updates
-  'checkForUpdates',
-  'installUpdate',
-  'getAppVersion',
-  'update-event',
-
-  // Badge
-  'badge:set',
-  'badge:clear',
-  'badge:test',
-
-  // Connectivity
-  'connectivity:check',
-
-  // Background sync (embedding cache)
-  'embedAndCachePosts',
-  'logSyncBreadcrumb',
-
-  // Online status check
-  'net:isOnline',
-
-  // Theme change notification (renderer → main for macOS titlebar overlay)
-  'theme:changed',
-
-  // Reset & Quit (clears all app data)
-  'reset-and-quit',
-]);
-
-function guard(channel) {
-  if (!ALLOWED_CHANNELS.has(channel)) {
-    const err = `[ipc-guard] Rejected unregistered channel: "${channel}"`;
-    console.error(err);
-    throw new Error(err);
-  }
-}
 
 /** Guarded wrapper — use instead of ipcMain.handle */
 function safeHandle(channel, handler) {
@@ -582,6 +516,12 @@ safeHandle('settings:get-key', (_event, key) => {
 
 safeHandle('settings:set-key', (_event, key, value) => {
   if (typeof key !== 'string') throw new Error('settings:set-key: key must be a string');
+  const allowedKeys = Object.keys(store.store);
+  if (!allowedKeys.includes(key)) throw new Error(`settings:set-key: unknown key "${key}"`);
+  const validator = STORE_SCHEMA[key];
+  if (validator && !validator(value)) {
+    throw new Error(`settings:set-key: invalid value for "${key}"`);
+  }
   store.set(key, value);
   return { ok: true };
 });
@@ -898,9 +838,17 @@ app.whenReady().then(() => {
     protocol.handle('electron', (req) => {
       const url = new URL(req.url);
       // electron://./index.html → /index.html
-      const filePath = path.join(DIST_DIR, url.pathname === '/' ? 'index.html' : url.pathname);
+      const urlPath = url.pathname === '/' ? 'index.html' : url.pathname;
+      const filePath = path.join(DIST_DIR, urlPath);
 
-      return net.fetch(`file://${filePath}`);
+      // Prevent path traversal — resolved path must stay inside DIST_DIR
+      const resolved = path.resolve(filePath);
+      if (!resolved.startsWith(path.resolve(DIST_DIR))) {
+        console.error(`[protocol] Blocked path traversal: ${url.pathname}`);
+        return new Response('Forbidden', { status: 403 });
+      }
+
+      return net.fetch(`file://${resolved}`);
     });
   }
 

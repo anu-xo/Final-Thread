@@ -27,7 +27,7 @@ export function initAutoUpdater() {
   autoUpdater.on('update-not-available', () => send('update-not-available'));
   autoUpdater.on('download-progress', (progress) => send('download-progress', progress));
   autoUpdater.on('update-downloaded', (info) => send('update-downloaded', info));
-  autoUpdater.on('error', (err) => send('error', { message: err.message }));
+  autoUpdater.on('error', (err) => send('error', { message: 'Update check failed' }));
 
   autoUpdater.checkForUpdatesAndNotify();
   setInterval(() => autoUpdater.checkForUpdatesAndNotify(), 4 * 60 * 60 * 1000);

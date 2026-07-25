@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { guard } from './ipc-guard.js';
 import Store from 'electron-store';
 
 const embeddingCache = new Store({ name: 'embedding-cache' });
@@ -10,6 +11,7 @@ const MAX_CACHE_ENTRIES = 200;
  * Merges fetched posts into the per-community embedding cache (LRU cap 200).
  * Existing posts with matching IDs get their access timestamp refreshed.
  */
+guard('embedAndCachePosts');
 ipcMain.handle('embedAndCachePosts', async (_event, communityId, posts) => {
   if (typeof communityId !== 'string' || !communityId) {
     throw new Error('embedAndCachePosts: communityId must be a non-empty string');
@@ -47,6 +49,7 @@ ipcMain.handle('embedAndCachePosts', async (_event, communityId, posts) => {
  * logSyncBreadcrumb(data)
  * Sends a Sentry breadcrumb from the main process (Day 3/DO Sentry init).
  */
+guard('logSyncBreadcrumb');
 ipcMain.handle('logSyncBreadcrumb', async (_event, data) => {
   try {
     const Sentry = await import('@sentry/electron');
