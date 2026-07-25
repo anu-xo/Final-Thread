@@ -31,6 +31,38 @@ describe('electron-builder.yml — macOS config', () => {
   });
 });
 
+describe('electron-builder.yml — DMG layout', () => {
+  it('has dmg section', () => {
+    assert.ok(yamlRaw.includes('dmg:'), 'dmg section missing');
+  });
+
+  it('references DMG background image', () => {
+    assert.ok(yamlRaw.includes('background: build-assets/dmg-background.png'),
+      'DMG background path not set');
+  });
+
+  it('sets DMG window dimensions', () => {
+    assert.ok(yamlRaw.includes('width: 560'), 'DMG width not set');
+    assert.ok(yamlRaw.includes('height: 400'), 'DMG height not set');
+  });
+
+  it('positions Applications symlink in DMG', () => {
+    assert.ok(yamlRaw.includes('type: link'), 'Applications link type missing');
+    assert.ok(yamlRaw.includes('path: /Applications'), 'Applications path missing');
+  });
+
+  it('positions ThreadVerse.app in DMG', () => {
+    assert.ok(yamlRaw.includes('type: file'), 'App file type missing');
+    assert.ok(yamlRaw.includes('path: ../dist/mac/ThreadVerse.app'),
+      'ThreadVerse.app path missing');
+  });
+
+  it('sets icon and text sizes', () => {
+    assert.ok(yamlRaw.includes('iconSize: 128'), 'iconSize not set');
+    assert.ok(yamlRaw.includes('iconTextSize: 14'), 'iconTextSize not set');
+  });
+});
+
 describe('electron-builder.yml — CFBundleURLSchemes', () => {
   it('has extendInfo section', () => {
     assert.ok(yamlRaw.includes('extendInfo:'), 'extendInfo missing');

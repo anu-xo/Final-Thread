@@ -172,6 +172,29 @@ jobs:
           spctl --assess --verbose "$APP_PATH"
           hdiutil detach /Volumes/ThreadVerse*
 
+      - name: Verify quarantine attribute cleared
+        if: runner.os == 'macOS'
+        run: |
+          DMG_PATH=$(find dist -name "*.dmg" -maxdepth 1 | head -1)
+          if [ -z "$DMG_PATH" ]; then
+            echo "No .dmg found, skipping quarantine check"
+            exit 0
+          fi
+
+          hdiutil attach "$DMG_PATH" -nobrowse
+          APP_PATH=$(find /Volumes -name "ThreadVerse.app" -maxdepth 2 | head -1)
+
+          QUARANTINE=$(xattr -p com.apple.quarantine "$APP_PATH" 2>&1 || true)
+          if [ -n "$QUARANTINE" ]; then
+            echo "FAIL: quarantine attribute still present on ThreadVerse.app:"
+            echo "$QUARANTINE"
+            hdiutil detach /Volumes/ThreadVerse*
+            exit 1
+          fi
+
+          echo "PASS: no quarantine attribute on ThreadVerse.app"
+          hdiutil detach /Volumes/ThreadVerse*
+
       # ── Publish (only after all signing/verification passes) ────────────
 
       - name: Publish to GitHub Releases

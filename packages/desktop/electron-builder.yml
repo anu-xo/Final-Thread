@@ -69,6 +69,22 @@ mas:
     - from: ../web/dist
       to: web/dist
 
+dmg:
+  background: build-assets/dmg-background.png
+  iconSize: 128
+  iconTextSize: 14
+  width: 560
+  height: 400
+  contents:
+    - x: 140
+      y: 200
+      type: file
+      path: ../dist/mac/ThreadVerse.app
+    - x: 420
+      y: 200
+      type: link
+      path: /Applications
+
 linux:
   target:
     - target: AppImage
