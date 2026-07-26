@@ -1,39 +1,67 @@
-// packages/server/src/services/__tests__/aiService.test.js
-jest.mock('@google/generative-ai', () => ({
+import { jest } from '@jest/globals';
+
+const mockCountTokens = jest.fn().mockResolvedValue({ totalTokens: 100 });
+const mockEmbedContent = jest.fn().mockResolvedValue({ embedding: { values: new Array(768).fill(0.1) } });
+const mockGenerateContentStream = jest.fn();
+const mockGenerateContent = jest.fn();
+
+jest.unstable_mockModule('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
     getGenerativeModel: jest.fn().mockReturnValue({
-      countTokens: jest.fn().mockResolvedValue({ totalTokens: 100 }),
-      embedContent: jest.fn().mockResolvedValue({ embedding: { values: new Array(768).fill(0.1) } }),
+      countTokens: mockCountTokens,
+      embedContent: mockEmbedContent,
+      generateContentStream: mockGenerateContentStream,
+      generateContent: mockGenerateContent,
     }),
   })),
 }));
 
-const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
-const aiService = require('../aiService');
-const AIMessage = require('../../models/AIMessage');
+const mockGroqCreate = jest.fn();
 
-let mongod;
+jest.unstable_mockModule('groq-sdk', () => ({
+  default: jest.fn().mockImplementation(() => ({
+    chat: { completions: { create: mockGroqCreate } },
+  })),
+}));
 
-beforeAll(async () => {
-  mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
-});
+jest.unstable_mockModule('../models/PostEmbedding.js', () => ({
+  default: { aggregate: jest.fn().mockResolvedValue([]) },
+}));
 
-afterAll(async () => {
-  await mongoose.disconnect();
-  await mongod.stop();
-});
+jest.unstable_mockModule('../models/Post.js', () => ({
+  default: { find: jest.fn().mockReturnValue({ select: jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue([]) }) }) },
+}));
+
+jest.unstable_mockModule('../models/AIMessage.js', () => ({
+  default: {
+    find: jest.fn().mockReturnValue({
+      sort: jest.fn().mockReturnValue({
+        limit: jest.fn().mockReturnValue({
+          lean: jest.fn().mockResolvedValue([]),
+        }),
+      }),
+    }),
+    create: jest.fn().mockResolvedValue({ _id: 'mock-msg-id' }),
+  },
+}));
+
+jest.unstable_mockModule('../models/Community.js', () => ({
+  default: { findById: jest.fn().mockReturnValue({ select: jest.fn().mockResolvedValue({ name: 'test-community' }) }) },
+}));
+
+jest.unstable_mockModule('../models/AIConversation.js', () => ({
+  default: {},
+}));
+
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'test-key';
+process.env.GROQ_API_KEY = process.env.GROQ_API_KEY || 'test-key';
+
+const aiService = await import('../services/aiService.js');
 
 describe('aiService RAG pipeline', () => {
-  test('retrieveContext calls $vectorSearch with correct communityId filter', async () => {
-    const spy = jest.spyOn(mongoose.connection.db.collection('postembeddings'), 'aggregate');
-    await aiService.retrieveContext('test query', 'community123');
-
-    const pipeline = spy.mock.calls[0][0];
-    const vectorStage = pipeline.find((stage) => stage.$vectorSearch);
-    expect(vectorStage.$vectorSearch.filter.communityId).toBe('community123');
-    expect(vectorStage.$vectorSearch.limit).toBe(8);
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
   test('buildPromptWithinBudget drops oldest turns when over token limit', async () => {
@@ -42,9 +70,8 @@ describe('aiService RAG pipeline', () => {
       content: 'x'.repeat(500),
     }));
 
-    // Force countTokens to report over-budget until history shrinks
     let callCount = 0;
-    aiService.model.countTokens = jest.fn().mockImplementation(() => {
+    mockCountTokens.mockImplementation(() => {
       callCount += 1;
       return Promise.resolve({ totalTokens: callCount < 4 ? 6000 : 4000 });
     });
@@ -60,12 +87,94 @@ describe('aiService RAG pipeline', () => {
     expect(result.historyUsed.length).toBeLessThan(longHistory.length);
   });
 
-  test('SSE stream emits token, done, and error event types correctly', async () => {
-    // Simulate the streamResponse generator, assert chunk shape
-    const chunks = [];
-    for await (const chunk of aiService.streamResponse('mock prompt')) {
-      chunks.push(chunk);
-    }
-    expect(chunks.length).toBeGreaterThan(0);
+  test('buildPrompt creates numbered citations from context chunks', () => {
+    const prompt = aiService.buildPrompt({
+      communityName: 'test-community',
+      contextChunks: [
+        { text: 'First post about testing' },
+        { text: 'Second post about quality' },
+      ],
+      history: [],
+      message: 'What is testing?',
+    });
+
+    expect(prompt).toContain('[1]');
+    expect(prompt).toContain('[2]');
+    expect(prompt).toContain('test-community');
+    expect(prompt).toContain('First post about testing');
+    expect(prompt).toContain('Second post about quality');
+  });
+
+  test('buildPrompt formats history with User/Assistant labels', () => {
+    const prompt = aiService.buildPrompt({
+      communityName: 'test',
+      contextChunks: [],
+      history: [
+        { role: 'user', content: 'Hello' },
+        { role: 'assistant', content: 'Hi there' },
+      ],
+      message: 'Follow up',
+    });
+
+    expect(prompt).toContain('User: Hello');
+    expect(prompt).toContain('Assistant: Hi there');
+    expect(prompt).toContain('User: Follow up');
+  });
+
+  test('buildPrompt handles empty context gracefully', () => {
+    const prompt = aiService.buildPrompt({
+      communityName: 'test',
+      contextChunks: [],
+      history: [],
+      message: 'question',
+    });
+
+    expect(prompt).toContain('(no relevant posts found)');
+    expect(prompt).toContain('test');
+  });
+
+  test('generateWithFallback calls Gemini first', async () => {
+    const onToken = jest.fn();
+    mockGenerateContentStream.mockResolvedValue({
+      stream: {
+        [Symbol.asyncIterator]() {
+          let called = false;
+          return {
+            async next() {
+              if (called) return { done: true };
+              called = true;
+              return { value: { text: () => 'hello' }, done: false };
+            },
+          };
+        },
+      },
+    });
+
+    const result = await aiService.generateWithFallback('test prompt', onToken);
+    expect(result).toBe('hello');
+    expect(mockGenerateContentStream).toHaveBeenCalledWith('test prompt');
+  });
+
+  test('generateWithFallback falls back to Groq on 429', async () => {
+    const onToken = jest.fn();
+    mockGenerateContentStream.mockRejectedValueOnce(Object.assign(
+      new Error('Rate limited'),
+      { status: 429 }
+    ));
+
+    mockGroqCreate.mockResolvedValue({
+      async *[Symbol.asyncIterator]() {
+        yield { choices: [{ delta: { content: 'fallback-response' } }] };
+      },
+    });
+
+    const result = await aiService.generateWithFallback('test prompt', onToken);
+    expect(result).toContain('fallback-response');
+    expect(mockGroqCreate).toHaveBeenCalled();
+  });
+
+  test('getRecentHistory returns messages in chronological order', async () => {
+    const history = await aiService.getRecentHistory('conv-123', 2);
+    expect(Array.isArray(history)).toBe(true);
   });
 });

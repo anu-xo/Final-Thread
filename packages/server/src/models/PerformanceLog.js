@@ -1,8 +1,10 @@
-// server/src/models/PerformanceLog.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
 const performanceLogSchema = new mongoose.Schema({
   endpoint: String,
   ttftMs: Number,
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
-module.exports = mongoose.model('PerformanceLog', performanceLogSchema);
+
+const PerformanceLog = mongoose.model('PerformanceLog', performanceLogSchema);
+export default PerformanceLog;

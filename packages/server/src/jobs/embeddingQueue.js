@@ -14,6 +14,11 @@ const getRedisConfig = () => {
       port: Number(url.port || 6379),
       password: url.password ? decodeURIComponent(url.password) : undefined,
       tls: url.protocol === 'rediss:' ? {} : undefined,
+      retryStrategy: (times) => {
+        if (times > 5) return null;
+        return Math.min(times * 200, 2000);
+      },
+      maxRetriesPerRequest: null,
     };
   } catch {
     return null;
