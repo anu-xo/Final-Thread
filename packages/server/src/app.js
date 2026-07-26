@@ -143,13 +143,24 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// ── Mongoose Debug Logging ───────────────────────────────────────────────────
+// Enable with MONGOOSE_DEBUG=true for the load-test window; off by default in prod.
+if (process.env.MONGOOSE_DEBUG === 'true') {
+  mongoose.set('debug', true);
+  console.log('🔍 Mongoose debug logging enabled');
+}
+
 // ── MongoDB Connection ──────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging';
     await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 30000,
+      maxPoolSize: isProduction ? 10 : undefined,
+      ssl: isProduction ? true : undefined,
+      authSource: isProduction ? 'admin' : undefined,
+      directConnection: isProduction ? true : undefined,
+      serverSelectionTimeoutMS: 5000,
     });
-    console.log("after connect");
     console.log('✅ MongoDB connected');
   } catch (err) {
     console.error('❌ MongoDB connection failed:', err.message);

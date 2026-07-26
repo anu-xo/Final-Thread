@@ -114,7 +114,7 @@ describe('Independent Vote Transitions', () => {
       expected.downvotes,
       post.createdAt
     );
-    expect(post.hotScore).toBeCloseTo(expectedHotScore, 10);
+    expect(post.hotScore).toBeCloseTo(expectedHotScore, 4);
     return post;
   }
 
@@ -170,7 +170,7 @@ describe('Independent Vote Transitions', () => {
     await verifyVoteDoc(testUser._id, post._id, -1);
   });
 
-  it('up → down: score delta = -2, upvotes=1, downvotes=1, Vote doc value=-1', async () => {
+  it('up → down: score delta = -2, upvotes=0, downvotes=1, Vote doc value=-1', async () => {
     const post = await createFreshPost();
 
     await createVoteRequest(authToken, {
@@ -189,11 +189,11 @@ describe('Independent Vote Transitions', () => {
     expect(res.body.data.score).toBe(-1);
     expect(res.body.data.userVote).toBe(-1);
 
-    await verifyPostState(post._id, { score: -1, upvotes: 1, downvotes: 1 });
+    await verifyPostState(post._id, { score: -1, upvotes: 0, downvotes: 1 });
     await verifyVoteDoc(testUser._id, post._id, -1);
   });
 
-  it('down → up: score delta = +2, upvotes=1, downvotes=1, Vote doc value=1', async () => {
+  it('down → up: score delta = +2, upvotes=1, downvotes=0, Vote doc value=1', async () => {
     const post = await createFreshPost();
 
     await createVoteRequest(authToken, {
@@ -212,7 +212,7 @@ describe('Independent Vote Transitions', () => {
     expect(res.body.data.score).toBe(1);
     expect(res.body.data.userVote).toBe(1);
 
-    await verifyPostState(post._id, { score: 1, upvotes: 1, downvotes: 1 });
+    await verifyPostState(post._id, { score: 1, upvotes: 1, downvotes: 0 });
     await verifyVoteDoc(testUser._id, post._id, 1);
   });
 

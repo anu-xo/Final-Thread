@@ -136,7 +136,7 @@ describe('Notification Trigger Conditions', () => {
   describe('Reply notifications', () => {
     it('fires when parentComment.author !== commenter', async () => {
       const parentRes = await createCommentAs(tokenA, 'parent comment by authorA');
-      expect(parentRes.status).toBe(21);
+      expect(parentRes.status).toBe(201);
       const parentComment = parentRes.body.data;
 
       const replyRes = await createCommentAs(tokenB, 'reply by commenterB', parentComment._id);
