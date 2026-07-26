@@ -37,8 +37,13 @@ export default function CommentBox({ postId, parentId = null, onSubmitted }) {
   };
 
   return (
-    <div className="border rounded-md p-2 mt-2">
+    <div className="border border-gray-200 dark:border-neutral-700 rounded-md p-2 mt-2 bg-white dark:bg-neutral-900">
       <EditorContent editor={editor} />
+      {submitMutation.isError && (
+        <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+          Failed to post comment: {submitMutation.error?.response?.data?.error || 'Unknown error'}
+        </p>
+      )}
       <div className="flex justify-end mt-2">
         <button
           onClick={submit}

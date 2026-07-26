@@ -36,6 +36,7 @@ const ALLOWED_CHANNELS = new Set([
 
   // Updates
   'checkForUpdates',
+  'tray:check-updates',
   'installUpdate',
   'getAppVersion',
   'update-event',
@@ -60,6 +61,12 @@ const ALLOWED_CHANNELS = new Set([
 
   // Reset & Quit
   'reset-and-quit',
+
+  // Test helpers (only active when NODE_ENV=test)
+  'test:get-window-state',
+  'test:get-tray-config',
+  'test:get-overlay-config',
+  'test:mock-file-dialog',
 ]);
 
 export function guard(channel) {

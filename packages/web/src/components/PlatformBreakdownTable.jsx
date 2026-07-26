@@ -32,7 +32,13 @@ export default function PlatformBreakdownTable() {
       </div>
     );
   }
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-center text-sm text-gray-500 dark:text-neutral-400">
+        No platform data available.
+      </div>
+    );
+  }
 
   const { eventsByType, uniqueUsersByPlatform, desktopVersions } = data;
 

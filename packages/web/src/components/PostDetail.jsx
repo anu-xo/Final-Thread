@@ -116,7 +116,20 @@ export default function PostDetail() {
       </div>
     );
   }
-  if (error)     return <div className="p-4 text-red-500">Unable to load post.</div>;
+  if (error) {
+    const is404 = error?.response?.status === 404;
+    return (
+      <div className="max-w-3xl mx-auto p-4 text-center py-20">
+        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
+          {is404 ? 'Post not found' : 'Something went wrong'}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">
+          {is404 ? 'This post may have been deleted.' : 'Unable to load post. Please try again later.'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -132,7 +145,7 @@ export default function PostDetail() {
       <SectionErrorBoundary sectionName="Post">
         <div className="max-w-3xl mx-auto p-4 space-y-4">
         {/* ── Post header ─────────────────────────────────────────────── */}
-        <article className="flex gap-3 bg-white border border-gray-200 rounded-lg p-4">
+        <article className="flex gap-3 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
           {/* Vote column */}
           <div className="shrink-0">
             <VoteButton
@@ -158,7 +171,7 @@ export default function PostDetail() {
             </h1>
 
             {post?.media?.length > 0 && (
-              <div className="mb-3 overflow-hidden rounded-lg border bg-gray-50">
+              <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800">
                 <img
                   src={post.media[0]}
                   alt={post.title}
@@ -181,7 +194,7 @@ export default function PostDetail() {
         {/* ── Comment tree ────────────────────────────────────────────── */}
         <SectionErrorBoundary sectionName="Comments">
           <section>
-            <h2 className="text-sm font-semibold text-gray-600 mb-2">
+            <h2 className="text-sm font-semibold text-gray-600 dark:text-neutral-400 mb-2">
               Comments ({post?.commentCount ?? 0})
             </h2>
             <CommentList postId={id} />

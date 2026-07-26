@@ -65,9 +65,16 @@ export default function ProfilePage() {
   }
 
   if (profileError || !profile) {
+    const is404 = profileError?.response?.status === 404;
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-        User not found.
+      <div className="max-w-3xl mx-auto text-center py-20">
+        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
+          {is404 ? 'User not found' : 'Something went wrong'}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">
+          {is404 ? 'This user may not exist.' : 'Unable to load profile. Please try again later.'}
+        </p>
       </div>
     );
   }

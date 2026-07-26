@@ -28,7 +28,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   maximizeWindow: () => ipcRenderer.send('window:maximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
   onWindowStateChange: (callback) =>
-    ipcRenderer.on('window:state-changed', (_event, isMaximized) => callback(isMaximized)),
+    createListener('window:state-changed', callback),
 
   // Notifications
   showNotification: (title, body) =>
@@ -67,11 +67,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAppVersion: () =>
     ipcRenderer.invoke('getAppVersion'),
 
-  onUpdateEvent: (callback) => {
-    const listener = (_event, channel, payload) => callback(channel, payload);
-    ipcRenderer.on('update-event', listener);
-    return () => ipcRenderer.removeListener('update-event', listener);
-  },
+  onUpdateEvent: (callback) =>
+    createListener('update-event', (channel, payload) => callback(channel, payload)),
 
   // File Picker
   selectFile: (options) =>
@@ -109,7 +106,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Deep Link Navigation
   onDeepLink: (callback) =>
-    ipcRenderer.on('deep-link:navigate', (_e, data) => callback(data)),
+    createListener('deep-link:navigate', callback),
 
   // Theme (sync — used by inline <script> in index.html to prevent flash)
   getThemeSync: () => ipcRenderer.sendSync('theme:get-sync'),
@@ -143,4 +140,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Reset & Quit (clears all app data)
   resetAndQuit: () => ipcRenderer.send('reset-and-quit'),
+
+  // ── Test Helpers (only active when NODE_ENV=test) ───────────────────────
+  // These expose main-process state to Playwright for verification.
+  // They are harmless in production — the IPC channels simply won't have
+  // handlers registered, so invoke() will reject.
+  getWindowState: () => ipcRenderer.invoke('test:get-window-state'),
+  getTrayConfig: () => ipcRenderer.invoke('test:get-tray-config'),
+  getOverlayConfig: () => ipcRenderer.invoke('test:get-overlay-config'),
+  mockFileDialog: (response) => ipcRenderer.invoke('test:mock-file-dialog', response),
 });

@@ -56,7 +56,21 @@ export default function PostFeed({ communityId, sort }) {
     );
   }
 
-  if (isError) return <>{error.message}</>;
+  if (isError) {
+    return (
+      <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 p-6 text-center">
+        <p className="text-sm text-red-600 dark:text-red-400">Failed to load posts: {error.message}</p>
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 p-10 text-center">
+        <p className="text-sm text-gray-500 dark:text-neutral-400">No posts yet. Be the first to post!</p>
+      </div>
+    );
+  }
 
   return (
     <List

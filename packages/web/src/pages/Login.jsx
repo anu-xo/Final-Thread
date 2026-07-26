@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +28,13 @@ export default function Login() {
     },
   });
 
+  const [banReason] = useState(() => {
+    try { return sessionStorage.getItem('ban-reason'); } catch { return null; }
+  });
+  useEffect(() => {
+    if (banReason) sessionStorage.removeItem('ban-reason');
+  }, [banReason]);
+
   return (
     <div
       className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900"
@@ -34,6 +42,12 @@ export default function Login() {
     >
       <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-6">Welcome back</h1>
+
+        {banReason && (
+          <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
+            {banReason}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
           <div>

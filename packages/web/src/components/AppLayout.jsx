@@ -1,7 +1,3 @@
-// Why a layout component?
-// React Router v6 supports "nested routes" where a parent route renders a layout
-// and child routes render inside it via <Outlet />.
-// Every authenticated page uses this layout — we define Header + Sidebar once here.
 import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Header from './Header.jsx';
@@ -12,6 +8,7 @@ import { useNotificationSocket } from '../hooks/useNotifications.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
 import UpdateBanner from './UpdateBanner.jsx';
+import ChatPanelDrawer from './ChatPanelDrawer.jsx';
 
 function OfflineBanner() {
   const isOnline = useOnlineStatus();
@@ -22,7 +19,7 @@ function OfflineBanner() {
       style={{ top: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
     >
       <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 px-4 py-2.5 text-sm text-yellow-800 dark:text-yellow-300 mt-3 shadow-sm">
-        You're offline — showing cached content
+        You&apos;re offline — showing cached content
       </div>
     </div>
   );
@@ -57,7 +54,7 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950">
       {isDesktop && <UpdateBanner />}
       <Header />
       <OfflineBanner />
@@ -78,6 +75,7 @@ export default function AppLayout() {
         </main>
       </div>
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <ChatPanelDrawer />
     </div>
   );
 }

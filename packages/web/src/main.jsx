@@ -12,6 +12,7 @@ import '@fontsource/inter/latin.css'
 
 import './index.css'
 import App from './App.jsx'
+import RootErrorBoundary from './components/RootErrorBoundary.jsx'
 
 Sentry.init({
   dsn: window.electronAPI
@@ -26,9 +27,11 @@ Sentry.init({
 
 const root = createRoot(document.getElementById('root'));
 root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+  <RootErrorBoundary>
+    <StrictMode>
+      <App />
+    </StrictMode>
+  </RootErrorBoundary>,
 );
 requestAnimationFrame(() => {
   requestAnimationFrame(() => {

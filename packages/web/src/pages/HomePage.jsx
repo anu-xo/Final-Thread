@@ -74,12 +74,30 @@ export default function HomePage() {
         <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Welcome to ThreadVerse</p>
         <h1 className="mt-2 text-3xl font-bold text-gray-900 dark:text-neutral-100">Join some communities to build your feed</h1>
         <p className="mt-3 max-w-2xl text-sm text-gray-600 dark:text-neutral-400">
-          Your home feed is personalized from the communities you subscribe to. Join a few spaces and we’ll start filling this page with posts that match your interests.
+          Your home feed is personalized from the communities you subscribe to. Join a few spaces and we&apos;ll start filling this page with posts that match your interests.
         </p>
         <div className="mt-6">
           <Link
             to="/communities"
             className="inline-flex items-center rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600"
+          >
+            Browse communities
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!noSubscriptions && posts.length === 0 && !isFetchingNextPage) {
+    return (
+      <div className="rounded-3xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-8 text-center shadow-sm">
+        <p className="text-sm text-gray-500 dark:text-neutral-400">
+          No posts in your subscribed communities yet. Check back later or join more communities.
+        </p>
+        <div className="mt-4">
+          <Link
+            to="/communities"
+            className="inline-flex items-center rounded-full bg-orange-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             Browse communities
           </Link>

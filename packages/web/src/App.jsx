@@ -16,6 +16,7 @@ import TitleBar from './components/TitleBar.jsx';
 
 // Lazy-loaded Pages
 import LandingPage from './pages/LandingPage.jsx';
+import NotFoundPage from './pages/NotFoundPage.jsx';
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity.jsx'));
@@ -31,11 +32,15 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage.jsx'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
+const ModQueue = lazy(() => import('./pages/ModQueue.jsx'));
 import AdminRoute from './components/AdminRoute.jsx';
 
 function PageSkeleton() {
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div
+      className="flex h-screen items-center justify-center"
+      style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
+    >
       <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
     </div>
   );
@@ -93,6 +98,7 @@ function AppRoutes() {
 
             {/* Admin */}
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/mod/queue" element={<AdminRoute><ModQueue /></AdminRoute>} />
 
             {/* Posts */}
             <Route path="/posts/:id" element={<PostDetail />} />
@@ -103,7 +109,7 @@ function AppRoutes() {
           </Route>
         </Route>
 
-        <Route path="*" element={<div>404 — Not Found</div>} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );

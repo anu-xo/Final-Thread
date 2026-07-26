@@ -38,24 +38,24 @@ export default function UserManagementTable() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Search by username or email"
-        className="border rounded px-3 py-1.5 mb-3 w-full"
+        className="border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded px-3 py-1.5 mb-3 w-full"
       />
       {isLoading ? (
         <TableSkeleton rows={6} columns={5} />
       ) : (
-        <table className="w-full text-sm">
+        <table className="w-full text-sm text-gray-900 dark:text-neutral-100">
         <thead>
-          <tr>
-            <th className="text-left">Username</th>
-            <th className="text-left">Email</th>
-            <th className="text-right">Karma</th>
-            <th className="text-left">Status</th>
-            <th className="text-right">Action</th>
+          <tr className="border-b border-gray-200 dark:border-neutral-700">
+            <th className="text-left py-2">Username</th>
+            <th className="text-left py-2">Email</th>
+            <th className="text-right py-2">Karma</th>
+            <th className="text-left py-2">Status</th>
+            <th className="text-right py-2">Action</th>
           </tr>
         </thead>
         <tbody>
           {users?.map((u) => (
-            <tr key={u._id} className="border-t">
+            <tr key={u._id} className="border-t border-gray-200 dark:border-neutral-700">
               <td className="py-1.5">{u.username}</td>
               <td>{u.email}</td>
               <td className="text-right">{u.karma}</td>
@@ -71,6 +71,13 @@ export default function UserManagementTable() {
               </td>
             </tr>
           ))}
+          {users?.length === 0 && (
+            <tr>
+              <td colSpan={5} className="py-8 text-center text-sm text-gray-400 dark:text-neutral-500">
+                No users found.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
       )}

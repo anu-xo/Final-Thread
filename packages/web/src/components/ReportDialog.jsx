@@ -18,18 +18,23 @@ export default function ReportDialog({ target, targetType, community, onClose })
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-neutral-900 rounded-lg p-6 w-full max-w-md">
         <h2 className="text-lg font-semibold mb-4">Report content</h2>
-        <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full border rounded p-2 mb-3">
+        <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded p-2 mb-3">
           {REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
         <textarea
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
           placeholder="Additional details (optional)"
-          className="w-full border rounded p-2 mb-4"
+          className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 rounded p-2 mb-4"
           rows={3}
         />
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm dark:text-neutral-300">Cancel</button>
+          {mutation.isError && (
+            <p className="text-xs text-red-500 dark:text-red-400 self-center mr-2">
+              {mutation.error?.response?.data?.error || 'Failed to submit'}
+            </p>
+          )}
           <button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}

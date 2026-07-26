@@ -38,7 +38,8 @@ mq.addEventListener('change', () => {
 
 export const useUiStore = create((set, get) => ({
   theme: initialTheme,
-  sidebarOpen: true,
+  sidebarOpen: typeof window !== 'undefined' && window.innerWidth >= 768,
+  chatPanelOpen: false,
 
   setTheme: (theme) => {
     const resolved = resolveTheme(theme);
@@ -63,4 +64,6 @@ export const useUiStore = create((set, get) => ({
     set((state) => ({
       sidebarOpen: !state.sidebarOpen,
     })),
+
+  setChatPanelOpen: (open) => set({ chatPanelOpen: open }),
 }));

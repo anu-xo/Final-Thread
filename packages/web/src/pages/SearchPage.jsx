@@ -103,37 +103,48 @@ export default function SearchPage() {
       ) : (
         <SectionErrorBoundary sectionName="Search Results">
           <div className="space-y-8">
-            <ResultSection title="Posts" count={posts.length}>
-              {posts.length > 0 ? (
-                posts.map((post) => <PostCard key={post._id} post={post} />)
-              ) : (
-                <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
-                  No posts matched this query.
-                </div>
-              )}
-            </ResultSection>
+            {posts.length === 0 && communities.length === 0 && users.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-10 text-center">
+                <p className="text-4xl mb-3">🔍</p>
+                <p className="text-sm text-gray-500 dark:text-neutral-400">
+                  No results found for &quot;{query}&quot;. Try different keywords.
+                </p>
+              </div>
+            ) : (
+              <>
+                <ResultSection title="Posts" count={posts.length}>
+                  {posts.length > 0 ? (
+                    posts.map((post) => <PostCard key={post._id} post={post} />)
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
+                      No posts matched this query.
+                    </div>
+                  )}
+                </ResultSection>
 
-            <ResultSection title="Communities" count={communities.length}>
-              {communities.length > 0 ? (
-                communities.map((community) => (
-                  <CommunityResult key={community._id} community={community} />
-                ))
-              ) : (
-                <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
-                  No communities matched this query.
-                </div>
-              )}
-            </ResultSection>
+                <ResultSection title="Communities" count={communities.length}>
+                  {communities.length > 0 ? (
+                    communities.map((community) => (
+                      <CommunityResult key={community._id} community={community} />
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
+                      No communities matched this query.
+                    </div>
+                  )}
+                </ResultSection>
 
-            <ResultSection title="Users" count={users.length}>
-              {users.length > 0 ? (
-                users.map((user) => <UserResult key={user._id || user.username} user={user} />)
-              ) : (
-                <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
-                  No users matched this query.
-                </div>
-              )}
-            </ResultSection>
+                <ResultSection title="Users" count={users.length}>
+                  {users.length > 0 ? (
+                    users.map((user) => <UserResult key={user._id || user.username} user={user} />)
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-4 text-sm text-gray-500 dark:text-neutral-400">
+                      No users matched this query.
+                    </div>
+                  )}
+                </ResultSection>
+              </>
+            )}
           </div>
         </SectionErrorBoundary>
       )}

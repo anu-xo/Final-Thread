@@ -137,9 +137,16 @@ export default function CommunityPage() {
   }
 
   if (error) {
+    const is404 = error?.response?.status === 404;
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <p className="text-neutral-400 text-lg">Community not found.</p>
+        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
+          {is404 ? 'Community not found' : 'Something went wrong'}
+        </p>
+        <p className="text-sm text-gray-500 dark:text-neutral-400">
+          {is404 ? 'This community may have been deleted or never existed.' : 'Unable to load community. Please try again later.'}
+        </p>
       </div>
     );
   }

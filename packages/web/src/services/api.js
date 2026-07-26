@@ -36,6 +36,14 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 403 with ban reason → store reason so Login can display it
+    if (error.response?.status === 403) {
+      const banReason = error.response?.data?.banReason || error.response?.data?.error;
+      if (banReason) {
+        try { sessionStorage.setItem('ban-reason', banReason); } catch {}
+      }
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {

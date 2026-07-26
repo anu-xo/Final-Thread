@@ -49,6 +49,17 @@ const store = new Store({
     aiChatAutoOpen: { type: 'boolean', default: false },
     lastViewedCommunity: { type: ['string', 'null'], default: null },
     subscribedCommunities: { type: 'array', default: [] },
+    windowBounds: {
+      type: 'object',
+      properties: {
+        x: { type: 'number' },
+        y: { type: 'number' },
+        width: { type: 'number' },
+        height: { type: 'number' },
+        isMaximized: { type: 'boolean' },
+      },
+      default: { width: 1280, height: 800, isMaximized: false },
+    },
   },
 });
 
@@ -157,10 +168,11 @@ function createWindow() {
   unregisterGlobalShortcuts();
 
   const isMac = process.platform === 'darwin';
+  const savedBounds = store.get('windowBounds', {});
 
   const windowOptions = {
-    width: 1280,
-    height: 800,
+    width: savedBounds.width || 1280,
+    height: savedBounds.height || 800,
     minWidth: 800,
     minHeight: 600,
     icon: path.join(__dirname, 'build', 'icons', '1024x1024.png'),
@@ -172,6 +184,12 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
     },
   };
+
+  // Restore position only if it's on a visible screen
+  if (savedBounds.x !== undefined && savedBounds.y !== undefined) {
+    windowOptions.x = savedBounds.x;
+    windowOptions.y = savedBounds.y;
+  }
 
   if (isMac) {
     // macOS: hiddenInset keeps native traffic-light buttons; no frame:false
@@ -233,10 +251,37 @@ function createWindow() {
 
   mainWindow.on('maximize', () => {
     mainWindow?.webContents.send('window:state-changed', true);
+    saveWindowBounds();
   });
   mainWindow.on('unmaximize', () => {
     mainWindow?.webContents.send('window:state-changed', false);
+    saveWindowBounds();
   });
+
+  // ── Persist window position & size (debounced) ──────────────────────────
+  let saveBoundsTimer = null;
+  function saveWindowBounds() {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    clearTimeout(saveBoundsTimer);
+    saveBoundsTimer = setTimeout(() => {
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+      const bounds = mainWindow.getBounds();
+      store.set('windowBounds', {
+        x: bounds.x,
+        y: bounds.y,
+        width: bounds.width,
+        height: bounds.height,
+        isMaximized: mainWindow.isMaximized(),
+      });
+    }, 500);
+  }
+  mainWindow.on('move', saveWindowBounds);
+  mainWindow.on('resize', saveWindowBounds);
+
+  // Restore maximized state if it was saved
+  if (savedBounds.isMaximized) {
+    mainWindow.maximize();
+  }
 
   mainWindow.on('close', (event) => {
     if (!isQuitting) {
@@ -544,6 +589,9 @@ safeHandle('get-subscribed-communities', () => {
 safeHandle('checkForUpdates', () => {
   autoUpdater.checkForUpdatesAndNotify();
 });
+safeOn('tray:check-updates', () => {
+  autoUpdater.checkForUpdatesAndNotify();
+});
 safeHandle('installUpdate', () => {
   autoUpdater.quitAndInstall();
 });
@@ -717,9 +765,6 @@ safeOn('notification:show', (_event, payload) => {
   });
 });
 
-  notification.show();
-});
-
 // ── Platform-Aware Notification Helper ───────────────────────────────────────
 //
 // macOS / Windows — Electron's Notification class uses the OS native notification
@@ -787,6 +832,50 @@ safeHandle('notification:ping-test', async () => {
   });
   return result;
 });
+
+// ── Test-only IPC handlers (active when NODE_ENV=test) ─────────────────────
+// These expose internal Electron state to Playwright tests via the window.api bridge.
+// They are safe because the IPC guard only allows them when NODE_ENV=test.
+
+if (process.env.NODE_ENV === 'test') {
+  safeHandle('test:get-window-state', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return null;
+    const bounds = mainWindow.getBounds();
+    return {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      isMaximized: mainWindow.isMaximized(),
+      isMinimized: mainWindow.isMinimized(),
+      isFullScreen: mainWindow.isFullScreen(),
+      isVisible: mainWindow.isVisible(),
+    };
+  });
+
+  safeHandle('test:get-tray-config', () => {
+    if (!tray || tray.isDestroyed()) return null;
+    return {
+      isDestroyed: false,
+      bounds: tray.getBounds(),
+    };
+  });
+
+  safeHandle('test:get-overlay-config', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return null;
+    const isMac = process.platform === 'darwin';
+    return {
+      isMac,
+      titleBarStyle: isMac ? 'hiddenInset' : undefined,
+      hasFrame: isMac ? undefined : false,
+    };
+  });
+
+  safeOn('test:mock-file-dialog', (_event, result) => {
+    // Allow tests to pre-set what the next select-file dialog returns
+    global.__mockFileDialogResult = result;
+  });
+}
 
 
 // ── Connectivity Detection ──────────────────────────────────────────────────

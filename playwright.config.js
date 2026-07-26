@@ -16,9 +16,32 @@ export default defineConfig({
       use: { browserName: 'chromium' },
     },
     {
+      name: 'responsive-layout',
+      testDir: './e2e/tests',
+      testMatch: '**/responsive-layout*.spec.js',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'empty-states',
+      testDir: './e2e/tests',
+      testMatch: '**/empty-states*.spec.js',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'error-states',
+      testDir: './e2e/tests',
+      testMatch: '**/error-states*.spec.js',
+      use: { browserName: 'chromium' },
+    },
+    {
       name: 'electron',
       testDir: './e2e/tests',
       testMatch: '**/*desktop*.spec.js',
+    },
+    {
+      name: 'electron-full-audit',
+      testDir: './e2e/tests',
+      testMatch: '**/electron-full-audit*.spec.js',
     },
     {
       name: 'font-audit',
