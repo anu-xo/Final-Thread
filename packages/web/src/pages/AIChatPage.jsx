@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useCommunityStore } from '../store/communityStore.js';
 import ChatPanel from '../components/ChatPanel.jsx';
@@ -51,8 +51,9 @@ export default function AIChatPage() {
       )}
 
       {!selected ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-gray-400 dark:text-neutral-500">
-          Join a community first to start chatting with AI.
+        <div className="flex-1 flex flex-col items-center justify-center text-sm text-gray-400 dark:text-neutral-500 gap-4">
+          <p>Join a community first to start chatting with AI.</p>
+          <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
         </div>
       ) : (
         <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">

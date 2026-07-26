@@ -177,11 +177,17 @@ export default function ProfilePage() {
                   <PostCardSkeleton key={i} />
                 ))}
               </div>
+            ) : postsQuery.isError ? (
+              <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300">
+                <p className="mb-2">Failed to load posts.</p>
+                <button onClick={() => postsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+              </div>
             ) : postItems.length > 0 ? (
               postItems.map((post) => <PostCard key={post._id} post={post} />)
             ) : (
-              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-sm text-gray-500 dark:text-neutral-400">
-                No posts yet.
+              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-center text-sm text-gray-500 dark:text-neutral-400">
+                <p className="mb-3">No posts yet.</p>
+                <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
               </div>
             )}
 
@@ -206,11 +212,17 @@ export default function ProfilePage() {
                   <CommentSkeleton key={i} />
                 ))}
               </div>
+            ) : commentsQuery.isError ? (
+              <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300">
+                <p className="mb-2">Failed to load comments.</p>
+                <button onClick={() => commentsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+              </div>
             ) : commentItems.length > 0 ? (
               commentItems.map((comment) => <ProfileCommentCard key={comment._id} comment={comment} />)
             ) : (
-              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-sm text-gray-500 dark:text-neutral-400">
-                No comments yet.
+              <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-center text-sm text-gray-500 dark:text-neutral-400">
+                <p className="mb-3">No comments yet.</p>
+                <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
               </div>
             )}
 

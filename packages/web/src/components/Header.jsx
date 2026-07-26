@@ -146,9 +146,9 @@ export default function Header() {
             </div>
           </>
         ) : (
-          <div className="flex gap-2">
-            <Link to="/login" className="px-3 py-1.5 text-sm border border-orange-500 text-orange-500 rounded-full hover:bg-orange-50 dark:hover:bg-orange-900/20">Log In</Link>
-            <Link to="/register" className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded-full hover:bg-orange-600">Sign Up</Link>
+          <div className="flex gap-1.5 sm:gap-2">
+            <Link to="/login" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-orange-500 text-orange-500 rounded-full hover:bg-orange-50 dark:hover:bg-orange-900/20">Log In</Link>
+            <Link to="/register" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-orange-500 text-white rounded-full hover:bg-orange-600">Sign Up</Link>
           </div>
         )}
       </div>

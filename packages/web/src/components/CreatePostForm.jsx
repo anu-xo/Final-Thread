@@ -104,6 +104,11 @@ function CommunityPicker({ value, onChange, error }) {
                     ))}
                 </ul>
             )}
+            {open && query.length >= 2 && communities.length === 0 && (
+                <div className="absolute z-10 w-full bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-600 rounded-md mt-1 px-3 py-2 text-sm text-gray-500 dark:text-neutral-400 shadow-lg">
+                    No communities match &quot;{query}&quot;.
+                </div>
+            )}
             {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
         </div>
     );

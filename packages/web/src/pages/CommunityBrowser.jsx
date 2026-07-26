@@ -45,7 +45,7 @@ function CommunityCard({ community }) {
 }
 
 export default function CommunityBrowser() {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useInfiniteQuery({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error } = useInfiniteQuery({
     queryKey: ['communities'],
     queryFn: ({ pageParam }) => communityApi.browse(pageParam).then((r) => r.data),
     getNextPageParam: (lastPage) =>
@@ -62,6 +62,17 @@ export default function CommunityBrowser() {
           {[...Array(6)].map((_, i) => (
             <CommunityCardSkeleton key={i} />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-5xl mx-auto py-8 px-4">
+        <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300 text-center">
+          <p className="mb-2">{error?.message || 'Failed to load communities.'}</p>
+          <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
         </div>
       </div>
     );

@@ -49,7 +49,7 @@ export default function Sidebar() {
       <aside
         className={`
           shrink-0 pt-2
-          fixed top-0 left-0 z-50 h-full w-64
+          fixed top-0 left-0 z-50 h-full w-64 overflow-y-auto
           bg-white dark:bg-neutral-900 border-r border-gray-200 dark:border-neutral-700
           transform transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}

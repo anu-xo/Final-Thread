@@ -108,6 +108,34 @@ export default function SearchModal({ open, onClose }) {
     enabled: open && debouncedQuery.length >= 2,
   });
 
+  const handleKeyDown = useCallback((event) => {
+    if (event.key === 'Escape') {
+      onClose();
+      return;
+    }
+    if (event.key === 'Tab') {
+      const dialog = document.getElementById('search-modal-dialog');
+      if (!dialog) return;
+      const focusable = dialog.querySelectorAll(
+        'input, button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) {
       setQuery('');
@@ -119,41 +147,13 @@ export default function SearchModal({ open, onClose }) {
       inputRef.current?.focus();
     }, 0);
 
-  const handleKeyDown = useCallback((event) => {
-      if (event.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (event.key === 'Tab') {
-        const dialog = document.getElementById('search-modal-dialog');
-        if (!dialog) return;
-        const focusable = dialog.querySelectorAll(
-          'input, button, [tabindex]:not([tabindex="-1"])'
-        );
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (event.shiftKey) {
-          if (document.activeElement === first) {
-            event.preventDefault();
-            last.focus();
-          }
-        } else {
-          if (document.activeElement === last) {
-            event.preventDefault();
-            first.focus();
-          }
-        }
-      }
-    }, [onClose]);
-
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.clearTimeout(focusId);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [open, onClose]);
+  }, [open, handleKeyDown]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -242,7 +242,7 @@ export default function SearchModal({ open, onClose }) {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 text-xs text-gray-500 dark:text-neutral-400">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-3 text-xs text-gray-500 dark:text-neutral-400">
           <span>Cmd/Ctrl+K opens this panel anywhere in the app.</span>
           <button
             type="button"

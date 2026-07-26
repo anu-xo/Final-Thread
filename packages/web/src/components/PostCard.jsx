@@ -35,8 +35,8 @@ export default function PostCard({ post }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-neutral-400 mb-1">
-          <span className="bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded-full font-medium text-gray-700 dark:text-neutral-300">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-neutral-400 mb-1">
+          <span className="bg-gray-100 dark:bg-neutral-700 px-2 py-0.5 rounded-full font-medium text-gray-700 dark:text-neutral-300 truncate max-w-[160px]">
             r/{community?.name}
           </span>
           {flair && (
@@ -44,8 +44,8 @@ export default function PostCard({ post }) {
               {flair.name}
             </span>
           )}
-          <span>Posted by u/{author?.username}</span>
-          <span>· {timeAgo(createdAt)}</span>
+          <span className="truncate">Posted by u/{author?.username}</span>
+          <span className="shrink-0">· {timeAgo(createdAt)}</span>
         </div>
 
         <h3 className="font-medium text-gray-900 dark:text-neutral-100 leading-snug">

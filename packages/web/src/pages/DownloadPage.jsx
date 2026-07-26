@@ -81,9 +81,10 @@ export default function DownloadPage() {
         )}
 
         {error && (
-          <p className="mt-2 text-sm text-red-500">
-            Could not reach download server — try again later.
-          </p>
+          <div className="mt-2 text-sm text-red-500">
+            <p>Could not reach download server — try again later.</p>
+            <button onClick={() => window.location.reload()} className="mt-1 underline hover:text-red-600">Retry</button>
+          </div>
         )}
 
         {/* Primary CTA */}

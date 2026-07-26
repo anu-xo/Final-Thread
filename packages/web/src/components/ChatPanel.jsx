@@ -34,7 +34,7 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`rounded-lg px-4 py-2.5 text-sm ${
+            className={`rounded-lg px-4 py-2.5 text-sm break-words ${
               msg.role === 'user'
                 ? 'bg-blue-600 text-white ml-auto max-w-[80%]'
                 : 'bg-gray-100 dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 max-w-[80%]'

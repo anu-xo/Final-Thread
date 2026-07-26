@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import api from '../services/api.js';
 import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
@@ -6,6 +7,7 @@ import { TableSkeleton } from '../components/skeletons/index.js';
 
 export default function ModQueue() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: reports, isLoading, error } = useQuery({
     queryKey: ['mod', 'queue'],
@@ -34,7 +36,11 @@ export default function ModQueue() {
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
         <p className="text-5xl font-bold text-orange-500 mb-4">!</p>
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">Failed to load mod queue</p>
-        <p className="text-sm text-gray-500 dark:text-neutral-400">You may not have moderator permissions.</p>
+        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">You may not have moderator permissions.</p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+        </div>
       </div>
     );
   }
