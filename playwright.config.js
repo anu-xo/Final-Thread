@@ -16,6 +16,17 @@ export default defineConfig({
       use: { browserName: 'chromium' },
     },
     {
+      name: 'core-flows',
+      testDir: './e2e/tests',
+      testMatch: '**/flow-core*.spec.js',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'core-flows-electron',
+      testDir: './e2e/tests',
+      testMatch: '**/flow-core*.spec.js',
+    },
+    {
       name: 'responsive-layout',
       testDir: './e2e/tests',
       testMatch: '**/responsive-layout*.spec.js',
@@ -66,5 +77,8 @@ export default defineConfig({
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120_000,
+    env: {
+      VITE_API_URL: '/api',
+    },
   },
 });
