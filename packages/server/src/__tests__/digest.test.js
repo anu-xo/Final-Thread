@@ -37,7 +37,7 @@ describe('sendWeeklyDigest', () => {
     await User.create({
       username: 'nodigest',
       email: 'no@test.com',
-      password: 'hashed',
+      passwordHash: 'hashed',
       notifPrefs: { digest: false },
     });
 
@@ -51,7 +51,7 @@ describe('sendWeeklyDigest', () => {
     const user = await User.create({
       username: 'lonely',
       email: 'lonely@test.com',
-      password: 'hashed',
+      passwordHash: 'hashed',
       notifPrefs: { digest: true },
     });
 
@@ -65,7 +65,7 @@ describe('sendWeeklyDigest', () => {
     const user = await User.create({
       username: 'noposts',
       email: 'noposts@test.com',
-      password: 'hashed',
+      passwordHash: 'hashed',
       notifPrefs: { digest: true },
     });
 
@@ -82,7 +82,7 @@ describe('sendWeeklyDigest', () => {
     await User.create({
       username: 'banned',
       email: 'banned@test.com',
-      password: 'hashed',
+      passwordHash: 'hashed',
       notifPrefs: { digest: true },
       isBanned: true,
     });

@@ -5,9 +5,30 @@ const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: 'mock-job-uuid' }),
 };
 
+const mockRedis = {
+  on: jest.fn().mockReturnThis(),
+  ping: jest.fn().mockResolvedValue('PONG'),
+  quit: jest.fn().mockResolvedValue(undefined),
+};
+
 jest.unstable_mockModule('../jobs/embeddingQueue.js', () => ({
   getEmbeddingQueue: () => mockQueue,
 }));
+
+jest.unstable_mockModule('ioredis', () => ({
+  Redis: jest.fn(() => mockRedis),
+}));
+
+jest.unstable_mockModule('../services/moderationService.js', () => ({
+  classifyContent: jest.fn().mockResolvedValue('SAFE'),
+}));
+
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
+
+const { MongoMemoryServer } = await import('mongodb-memory-server');
+const mongoServer = await MongoMemoryServer.create();
+process.env.MONGODB_URI = mongoServer.getUri();
+process.env.REDIS_URL = 'redis://localhost:6379';
 
 // Dynamically import dependencies so they receive the mocked queue
 const { default: request } = await import('supertest');
@@ -67,6 +88,7 @@ describe('POST /api/posts', () => {
     // Properly disconnect from DB and Redis
     await mongoose.connection.close();
     await redis.quit();
+    await mongoServer.stop();
   });
 
   beforeEach(() => {
