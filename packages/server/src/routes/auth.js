@@ -335,7 +335,7 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ data: null, error: 'Invalid or expired refresh token.', meta: null });
     }
 
-    const user = await User.findById(payload.userId);
+    const user = await User.findById(payload.userId).select('+refreshTokens');
     if (!user || !user.refreshTokens.includes(refreshToken)) {
       return res.status(401).json({ data: null, error: 'Refresh token not recognised.', meta: null });
     }

@@ -47,7 +47,7 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const { cursor, limit = 20 } = req.query;
-    const query = { user: req.user.id };
+    const query = { user: req.user._id };
     if (cursor) query._id = { $lt: cursor };
 
     const notifications = await Notification.find(query)
@@ -99,7 +99,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/unread-count', async (req, res) => {
   try {
-    const count = await Notification.countDocuments({ user: req.user.id, read: false });
+    const count = await Notification.countDocuments({ user: req.user._id, read: false });
     res.json({ data: { count }, error: null, meta: {} });
   } catch (err) {
     res.status(500).json({ data: null, error: sanitizeError(err), meta: {} });
@@ -142,7 +142,7 @@ router.put('/read', async (req, res) => {
       return res.status(400).json({ data: null, error: 'ids array required', meta: {} });
     }
     await Notification.updateMany(
-      { _id: { $in: ids }, user: req.user.id }, // IDOR guard — only touch your own notifications
+      { _id: { $in: ids }, user: req.user._id }, // IDOR guard — only touch your own notifications
       { $set: { read: true } }
     );
     res.json({ data: { updated: ids.length }, error: null, meta: {} });
@@ -181,7 +181,7 @@ router.put('/read', async (req, res) => {
 router.put('/read-all', async (req, res) => {
   try {
     const result = await Notification.updateMany(
-      { user: req.user.id, read: false },
+      { user: req.user._id, read: false },
       { $set: { read: true } }
     );
     res.json({ data: { updated: result.modifiedCount }, error: null, meta: {} });

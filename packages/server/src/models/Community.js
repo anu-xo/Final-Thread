@@ -11,6 +11,7 @@ const communitySchema = new mongoose.Schema(
     members:     { type: Number, default: 0 },
     mods:        [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     rules:       [{ title: String, body: String }],
+    flairs:      [{ name: String, color: String }],
     createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     aiEnabled:   { type: Boolean, default: true },
   },

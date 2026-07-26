@@ -18,6 +18,16 @@ jest.unstable_mockModule('ioredis', () => ({
   Redis: jest.fn(() => mockRedis),
 }));
 
+jest.unstable_mockModule('../services/moderationService.js', () => ({
+  classifyContent: jest.fn().mockResolvedValue('SAFE'),
+}));
+
+jest.unstable_mockModule('../services/aiService.js', () => ({
+  generateCommunityChat: jest.fn().mockResolvedValue({ message: 'mock', model: 'test' }),
+  generateCommentSummary: jest.fn().mockResolvedValue('Mock summary'),
+  generatePostSummary: jest.fn().mockResolvedValue('Mock summary'),
+}));
+
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
 
 const { MongoMemoryServer } = await import('mongodb-memory-server');
@@ -33,6 +43,7 @@ const { default: User } = await import('../models/User.js');
 const { default: Post } = await import('../models/Post.js');
 const { default: Community } = await import('../models/Community.js');
 const { default: CommunityMember } = await import('../models/CommunityMember.js');
+const { default: Report } = await import('../models/Report.js');
 
 describe('Mod API', () => {
   let adminUser;
@@ -42,7 +53,6 @@ describe('Mod API', () => {
   let modToken;
   let regularToken;
   let testCommunity;
-  let testPost;
 
   beforeAll(async () => {
     while (mongoose.connection.readyState !== 1) {
@@ -96,17 +106,6 @@ describe('Mod API', () => {
       role: 'member',
     });
 
-    testPost = await Post.create({
-      title: 'Mod Test Post',
-      body: 'Post to moderate',
-      author: regularUser._id,
-      community: testCommunity._id,
-      upvotes: 1,
-      downvotes: 0,
-      score: 1,
-      hotScore: 0.5,
-    });
-
     adminToken = jwt.sign(
       { userId: adminUser._id, role: adminUser.role },
       process.env.JWT_SECRET,
@@ -127,6 +126,7 @@ describe('Mod API', () => {
   });
 
   afterAll(async () => {
+    await Report.deleteMany({});
     await Post.deleteMany({});
     await CommunityMember.deleteMany({});
     await Community.deleteOne({ _id: testCommunity?._id });
@@ -140,128 +140,137 @@ describe('Mod API', () => {
     jest.clearAllMocks();
   });
 
-  describe('Authorization', () => {
+  describe('GET /api/mod/queue', () => {
     it('returns 401 for unauthenticated requests', async () => {
-      const res = await request(app).get(`/api/mod/${testCommunity.slug}/queue`);
+      const res = await request(app).get('/api/mod/queue');
       expect(res.status).toBe(401);
     });
 
-    it('returns 403 for non-mod users', async () => {
+    it('returns empty queue for non-mod users', async () => {
       const res = await request(app)
-        .get(`/api/mod/${testCommunity.slug}/queue`)
+        .get('/api/mod/queue')
         .set('Authorization', `Bearer ${regularToken}`);
-      expect(res.status).toBe(403);
-    });
-
-    it('allows community mods', async () => {
-      const res = await request(app)
-        .get(`/api/mod/${testCommunity.slug}/queue`)
-        .set('Authorization', `Bearer ${modToken}`);
       expect(res.status).toBe(200);
+      expect(res.body.data).toEqual([]);
     });
 
-    it('allows platform admins', async () => {
+    it('returns pending reports for mod communities', async () => {
       const res = await request(app)
-        .get(`/api/mod/${testCommunity.slug}/queue`)
-        .set('Authorization', `Bearer ${adminToken}`);
-      expect(res.status).toBe(200);
-    });
-  });
-
-  describe('GET /api/mod/:slug/queue', () => {
-    it('returns pending posts for the community', async () => {
-      const res = await request(app)
-        .get(`/api/mod/${testCommunity.slug}/queue`)
+        .get('/api/mod/queue')
         .set('Authorization', `Bearer ${modToken}`);
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
-    it('returns 404 for non-existent community', async () => {
+    it('allows platform admins', async () => {
       const res = await request(app)
-        .get('/api/mod/fakecomm/queue')
-        .set('Authorization', `Bearer ${modToken}`);
-      expect(res.status).toBe(404);
+        .get('/api/mod/queue')
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
     });
-  });
 
-  describe('POST /api/mod/:slug/approve/:postId', () => {
-    it('approves a pending post', async () => {
+    it('filters by communityId when provided', async () => {
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/approve/${testPost._id}`)
+        .get(`/api/mod/queue?communityId=${testCommunity._id}`)
         .set('Authorization', `Bearer ${modToken}`);
       expect(res.status).toBe(200);
     });
 
-    it('returns 404 for non-existent post', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
+    it('returns 403 when filtering by community user does not mod', async () => {
+      const otherComm = await Community.create({
+        name: 'Other', slug: 'other-mod-test', description: 'x', createdBy: regularUser._id, members: 1,
+      });
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/approve/${fakeId}`)
+        .get(`/api/mod/queue?communityId=${otherComm._id}`)
         .set('Authorization', `Bearer ${modToken}`);
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(403);
+      await Community.deleteOne({ _id: otherComm._id });
     });
   });
 
-  describe('POST /api/mod/:slug/remove/:postId', () => {
-    it('removes a pending post', async () => {
+  describe('POST /api/mod/action', () => {
+    it('returns 401 for unauthenticated requests', async () => {
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/remove/${testPost._id}`)
+        .post('/api/mod/action')
+        .send({ type: 'approve' });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 400 for invalid action type', async () => {
+      const res = await request(app)
+        .post('/api/mod/action')
         .set('Authorization', `Bearer ${modToken}`)
-        .send({ reason: 'Test removal' });
-      expect(res.status).toBe(200);
+        .send({ type: 'invalid', targetType: 'post' });
+      expect(res.status).toBe(400);
     });
 
-    it('returns 404 for non-existent post', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
+    it('returns 400 when ban has no userId', async () => {
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/remove/${fakeId}`)
-        .set('Authorization', `Bearer ${modToken}`);
-      expect(res.status).toBe(404);
-    });
-  });
-
-  describe('POST /api/mod/:slug/ban-member/:userId', () => {
-    it('bans a community member', async () => {
-      const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/ban-member/${regularUser._id}`)
+        .post('/api/mod/action')
         .set('Authorization', `Bearer ${modToken}`)
-        .send({ reason: 'Test ban' });
+        .send({ type: 'ban', targetType: 'post', communityId: testCommunity._id });
+      expect(res.status).toBe(400);
+    });
+
+    it('handles approve action', async () => {
+      const postId = new mongoose.Types.ObjectId();
+      await Post.create({
+        _id: postId, title: 'Reported', body: 'body', author: regularUser._id,
+        community: testCommunity._id, upvotes: 0, downvotes: 0, score: 0, hotScore: 0,
+      });
+      const report = await Report.create({
+        reporter: regularUser._id,
+        community: testCommunity._id,
+        targetType: 'post',
+        target: postId,
+        reason: 'spam',
+      });
+      const res = await request(app)
+        .post('/api/mod/action')
+        .set('Authorization', `Bearer ${modToken}`)
+        .send({
+          type: 'approve',
+          targetType: 'post',
+          communityId: testCommunity._id,
+          reportId: report._id,
+        });
       expect(res.status).toBe(200);
     });
 
-    it('returns 404 for non-existent member', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
+    it('handles remove action', async () => {
+      const post = await Post.create({
+        title: 'To Remove', body: 'body', author: regularUser._id, community: testCommunity._id,
+        upvotes: 0, downvotes: 0, score: 0, hotScore: 0,
+      });
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/ban-member/${fakeId}`)
-        .set('Authorization', `Bearer ${modToken}`);
-      expect(res.status).toBe(404);
+        .post('/api/mod/action')
+        .set('Authorization', `Bearer ${modToken}`)
+        .send({
+          type: 'remove',
+          targetType: 'post',
+          targetId: post._id,
+          communityId: testCommunity._id,
+        });
+      expect(res.status).toBe(200);
     });
-  });
 
-  describe('POST /api/mod/:slug/unban-member/:userId', () => {
-    it('unbans a community member', async () => {
-      await CommunityMember.findOneAndUpdate(
-        { user: regularUser._id, community: testCommunity._id },
-        { role: 'banned' }
-      );
-
+    it('handles ban action', async () => {
       const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/unban-member/${regularUser._id}`)
-        .set('Authorization', `Bearer ${modToken}`);
+        .post('/api/mod/action')
+        .set('Authorization', `Bearer ${modToken}`)
+        .send({
+          type: 'ban',
+          targetType: 'post',
+          userId: regularUser._id,
+          communityId: testCommunity._id,
+          reason: 'Test ban',
+        });
       expect(res.status).toBe(200);
 
       await CommunityMember.findOneAndUpdate(
         { user: regularUser._id, community: testCommunity._id },
         { role: 'member' }
       );
-    });
-
-    it('returns 404 for non-existent member', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
-      const res = await request(app)
-        .post(`/api/mod/${testCommunity.slug}/unban-member/${fakeId}`)
-        .set('Authorization', `Bearer ${modToken}`);
-      expect(res.status).toBe(404);
     });
   });
 });

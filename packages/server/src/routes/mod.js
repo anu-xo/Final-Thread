@@ -56,7 +56,7 @@ router.get('/mod/queue', authMiddleware, async (req, res, next) => {
 
     // Only return reports for communities where req.user is mod/admin
     const memberships = await CommunityMember.find({
-      user: req.user.id,
+      user: req.user._id,
       role: { $in: ['mod', 'admin'] },
     }).select('community').lean();
 
@@ -164,7 +164,8 @@ router.post('/mod/action', authMiddleware, modGuard, async (req, res, next) => {
     }
 
     await ModerationLog.create({
-      moderator: req.user.id,
+      source: 'mod',
+      moderator: req.user._id,
       action: type,
       target: targetId,
       targetType,

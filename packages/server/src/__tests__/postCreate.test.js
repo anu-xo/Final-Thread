@@ -23,6 +23,12 @@ jest.unstable_mockModule('../services/moderationService.js', () => ({
   classifyContent: jest.fn().mockResolvedValue('SAFE'),
 }));
 
+jest.unstable_mockModule('../services/aiService.js', () => ({
+  generateCommunityChat: jest.fn().mockResolvedValue({ message: 'mock', model: 'test' }),
+  generateCommentSummary: jest.fn().mockResolvedValue('Mock summary'),
+  generatePostSummary: jest.fn().mockResolvedValue('Mock summary'),
+}));
+
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret';
 
 const { MongoMemoryServer } = await import('mongodb-memory-server');
