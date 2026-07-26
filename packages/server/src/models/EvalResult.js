@@ -72,7 +72,7 @@ const evalResultSchema = new mongoose.Schema(
     // Which retrieval backend produced this result: 'server-vsearch' | 'desktop-cache' | 'cron'
     mode: {
       type: String,
-      enum: ['server-vsearch', 'desktop-cache', 'cron', 'baseline', null],
+      enum: ['server-vsearch', 'desktop-cache', 'cron', 'baseline', 'rag', 'variant', null],
       default: null,
     },
 

@@ -18,6 +18,10 @@
     "eval:desktop": "node src/scripts/evalDesktop.js",
     "eval:server": "node src/scripts/evalServer.js",
     "eval:rag": "node src/scripts/evalRagDesktop.js",
+    "eval:baseline": "node src/scripts/evalBaseline.js",
+    "eval:baseline:cron": "node src/jobs/evalCron.js --baseline",
+    "eval:compare": "node src/scripts/evalCompare.js",
+    "eval:variants": "node src/scripts/evalVariants.js",
     "test:digest": "node src/scripts/testDigest.js",
     "test:sync-freshness": "node src/scripts/testSyncFreshness.js",
     "test:sync-freshness:quick": "node src/scripts/testSyncFreshness.js --quick"

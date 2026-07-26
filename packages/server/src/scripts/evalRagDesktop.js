@@ -4,6 +4,9 @@
 // Runs the same 20-question suite through both cached (desktop) and live
 // ($vectorSearch) paths, then produces a side-by-side comparison.
 //
+// Records every result in EvalResult with runId, evalLabel, mode, latency,
+// and isEdgeCase for the Day 21 pre-launch baseline.
+//
 // Usage:
 //   node src/scripts/evalRagDesktop.js          # run both desktop + server
 //   node src/scripts/evalRagDesktop.js --desktop  # desktop only
@@ -50,7 +53,7 @@ async function getLiveContext(queryEmbedding, communityId) {
 
 // ── Shared eval runner ──────────────────────────────────────────────────────
 
-async function runEvalSuite({ contextFn, label, promptVersion }) {
+async function runEvalSuite({ contextFn, label, promptVersion, runId, evalLabel }) {
   const allResults = [];
   const communityIds = Object.keys(questionsByCommunity);
 
@@ -68,11 +71,11 @@ async function runEvalSuite({ contextFn, label, promptVersion }) {
     }
 
     const questions = questionsByCommunity[cid];
-    for (const { question } of questions) {
+    for (const q of questions) {
       try {
         // Embed
         const embedStart = Date.now();
-        const queryEmbedding = await aiService.embedQuery(question);
+        const queryEmbedding = await aiService.embedQuery(q.question);
         const embedMs = Date.now() - embedStart;
 
         // Retrieve (swappable)
@@ -86,7 +89,7 @@ async function runEvalSuite({ contextFn, label, promptVersion }) {
           communityName: communityDoc.name,
           contextChunks,
           history: [],
-          message: question,
+          message: q.question,
         });
 
         const sources = contextChunks.map((chunk) => ({
@@ -101,21 +104,37 @@ async function runEvalSuite({ contextFn, label, promptVersion }) {
 
         // Judge
         const judgeStart = Date.now();
-        const grade = await judgeResponse({ question, answer, sources });
+        const grade = await judgeResponse({ question: q.question, answer, sources });
         const judgeMs = Date.now() - judgeStart;
 
         const saveGrade = { ...grade };
         if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
+        const totalMs = embedMs + retrievalMs + llmMs + judgeMs;
+        const cacheHit = contextChunks.length > 0;
+
         await EvalResult.create({
           community: cid,
-          question,
+          question: q.question,
           answer,
           ...saveGrade,
+          hasCitation: sources.length > 0,
           promptVersion,
+          runId,
+          mode: label === 'desktop' ? 'desktop-cache' : 'server-vsearch',
+          evalLabel,
+          embedMs,
+          retrievalMs,
+          llmMs,
+          judgeMs,
+          totalMs,
+          cacheHit,
+          sourcesReturned: sources.length,
+          isEdgeCase: q.isEdgeCase === true,
         });
 
         allResults.push({
-          question,
+          question: q.question,
+          isEdgeCase: q.isEdgeCase === true,
           relevance: grade.relevance,
           faithfulness: grade.faithfulness,
           groundedness: grade.groundedness,
@@ -124,12 +143,13 @@ async function runEvalSuite({ contextFn, label, promptVersion }) {
           retrievalMs,
           llmMs,
           judgeMs,
-          totalMs: embedMs + retrievalMs + llmMs + judgeMs,
+          totalMs,
         });
 
-        console.log(`    Q: "${question.slice(0, 55)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} ${embedMs + retrievalMs + llmMs + judgeMs}ms`);
+        const tag = q.isEdgeCase ? ' [EDGE]' : '';
+        console.log(`    Q: "${q.question.slice(0, 55)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} ${totalMs}ms${tag}`);
       } catch (err) {
-        console.error(`    Q FAILED: "${question.slice(0, 45)}…" → ${err.message}`);
+        console.error(`    Q FAILED: "${q.question.slice(0, 45)}…" → ${err.message}`);
       }
       await new Promise((r) => setTimeout(r, 500));
     }
@@ -167,6 +187,9 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB\n');
 
+  const runId = `eval-rag-ab-${new Date().toISOString()}`;
+  const evalLabel = 'manual';
+
   let desktopResults = null;
   let serverResults = null;
 
@@ -176,6 +199,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       contextFn: getCachedContext,
       label: 'desktop',
       promptVersion: 'desktop-cache-v2',
+      runId,
+      evalLabel,
     });
     resetCaches();
   }
@@ -186,6 +211,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       contextFn: getLiveContext,
       label: 'server',
       promptVersion: 'server-vsearch-v2',
+      runId,
+      evalLabel,
     });
   }
 
@@ -235,6 +262,22 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     console.log(`  [${cacheHitRate === '100%' ? 'PASS' : 'FAIL'}] Cache hit rate:           ${cacheHitRate}`);
     console.log(`  [${parseFloat(cacheSpeedup) >= 10 ? 'PASS' : 'WARN'}] Cache speedup:            ${cacheSpeedup} faster retrieval`);
     console.log('════════════════════════════════════════════════════════════════');
+
+    // ── Edge-case blocker check ────────────────────────────────────────────
+    const allEdgeCases = [
+      ...(desktopResults || []).filter((r) => r.isEdgeCase),
+      ...(serverResults || []).filter((r) => r.isEdgeCase),
+    ];
+    if (allEdgeCases.length > 0) {
+      const failedEdgeCases = allEdgeCases.filter((r) => r.relevance != null && r.relevance < 3);
+      if (failedEdgeCases.length > 0) {
+        console.log('\n  ⛔ BLOCKER: Edge-case questions scored below threshold:');
+        for (const r of failedEdgeCases) {
+          console.log(`    - "${r.question.slice(0, 60)}…" rel=${r.relevance}`);
+        }
+        console.log('  → Fix aiService.js prompt/guardrails TODAY, not Day 21.\n');
+      }
+    }
 
     // Save report
     const report = {

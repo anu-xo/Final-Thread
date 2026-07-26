@@ -4,6 +4,9 @@
 // (v1-verbose, v2-concise, v3-structured) across 3 test communities.
 // Records token count, citation rate, relevance, and faithfulness scores.
 // Cross-references against existing EvalResult rating data.
+//
+// Records every result in EvalResult with runId, evalLabel, mode, latency,
+// and isEdgeCase for the Day 21 pre-launch baseline.
 
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
@@ -191,7 +194,10 @@ async function runFullEval() {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB\n');
 
+  const runId = `eval-variants-${new Date().toISOString()}`;
+  const evalLabel = 'manual';
   const allResults = [];
+  const edgeCaseResults = [];
 
   for (const communityId of TEST_COMMUNITIES) {
     const community = await Community.findById(communityId).select('name');
@@ -207,12 +213,12 @@ async function runFullEval() {
 
     const questions = questionsByCommunity[communityId] || [];
 
-    for (const { question } of questions) {
-      console.log(`\n  Q: "${question.slice(0, 70)}…"`);
+    for (const q of questions) {
+      console.log(`\n  Q: "${q.question.slice(0, 70)}…"`);
 
       for (const variant of VARIANTS) {
         try {
-          const result = await evalVariant(variant, question, community.name, communityId);
+          const result = await evalVariant(variant, q.question, community.name, communityId);
 
           console.log(
             `    ${variant.name.padEnd(14)} tokens=${String(result.tokenCount).padStart(5)} ` +
@@ -223,29 +229,39 @@ async function runFullEval() {
           allResults.push({
             communityId,
             communityName: community.name,
-            question,
+            question: q.question,
+            isEdgeCase: q.isEdgeCase === true,
             variant: variant.name,
             ...result,
           });
+
+          if (q.isEdgeCase) {
+            edgeCaseResults.push({ variant: variant.name, ...result });
+          }
 
           // Save to EvalResult
           const saveGrade = { relevance: result.relevance, faithfulness: result.faithfulness, groundedness: result.groundedness };
           if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
           await EvalResult.create({
             community: communityId,
-            question,
+            question: q.question,
             answer: result.answer,
             ...saveGrade,
             hasCitation: result.hasCitation,
             reasoning: result.reasoning,
             promptVersion: variant.name,
+            runId,
+            mode: 'variant',
+            evalLabel,
+            isEdgeCase: q.isEdgeCase === true,
           });
         } catch (err) {
           console.error(`    ${variant.name.padEnd(14)} FAILED: ${err.message}`);
           allResults.push({
             communityId,
             communityName: community.name,
-            question,
+            question: q.question,
+            isEdgeCase: q.isEdgeCase === true,
             variant: variant.name,
             answer: '',
             tokenCount: 0,
@@ -330,6 +346,23 @@ async function runFullEval() {
     console.log('  Cross-reference with user feedback not possible until users interact with AI chat.');
   } else {
     console.log('\n  User feedback distribution:', JSON.stringify(aiMsgRatings));
+  }
+
+  // ── Edge-case sub-report & blocker check ────────────────────────────────
+  if (edgeCaseResults.length > 0) {
+    console.log('\n══════════════════════════════════════════════════════════════');
+    console.log('  EDGE-CASE SUB-REPORT');
+    console.log('══════════════════════════════════════════════════════════════\n');
+    console.log(`  Total edge-case results: ${edgeCaseResults.length}`);
+
+    const failedEdgeCases = edgeCaseResults.filter((r) => r.relevance != null && r.relevance < 3);
+    if (failedEdgeCases.length > 0) {
+      console.log('\n  ⛔ BLOCKER: Edge-case questions scored below threshold:');
+      for (const r of failedEdgeCases) {
+        console.log(`    - "${r.question.slice(0, 60)}…" rel=${r.relevance} [${r.variant}]`);
+      }
+      console.log('  → Fix aiService.js prompt/guardrails TODAY, not Day 21.\n');
+    }
   }
 
   // ── Save full report ─────────────────────────────────────────────────────

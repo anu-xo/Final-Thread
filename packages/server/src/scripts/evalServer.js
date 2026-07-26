@@ -2,6 +2,8 @@
 //
 // Server baseline eval: same 20-question suite, live $vectorSearch retrieval.
 // Produces identical report format to evalDesktop.js for A/B comparison.
+// Records every result in EvalResult with runId, evalLabel, mode, latency,
+// and isEdgeCase for the Day 21 pre-launch baseline.
 
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
@@ -19,17 +21,17 @@ const aiService = await import('../services/aiService.js');
 
 const PROMPT_VERSION = 'server-vsearch-v1';
 
-async function runServerEval(communityId) {
+async function runServerEval(communityId, runId, evalLabel) {
   const questions = questionsByCommunity[communityId];
   if (!questions) throw new Error(`No eval questions for community ${communityId}`);
 
   const questionResults = [];
 
-  for (const { question } of questions) {
+  for (const q of questions) {
     try {
       // ── Embedding ──
       const embedStart = Date.now();
-      const queryEmbedding = await aiService.embedQuery(question);
+      const queryEmbedding = await aiService.embedQuery(q.question);
       const embedMs = Date.now() - embedStart;
 
       // ── Live $vectorSearch retrieval ──
@@ -44,7 +46,7 @@ async function runServerEval(communityId) {
         communityName: community.name,
         contextChunks,
         history: [],
-        message: question,
+        message: q.question,
       });
 
       const sources = contextChunks.map((chunk) => ({
@@ -59,23 +61,36 @@ async function runServerEval(communityId) {
 
       // ── Judge grading ──
       const judgeStart = Date.now();
-      const grade = await judgeResponse({ question, answer, sources });
+      const grade = await judgeResponse({ question: q.question, answer, sources });
       const judgeMs = Date.now() - judgeStart;
 
       const saveGrade = { ...grade };
       if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
-      await EvalResult.create({
-        community: communityId,
-        question,
-        answer,
-        ...saveGrade,
-        promptVersion: PROMPT_VERSION,
-      });
-
       const totalMs = embedMs + retrievalMs + llmMs + judgeMs;
 
+      await EvalResult.create({
+        community: communityId,
+        question: q.question,
+        answer,
+        ...saveGrade,
+        hasCitation: sources.length > 0,
+        promptVersion: PROMPT_VERSION,
+        runId,
+        mode: 'server-vsearch',
+        evalLabel,
+        embedMs,
+        retrievalMs,
+        llmMs,
+        judgeMs,
+        totalMs,
+        cacheHit,
+        sourcesReturned: sources.length,
+        isEdgeCase: q.isEdgeCase === true,
+      });
+
       questionResults.push({
-        question,
+        question: q.question,
+        isEdgeCase: q.isEdgeCase === true,
         relevance: grade.relevance,
         faithfulness: grade.faithfulness,
         groundedness: grade.groundedness,
@@ -88,9 +103,10 @@ async function runServerEval(communityId) {
         totalMs,
       });
 
-      console.log(`  Q: "${question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} src=${sources.length} ${totalMs}ms`);
+      const tag = q.isEdgeCase ? ' [EDGE]' : '';
+      console.log(`  Q: "${q.question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} src=${sources.length} ${totalMs}ms${tag}`);
     } catch (err) {
-      console.error(`  Q FAILED: "${question.slice(0, 50)}…" → ${err.message}`);
+      console.error(`  Q FAILED: "${q.question.slice(0, 50)}…" → ${err.message}`);
     }
 
     await new Promise((r) => setTimeout(r, 500));
@@ -104,7 +120,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB\n');
 
+  const runId = `eval-server-${new Date().toISOString()}`;
+  const evalLabel = 'manual';
+
   const allResults = [];
+  const edgeCaseResults = [];
   const communityIds = Object.keys(questionsByCommunity);
 
   for (const cid of communityIds) {
@@ -113,8 +133,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     console.log(`━━━ ${label} ━━━`);
 
     try {
-      const results = await runServerEval(cid);
-      if (results) allResults.push(...results);
+      const results = await runServerEval(cid, runId, evalLabel);
+      if (results) {
+        allResults.push(...results);
+        edgeCaseResults.push(...results.filter((r) => r.isEdgeCase));
+      }
     } catch (err) {
       console.error(`  ERROR: ${err.message}`);
     }
@@ -137,7 +160,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('════════════════════════════════════════════════════════════');
   console.log('  SERVER BASELINE REPORT — 20-Question Suite ($vectorSearch)');
   console.log('════════════════════════════════════════════════════════════');
-  console.log(`  Questions evaluated:  ${total}`);
+  console.log(`  Questions evaluated:  ${total} (${edgeCaseResults.length} edge cases)`);
   console.log('');
   console.log('  ── Latency Breakdown (avg per question) ──────────────');
   console.log(`  Embedding (Gemini):   ${avgEmbed}ms`);
@@ -152,6 +175,32 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log(`  Faithfulness (1-5):   ${avg('faithfulness')}`);
   console.log(`  Groundedness (0/1):   ${avg('groundedness')} (${(avg('groundedness') * 100).toFixed(0)}% cited a source)`);
   console.log(`  Sources returned:     ${allResults.reduce((s, r) => s + r.sourcesReturned, 0) / total}`);
+  console.log('════════════════════════════════════════════════════════════');
+
+  // ── Edge-case sub-report & blocker check ─────────────────────────────────
+  if (edgeCaseResults.length > 0) {
+    const ecAvg = (key) => {
+      const vals = edgeCaseResults.map((r) => r[key]).filter((v) => v != null);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    };
+
+    console.log('');
+    console.log('  ── Edge-Case Sub-Report ────────────────────────────────');
+    console.log(`  Questions:            ${edgeCaseResults.length}`);
+    console.log(`  Relevance:            ${ecAvg('relevance').toFixed(2)}`);
+    console.log(`  Faithfulness:         ${ecAvg('faithfulness').toFixed(2)}`);
+    console.log(`  Groundedness:         ${ecAvg('groundedness').toFixed(2)}`);
+
+    const failedEdgeCases = edgeCaseResults.filter((r) => r.relevance != null && r.relevance < 3);
+    if (failedEdgeCases.length > 0) {
+      console.log('\n  ⛔ BLOCKER: Edge-case questions scored below threshold:');
+      for (const r of failedEdgeCases) {
+        console.log(`    - "${r.question.slice(0, 60)}…" rel=${r.relevance}`);
+      }
+      console.log('  → Fix aiService.js prompt/guardrails TODAY, not Day 21.\n');
+    }
+  }
+
   console.log('════════════════════════════════════════════════════════════');
 
   const report = {

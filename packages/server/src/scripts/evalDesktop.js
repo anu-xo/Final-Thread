@@ -3,6 +3,9 @@
 // Mock-desktop eval: 20-question suite across 5 communities.
 // Measures cache-hit rate, retrieval latency, and answer quality.
 // Compare output against the server (live $vectorSearch) baseline.
+//
+// Records every result in EvalResult with runId, evalLabel, mode, latency,
+// and isEdgeCase for the Day 21 pre-launch baseline.
 
 import { fileURLToPath, pathToFileURL } from 'url';
 import path from 'path';
@@ -30,7 +33,7 @@ const {
 
 const PROMPT_VERSION = 'desktop-cache-v1';
 
-async function runDesktopEval(communityId) {
+async function runDesktopEval(communityId, runId, evalLabel) {
   const questions = questionsByCommunity[communityId];
   if (!questions) throw new Error(`No eval questions for community ${communityId}`);
 
@@ -47,11 +50,11 @@ async function runDesktopEval(communityId) {
 
   const questionResults = [];
 
-  for (const { question } of questions) {
+  for (const q of questions) {
     try {
       // ── Embedding (Gemini API call — same for both desktop & server) ──
       const embedStart = Date.now();
-      const queryEmbedding = await aiService.embedQuery(question);
+      const queryEmbedding = await aiService.embedQuery(q.question);
       const embedMs = Date.now() - embedStart;
 
       // ── Cache retrieval (local cosine-sim — replaces $vectorSearch) ──
@@ -66,7 +69,7 @@ async function runDesktopEval(communityId) {
         communityName: community.name,
         contextChunks,
         history: [],
-        message: question,
+        message: q.question,
       });
 
       const sources = contextChunks.map((chunk) => ({
@@ -81,25 +84,38 @@ async function runDesktopEval(communityId) {
 
       // ── Judge grading ──
       const judgeStart = Date.now();
-      const grade = await judgeResponse({ question, answer, sources });
+      const grade = await judgeResponse({ question: q.question, answer, sources });
       const judgeMs = Date.now() - judgeStart;
 
       // Save to DB — groundedness may be 0 which violates model min:1,
       // so we coerce to 1 for persistence but keep original for metrics
       const saveGrade = { ...grade };
       if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
-      await EvalResult.create({
-        community: communityId,
-        question,
-        answer,
-        ...saveGrade,
-        promptVersion: PROMPT_VERSION,
-      });
-
       const totalMs = embedMs + cacheRetrievalMs + llmMs + judgeMs;
 
+      await EvalResult.create({
+        community: communityId,
+        question: q.question,
+        answer,
+        ...saveGrade,
+        hasCitation: sources.length > 0,
+        promptVersion: PROMPT_VERSION,
+        runId,
+        mode: 'desktop-cache',
+        evalLabel,
+        embedMs,
+        retrievalMs: cacheRetrievalMs,
+        llmMs,
+        judgeMs,
+        totalMs,
+        cacheHit,
+        sourcesReturned: sources.length,
+        isEdgeCase: q.isEdgeCase === true,
+      });
+
       questionResults.push({
-        question,
+        question: q.question,
+        isEdgeCase: q.isEdgeCase === true,
         relevance: grade.relevance,
         faithfulness: grade.faithfulness,
         groundedness: grade.groundedness,
@@ -112,9 +128,10 @@ async function runDesktopEval(communityId) {
         totalMs,
       });
 
-      console.log(`  Q: "${question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} cache=${cacheHit ? 'HIT' : 'MISS'} ${totalMs}ms`);
+      const tag = q.isEdgeCase ? ' [EDGE]' : '';
+      console.log(`  Q: "${q.question.slice(0, 60)}…" → rel=${grade.relevance} faith=${grade.faithfulness} gnd=${grade.groundedness} cache=${cacheHit ? 'HIT' : 'MISS'} ${totalMs}ms${tag}`);
     } catch (err) {
-      console.error(`  Q FAILED: "${question.slice(0, 50)}…" → ${err.message}`);
+      console.error(`  Q FAILED: "${q.question.slice(0, 50)}…" → ${err.message}`);
     }
 
     // Rate-limit delay
@@ -129,7 +146,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await mongoose.connect(process.env.MONGODB_URI);
   console.log('Connected to MongoDB\n');
 
+  const runId = `eval-desktop-${new Date().toISOString()}`;
+  const evalLabel = 'manual';
+
   const allResults = [];
+  const edgeCaseResults = [];
   const communityIds = Object.keys(questionsByCommunity);
 
   for (const cid of communityIds) {
@@ -139,8 +160,11 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     resetInstrumentation();
 
     try {
-      const results = await runDesktopEval(cid);
-      if (results) allResults.push(...results);
+      const results = await runDesktopEval(cid, runId, evalLabel);
+      if (results) {
+        allResults.push(...results);
+        edgeCaseResults.push(...results.filter((r) => r.isEdgeCase));
+      }
     } catch (err) {
       console.error(`  ERROR: ${err.message}`);
     }
@@ -166,7 +190,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('════════════════════════════════════════════════════════════');
   console.log('  DESKTOP EVAL REPORT — 20-Question Suite');
   console.log('════════════════════════════════════════════════════════════');
-  console.log(`  Questions evaluated:  ${total}`);
+  console.log(`  Questions evaluated:  ${total} (${edgeCaseResults.length} edge cases)`);
   console.log('');
   console.log('  ── Cache Performance ──────────────────────────────────');
   console.log(`  Cache hit rate:       ${cacheHits}/${total} (${(cacheHits / total * 100).toFixed(0)}%)`);
@@ -193,6 +217,32 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('  than Atlas $vectorSearch (~2-5ms vs ~30-80ms).');
   console.log('  Answer quality should not regress — same embedding model,');
   console.log('  same LLM, same judge.');
+  console.log('════════════════════════════════════════════════════════════');
+
+  // ── Edge-case sub-report & blocker check ─────────────────────────────────
+  if (edgeCaseResults.length > 0) {
+    const ecAvg = (key) => {
+      const vals = edgeCaseResults.map((r) => r[key]).filter((v) => v != null);
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    };
+
+    console.log('');
+    console.log('  ── Edge-Case Sub-Report ────────────────────────────────');
+    console.log(`  Questions:            ${edgeCaseResults.length}`);
+    console.log(`  Relevance:            ${ecAvg('relevance').toFixed(2)}`);
+    console.log(`  Faithfulness:         ${ecAvg('faithfulness').toFixed(2)}`);
+    console.log(`  Groundedness:         ${ecAvg('groundedness').toFixed(2)}`);
+
+    const failedEdgeCases = edgeCaseResults.filter((r) => r.relevance != null && r.relevance < 3);
+    if (failedEdgeCases.length > 0) {
+      console.log('\n  ⛔ BLOCKER: Edge-case questions scored below threshold:');
+      for (const r of failedEdgeCases) {
+        console.log(`    - "${r.question.slice(0, 60)}…" rel=${r.relevance}`);
+      }
+      console.log('  → Fix aiService.js prompt/guardrails TODAY, not Day 21.\n');
+    }
+  }
+
   console.log('════════════════════════════════════════════════════════════');
 
   // Save structured report
