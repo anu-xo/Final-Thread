@@ -47,6 +47,15 @@ appx:
   publisherDisplayName: ThreadVerse Inc.
   languages: [en-US]
 
+msix:
+  applicationId: ThreadVerse
+  identityName: YourPublisher.ThreadVerse
+  publisher: CN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+  publisherDisplayName: ThreadVerse Inc.
+  languages: [en-US]
+  artifactName: 'ThreadVerse-${version}.${arch}.msix'
+  sign: false
+
 mac:
   target:
     - target: dmg
@@ -96,9 +105,20 @@ dmg:
       type: link
       path: /Applications
 
+snap:
+  confinement: strict
+  grade: stable
+  plugins:
+    - npm-node:
+        source: .
+  artifactName: 'ThreadVerse-${version}.${arch}.snap'
+
 linux:
   target:
     - target: AppImage
+      arch:
+        - x64
+    - target: snap
       arch:
         - x64
   desktop:

@@ -1,6 +1,7 @@
 {
   "name": "ThreadVerse",
   "short_name": "ThreadVerse",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
