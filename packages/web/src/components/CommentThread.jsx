@@ -28,8 +28,8 @@ export default function CommentThread({ comment, postId, currentUserVote = 0 }) 
         />
 
         <div className="flex-1">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <span className="font-medium text-gray-700">{comment.author.username}</span>
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-neutral-400">
+            <span className="font-medium text-gray-700 dark:text-neutral-300">{comment.author.username}</span>
             <span>{timeAgo(comment.createdAt)}</span>
             {hasChildren && (
               <button
@@ -43,9 +43,9 @@ export default function CommentThread({ comment, postId, currentUserVote = 0 }) 
 
           {!collapsed && (
             <>
-              <p className="text-sm mt-1">{comment.body}</p>
+              <p className="text-sm mt-1 text-gray-700 dark:text-neutral-300">{comment.body}</p>
 
-              <div className="flex gap-3 mt-1 text-xs text-gray-500">
+              <div className="flex gap-3 mt-1 text-xs text-gray-500 dark:text-neutral-400">
                 {comment.depth < 5 && (
                   <button onClick={() => setReplying((r) => !r)} className="hover:underline">
                     Reply

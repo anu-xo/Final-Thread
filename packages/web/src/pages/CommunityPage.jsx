@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import { communityApi } from '../services/communityApi.js';
@@ -77,6 +77,7 @@ const SORT_OPTIONS = [
 
 export default function CommunityPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [sort, setSort] = useState('hot');
   const debounceRef = useRef(null);
 
@@ -144,9 +145,13 @@ export default function CommunityPage() {
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
           {is404 ? 'Community not found' : 'Something went wrong'}
         </p>
-        <p className="text-sm text-gray-500 dark:text-neutral-400">
+        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
           {is404 ? 'This community may have been deleted or never existed.' : 'Unable to load community. Please try again later.'}
         </p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+        </div>
       </div>
     );
   }

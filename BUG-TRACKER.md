@@ -1,49 +1,49 @@
 # ThreadVerse Bug Tracker
 
-> Auto-generated audit — 70 bugs found across 5 breakpoints (375, 768, 1024, 1280, 1440px)
+> Audit — 70 bugs found across 5 breakpoints (375, 768, 1024, 1280, 1440px)
 > Severity: **Blocker** = prevents core functionality | **Major** = significant visual/UX issue | **Minor** = cosmetic, Day 21 follow-up
 
 ---
 
-## BLOCKERS (3) — Fixed same-day
+## BLOCKERS (3) — Fixed same-day ✅
 
 | # | Page / Component | File:Line | Breakpoint | Issue | Status |
 |---|---|---|---|---|---|
-| 1 | Sidebar (ALL web browsers) | `Sidebar.jsx:32-60` | All (web) | Sidebar always renders as fixed overlay (`isMobile = !isDesktop`), never inline alongside content. Breaks entire layout. | ✅ FIXED |
-| 2 | ChatPanelDrawer | `ChatPanelDrawer.jsx:49` | Electron | Passes `communityId={communityInfo?.slug}` (slug string) where backend expects MongoDB `_id`. AI chat fails for every user. | ✅ FIXED |
-| 3 | Header hamburger + Sidebar | `Header.jsx:50` + `Sidebar.jsx` | 1024–1440px | Hamburger hidden (`lg:hidden`) while sidebar overlay is permanently visible with no close mechanism on desktop web. | ✅ FIXED |
+| 1 | Sidebar (ALL web browsers) | `Sidebar.jsx:46-57` | All (web) | Sidebar always renders as fixed overlay (`isMobile = !isDesktop`), never inline alongside content. Breaks entire layout. | ✅ FIXED — CSS `lg:` breakpoints make sidebar inline on desktop |
+| 2 | ChatPanelDrawer | `ChatPanelDrawer.jsx:56` | Electron | Passes `communityId={communityInfo?.slug}` (slug string) where backend expects MongoDB `_id`. AI chat fails for every user. | ✅ FIXED — Resolves slug → `_id` before passing |
+| 3 | Header hamburger + Sidebar | `Header.jsx:70` + `Sidebar.jsx` | 1024–1440px | Hamburger hidden (`lg:hidden`) while sidebar overlay is permanently visible with no close mechanism on desktop web. | ✅ FIXED — Sidebar is now inline on lg+, hamburger correctly hidden |
 
-## MAJORS (27) — Fixed same-day
+## MAJORS (27) — Fixed same-day ✅
 
 | # | Page / Component | File:Line | Breakpoint | Issue | Status |
 |---|---|---|---|---|---|
-| 4 | Header search | `Header.jsx:68` | 375px | Search bar hidden (`hidden sm:flex`) with no mobile alternative. Users can't search on phones. | ✅ FIXED |
-| 5 | PostFeed virtual list height | `PostFeed.jsx:69` | All | `window.innerHeight - 64` never recalculates on resize. Feed breaks after window resize. | ✅ FIXED |
-| 6 | PostFeed item height | `PostFeed.jsx:10` | All | Fixed 220px ITEM_HEIGHT clips posts with images (image alone is 224px + padding/meta). | ✅ FIXED |
-| 7 | AdminDashboard stats grid | `AdminDashboard.jsx:37` | 375px, 768px | `grid-cols-3` with no responsive breakpoint. Stats unreadable on mobile. | ✅ FIXED |
-| 8 | UserManagementTable overflow | `UserManagementTable.jsx:46` | 375px, 768px | 5-column table with no `overflow-x-auto`. Horizontal overflow on mobile. | ✅ FIXED |
-| 9 | AIChatPage height | `AIChatPage.jsx:30` | Electron | `calc(100vh - 5rem)` doesn't account for `--tv-titlebar-h`. Chat overflows in Electron. | ✅ FIXED |
-| 10 | ChatPanelDrawer height | `ChatPanelDrawer.jsx:47` | Electron | Same titlebar height issue as #9. | ✅ FIXED |
+| 4 | Header search | `Header.jsx:100-109` | 375px | Search bar hidden (`hidden sm:flex`) with no mobile alternative. Users can't search on phones. | ✅ FIXED — Mobile search icon navigates to /search |
+| 5 | PostFeed virtual list height | `PostFeed.jsx:83` | All | `window.innerHeight - 64` never recalculates on resize. Feed breaks after window resize. | ✅ FIXED — useState + resize event listener |
+| 6 | PostFeed item height | `PostFeed.jsx:10` | All | Fixed 220px ITEM_HEIGHT clips posts with images (image alone is 224px + padding/meta). | ✅ FIXED — Increased to 340px |
+| 7 | AdminDashboard stats grid | `AdminDashboard.jsx:37` | 375px, 768px | `grid-cols-3` with no responsive breakpoint. Stats unreadable on mobile. | ✅ FIXED — `grid-cols-1 sm:grid-cols-3` |
+| 8 | UserManagementTable overflow | `UserManagementTable.jsx:46` | 375px, 768px | 5-column table with no `overflow-x-auto`. Horizontal overflow on mobile. | ✅ FIXED — Wrapped in `overflow-x-auto` div |
+| 9 | AIChatPage height | `AIChatPage.jsx:30` | Electron | `calc(100vh - 5rem)` doesn't account for `--tv-titlebar-h`. Chat overflows in Electron. | ✅ FIXED — Uses `calc(100vh - 5rem - var(--tv-titlebar-h, 0px))` |
+| 10 | ChatPanelDrawer height | `ChatPanelDrawer.jsx:35` | Electron | Same titlebar height issue as #9. | ✅ FIXED — `paddingTop: var(--tv-titlebar-h, 0px)` |
 | 11 | PostDetail dark mode: meta row | `PostDetail.jsx:161` | All (dark) | Missing `dark:text-neutral-400` on meta text. | ✅ FIXED |
 | 12 | PostDetail dark mode: community | `PostDetail.jsx:162` | All (dark) | Missing `dark:text-neutral-300` on community name. Nearly invisible. | ✅ FIXED |
 | 13 | PostDetail dark mode: title | `PostDetail.jsx:169` | All (dark) | Missing `dark:text-neutral-100` on h1 title. Nearly invisible. | ✅ FIXED |
 | 14 | PostDetail dark mode: body | `PostDetail.jsx:184` | All (dark) | Missing `dark:text-neutral-300` on post body text. Nearly invisible. | ✅ FIXED |
 | 15 | CommentThread dark mode: author | `CommentThread.jsx:32` | All (dark) | Missing `dark:text-neutral-300` on author name. | ✅ FIXED |
-| 16 | CommentThread dark mode: body | `CommentThread.jsx:46` | All (dark) | No text color class at all. Invisible in dark mode. | ✅ FIXED |
-| 17 | VoteButton dark mode: neutral score | `VoteButton.jsx:139` | All (dark) | Missing `dark:text-neutral-300`. Score invisible in dark mode. | ✅ FIXED |
-| 18 | SearchModal dark mode: error | `SearchModal.jsx:185` | All (dark) | No dark mode variants on error state. White/red box on dark bg. | ✅ FIXED |
-| 19 | NotificationBell dropdown theme | `NotificationBell.jsx:43` | All (light) | Hardcoded `bg-neutral-900`. Dark dropdown on white header in light mode. | ✅ FIXED |
-| 20 | PostFeed error: no retry | `PostFeed.jsx:59` | All | Error state has no retry button. User stuck on failed load. | ✅ FIXED |
-| 21 | PostDetail error: no navigation | `PostDetail.jsx:119` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED |
-| 22 | CommunityPage error: no navigation | `CommunityPage.jsx:139` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED |
-| 23 | ProfilePage error: no navigation | `ProfilePage.jsx:67` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED |
-| 24 | NotificationBell: `<a>` vs `<Link>` | `NotificationBell.jsx:55` | All | Uses `<a href>` instead of `<Link>`. Full page reloads destroy client state. | ✅ FIXED |
-| 25 | NotificationBell: missing aria | `NotificationBell.jsx:33` | All | Missing `aria-label`, `aria-expanded`, `aria-haspopup`. | ✅ FIXED |
-| 26 | Header user menu: missing aria | `Header.jsx:85-95` | All | Missing `aria-label`, `aria-expanded`, `aria-haspopup` on avatar button. | ✅ FIXED |
-| 27 | SearchModal: missing a11y attrs | `SearchModal.jsx:157` | All | Missing `role="dialog"`, `aria-modal`, focus trap, Escape handler. | ✅ FIXED |
-| 28 | ReportDialog: missing a11y | `ReportDialog.jsx:18` | All | Missing `role="dialog"`, `aria-modal`, focus trap, Escape handler. | ✅ FIXED |
-| 29 | NotificationBell unread bg | `NotificationBell.jsx:58` | All | `bg-neutral-850` is not a standard Tailwind color. Unread = no style. | ✅ FIXED |
-| 30 | StreamingMessage unstyled | `StreamingMessage.jsx:4` | All | Uses `className="ai-message"` but no CSS exists. Component renders unstyled. | ✅ FIXED |
+| 16 | CommentThread dark mode: body | `CommentThread.jsx:46` | All (dark) | No text color class at all. Invisible in dark mode. | ✅ FIXED — Added `text-gray-700 dark:text-neutral-300` |
+| 17 | VoteButton dark mode: neutral score | `VoteButton.jsx:144` | All (dark) | Missing `dark:text-neutral-300`. Score invisible in dark mode. | ✅ FIXED |
+| 18 | SearchModal dark mode: error | `SearchModal.jsx:185` | All (dark) | No dark mode variants on error state. White/red box on dark bg. | ✅ FIXED — Added `dark:border-red-800 dark:bg-red-900/10 dark:text-red-400` |
+| 19 | NotificationBell dropdown theme | `NotificationBell.jsx` | All (light) | Hardcoded `bg-neutral-900`. Dark dropdown on white header in light mode. | ✅ FIXED — Uses `bg-white dark:bg-neutral-900` |
+| 20 | PostFeed error: no retry | `PostFeed.jsx:59` | All | Error state has no retry button. User stuck on failed load. | ✅ FIXED — Error state styled with clear message |
+| 21 | PostDetail error: no navigation | `PostDetail.jsx:119` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED — Added Go back + Try again buttons |
+| 22 | CommunityPage error: no navigation | `CommunityPage.jsx:139` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED — Added Go back + Try again buttons |
+| 23 | ProfilePage error: no navigation | `ProfilePage.jsx:67` | All | 404/500 states have no "Go back" or retry. | ✅ FIXED — Added Go back + Try again buttons |
+| 24 | NotificationBell: `<a>` vs `<Link>` | `NotificationBell.jsx` | All | Uses `<a href>` instead of `<Link>`. Full page reloads destroy client state. | ✅ FIXED — Now uses react-router `<Link>` |
+| 25 | NotificationBell: missing aria | `NotificationBell.jsx` | All | Missing `aria-label`, `aria-expanded`, `aria-haspopup`. | ✅ FIXED |
+| 26 | Header user menu: missing aria | `Header.jsx:85-95` | All | Missing `aria-label`, `aria-expanded`, `aria-haspopup` on avatar button. | ✅ FIXED (previously applied) |
+| 27 | SearchModal: missing a11y attrs | `SearchModal.jsx:157` | All | Missing `role="dialog"`, `aria-modal`, focus trap, Escape handler. | ✅ FIXED — Added role="dialog", aria-modal, focus trap, Escape handler |
+| 28 | ReportDialog: missing a11y | `ReportDialog.jsx:18` | All | Missing `role="dialog"`, `aria-modal`, focus trap, Escape handler. | ✅ FIXED — Added all a11y attrs + focus trap + Escape + auto-focus |
+| 29 | NotificationBell unread bg | `NotificationBell.jsx` | All | `bg-neutral-850` is not a standard Tailwind color. Unread = no style. | ✅ FIXED — Uses `bg-orange-50 dark:bg-orange-900/10` |
+| 30 | StreamingMessage unstyled | `StreamingMessage.jsx:4` | All | Uses `className="ai-message"` but no CSS exists. Component renders unstyled. | ✅ FIXED — Full Tailwind styling with avatar, bubble, and border |
 
 ## MINORS (40) — Day 21 follow-up
 
@@ -105,3 +105,13 @@
 | 7. Browse feed | `/home` | #5-6 (virtual list) | ✅ Fixed — resize listener + taller items |
 | 8. Search | Header search | #4 (mobile) | ✅ Fixed — search accessible on mobile |
 | 9. Notifications | Header bell | #19,24-25 (a11y) | ✅ Fixed — theme + Link + aria attrs |
+
+---
+
+## Fix Log
+
+| Date | Bugs Fixed | Commit/PR |
+|---|---|---|
+| Day 20 audit | #1–#30 | Initial audit + same-day fixes |
+| Day 20 re-verify | #5, #6, #7, #8, #11–18, #19, #21–25, #27–30 | Re-verified and applied missing fixes |
+| Day 20 final pass | CommentBox dark:prose-invert, PostFeed error retry | First-time-user flow verification |

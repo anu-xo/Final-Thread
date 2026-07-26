@@ -34,7 +34,7 @@ export default function AdminDashboard() {
       <SectionErrorBoundary sectionName="Platform Stats">
         <div>
           <h2 className="text-lg font-semibold mb-2">Traffic by Platform (30d)</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Total Events" value={totalActivity} />
             <StatCard label="Desktop" value={pb?.desktop} sub={totalActivity ? `${((pb.desktop / totalActivity) * 100).toFixed(1)}%` : undefined} />
             <StatCard label="Web" value={pb?.web} sub={totalActivity ? `${((pb.web / totalActivity) * 100).toFixed(1)}%` : undefined} />

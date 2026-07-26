@@ -1,13 +1,13 @@
 // components/PostFeed.jsx
 
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { List } from 'react-window';
 import { usePostFeed } from '../hooks/usePostFeed';
 import { usePostRealtimeVotes } from '../hooks/usePostRealtimeVotes';
 import PostCard from './PostCard';
 import { PostCardSkeleton } from './skeletons/index.js';
 
-const ITEM_HEIGHT = 220;
+const ITEM_HEIGHT = 340;
 const OVERSCAN = 5;
 
 function PostRow({ index, style, posts }) {
@@ -32,6 +32,17 @@ export default function PostFeed({ communityId, sort }) {
   usePostRealtimeVotes();
 
   const posts = data ? data.pages.flatMap((page) => page.posts) : [];
+
+  const [listHeight, setListHeight] = useState(
+    typeof window !== 'undefined' ? window.innerHeight - 64 : 800
+  );
+
+  useEffect(() => {
+    const updateHeight = () => setListHeight(window.innerHeight - 64);
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   const handleRowsRendered = useCallback(
     ({ stopIndex }) => {
@@ -59,7 +70,8 @@ export default function PostFeed({ communityId, sort }) {
   if (isError) {
     return (
       <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 p-6 text-center">
-        <p className="text-sm text-red-600 dark:text-red-400">Failed to load posts: {error.message}</p>
+        <p className="text-sm text-red-600 dark:text-red-400 mb-3">Failed to load posts: {error.message}</p>
+        <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
       </div>
     );
   }
@@ -80,7 +92,7 @@ export default function PostFeed({ communityId, sort }) {
       rowProps={{ posts }}
       overscanCount={OVERSCAN}
       onRowsRendered={handleRowsRendered}
-      style={{ height: typeof window !== 'undefined' ? window.innerHeight - 64 : 800, width: '100%' }}
+      style={{ height: listHeight, width: '100%' }}
     />
   );
 }

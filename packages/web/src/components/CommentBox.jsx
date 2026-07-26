@@ -10,7 +10,7 @@ export default function CommentBox({ postId, parentId = null, onSubmitted }) {
   const editor = useEditor({
     extensions: [StarterKit],
     editorProps: {
-      attributes: { class: 'prose prose-sm max-w-none focus:outline-none min-h-[60px]' },
+      attributes: { class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[60px]' },
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
           submit();

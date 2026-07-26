@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
 import PostCard from '../components/PostCard.jsx';
@@ -36,6 +36,7 @@ function ProfileCommentCard({ comment }) {
 
 export default function ProfilePage() {
   const { username } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
 
   const { data: profile, isLoading: profileLoading, error: profileError } = useQuery({
@@ -72,9 +73,13 @@ export default function ProfilePage() {
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
           {is404 ? 'User not found' : 'Something went wrong'}
         </p>
-        <p className="text-sm text-gray-500 dark:text-neutral-400">
+        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
           {is404 ? 'This user may not exist.' : 'Unable to load profile. Please try again later.'}
         </p>
+        <div className="flex items-center justify-center gap-3">
+          <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+        </div>
       </div>
     );
   }

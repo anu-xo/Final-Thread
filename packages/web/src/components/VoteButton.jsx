@@ -141,7 +141,7 @@ export default function VoteButton({
             ? 'text-orange-500'
             : userVote === -1
             ? 'text-blue-500'
-            : 'text-gray-700'
+            : 'text-gray-700 dark:text-neutral-300'
         }`}
       >
         {score}

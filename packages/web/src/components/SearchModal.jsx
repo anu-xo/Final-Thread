@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
@@ -119,11 +119,33 @@ export default function SearchModal({ open, onClose }) {
       inputRef.current?.focus();
     }, 0);
 
-    const handleKeyDown = (event) => {
+  const handleKeyDown = useCallback((event) => {
       if (event.key === 'Escape') {
         onClose();
+        return;
       }
-    };
+      if (event.key === 'Tab') {
+        const dialog = document.getElementById('search-modal-dialog');
+        if (!dialog) return;
+        const focusable = dialog.querySelectorAll(
+          'input, button, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey) {
+          if (document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    }, [onClose]);
 
     window.addEventListener('keydown', handleKeyDown);
 
@@ -155,7 +177,7 @@ export default function SearchModal({ open, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[80] bg-black/50 px-4 py-10 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/20 bg-gray-50 dark:bg-neutral-900 shadow-2xl">
+      <div id="search-modal-dialog" role="dialog" aria-modal="true" aria-label="Search" className="mx-auto flex max-w-4xl flex-col overflow-hidden rounded-3xl border border-white/20 bg-gray-50 dark:bg-neutral-900 shadow-2xl">
         <div className="flex items-center gap-3 border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 py-4">
           <input
             ref={inputRef}
@@ -182,7 +204,7 @@ export default function SearchModal({ open, onClose }) {
           ) : isLoading ? (
             <SearchResultsSkeleton />
           ) : isError ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-sm text-red-700">
+            <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 p-8 text-sm text-red-700 dark:text-red-400">
               Unable to load results.
             </div>
           ) : (
