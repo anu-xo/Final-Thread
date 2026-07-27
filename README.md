@@ -2,6 +2,7 @@
 Heyy Everyone!! Anuradha this side. I have made this app completely by myself. Please have a look!! 
 A Reddit-style community platform with AI chat, built with pure MERN stack.
 Available as a web app and native desktop app (Windows, macOS, Linux).
+This is one of the craziest project i have made so far.
 
 ## Tech Stack
 - **Frontend**: React 18 + Vite + TailwindCSS v4 + React Query + Zustand
