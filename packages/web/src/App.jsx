@@ -17,6 +17,7 @@ import TitleBar from './components/TitleBar.jsx';
 // Lazy-loaded Pages
 import LandingPage from './pages/LandingPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import VerifyEmail from './pages/VerifyEmail.jsx';
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity.jsx'));
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/download" element={<DownloadPage />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

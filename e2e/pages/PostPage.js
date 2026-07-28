@@ -17,18 +17,18 @@ export class PostPage {
   }
 
   async getScore() {
-    const scoreEl = this.page.locator('.vote-score-pop, [class*="font-semibold"][class*="tabular-nums"]').first();
+    const scoreEl = this.page.locator('.vote-score-pop').first();
     return scoreEl.textContent();
   }
 
   async writeComment(text) {
-    const editor = this.page.locator('.tiptap, .ProseMirror').first();
+    const editor = this.page.locator('.tiptap, .ProseMirror, [role="textbox"]').first();
     await editor.click();
     await editor.fill(text);
   }
 
   async submitComment() {
-    await this.page.getByRole('button', { name: /comment/i }).click();
+    await this.page.getByRole('button', { name: /comment/i }).first().click();
   }
 
   async addComment(text) {
@@ -39,6 +39,9 @@ export class PostPage {
   async reportPost(reason = 'Spam') {
     const reportBtn = this.page.getByRole('button', { name: /report/i });
     await reportBtn.click();
+
+    const dialog = this.page.getByRole('dialog');
+    await dialog.waitFor({ state: 'visible', timeout: 5000 });
 
     const select = this.page.locator('#report-reason');
     await select.selectOption(reason);
@@ -52,5 +55,9 @@ export class PostPage {
 
   async getCommentCount() {
     return this.page.locator('text=/\\d+ comments?/').first().textContent();
+  }
+
+  async isPostVisible(postId) {
+    return this.page.locator(`a[href*="${postId}"]`).isVisible({ timeout: 3000 }).catch(() => false);
   }
 }

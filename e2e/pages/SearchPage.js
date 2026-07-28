@@ -9,7 +9,7 @@ export class SearchPage {
   }
 
   async getPostResults() {
-    return this.page.locator('a[href^="/posts/"]').all();
+    return this.page.locator('a[href^="/posts/"], a[href^="/post/"]').all();
   }
 
   async getCommunityResults() {
@@ -21,7 +21,7 @@ export class SearchPage {
   }
 
   async clickFirstPost() {
-    await this.page.locator('a[href^="/posts/"]').first().click();
+    await this.page.locator('a[href^="/posts/"], a[href^="/post/"]').first().click();
   }
 
   async clickFirstCommunity() {

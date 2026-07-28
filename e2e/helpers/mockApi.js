@@ -61,6 +61,7 @@ export function upsertUser(state, data) {
   const user = {
     _id: data._id || mid(), username: data.username, email: data.email,
     role: data.role || 'user', karma: data.karma || 1,
+    emailVerified: data.emailVerified || false,
     createdAt: new Date().toISOString(), ...data,
   };
   state.users.push(user);
@@ -171,7 +172,8 @@ export async function setupMocks(page, state) {
     }
     const user = {
       _id: mid(), username: b.username, email: b.email,
-      role: 'user', karma: 1, createdAt: new Date().toISOString(),
+      role: 'user', karma: 1, emailVerified: false,
+      createdAt: new Date().toISOString(),
     };
     state.users.push(user);
     return json(route, 201, { user, accessToken: mockJwt(user) });
@@ -194,8 +196,16 @@ export async function setupMocks(page, state) {
 
   await page.route('**/api/auth/refresh', async (route) => {
     const user = authUser(route);
-    if (!user) return json(route, 401, { data: null, error: 'No token provided.', meta: null });
+    if (!user) return json(route, 401, { data: null, error: 'No token provided.' });
     return json(route, 200, { data: { accessToken: mockJwt(user) } });
+  });
+
+  await page.route('**/api/auth/verify-email', async (route) => {
+    const b = body(route);
+    if (!b.token) return json(route, 400, { data: null, error: 'Token is required.' });
+    const user = authUser(route);
+    if (user) user.emailVerified = true;
+    return json(route, 200, { data: { message: 'Email verified successfully.' } });
   });
 
   // ── Users ─────────────────────────────────────────────────────────────

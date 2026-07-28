@@ -18,12 +18,12 @@ export class ModQueuePage {
   }
 
   async dismissFirstReport() {
-    await this.page.getByRole('button', { name: /dismiss/i }).first().click();
+    await this.page.getByRole('button', { name: /^dismiss$/i }).first().click();
     await this.page.waitForTimeout(500);
   }
 
   async removeFirstReport() {
-    await this.page.getByRole('button', { name: /remove/i }).first().click();
+    await this.page.getByRole('button', { name: /^remove$/i }).first().click();
     await this.page.waitForTimeout(500);
   }
 
@@ -36,6 +36,6 @@ export class ModQueuePage {
   }
 
   async getFirstReportReporter() {
-    return this.page.locator('.rounded-xl.border .text-xs.text-gray-400, .rounded-xl.border .text-xs.dark\\:text-neutral-500').first().textContent();
+    return this.page.locator('.rounded-xl.border .text-xs').first().textContent();
   }
 }
