@@ -60,6 +60,32 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Core user flow (web)
+        run: |
+          pnpm exec playwright test \
+            --project=core-flows \
+            --reporter=list
+
+      - name: Moderation flow (web)
+        run: |
+          pnpm exec playwright test \
+            --project=moderation-flows \
+            --reporter=list
+
+      - name: Social flow (web)
+        run: |
+          pnpm exec playwright test \
+            --project=social-flows \
+            --reporter=list
+
+      - name: Upload flow test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-tests-ci
+          path: test-results/
+          retention-days: 14
+
       - name: Font rendering audit
         run: |
           pnpm exec playwright test \

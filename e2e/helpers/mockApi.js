@@ -334,7 +334,7 @@ export async function setupMocks(page, state) {
       const comments = state.comments
         .filter(c => c.post === postId && !c.isRemoved)
         .map(c => ({ ...c, children: [] }));
-      return json(route, 200, { data: comments, meta: { total: comments.length } });
+      return json(route, 200, { data: { comments }, meta: { total: comments.length } });
     }
 
     if (method === 'POST') {
@@ -386,7 +386,7 @@ export async function setupMocks(page, state) {
     const postId = route.request().url().split('/posts/')[1]?.split('?')[0];
     const post = state.posts.find(p => p._id === postId);
     if (!post) return json(route, 404, { data: null, error: 'Post not found' });
-    return json(route, 200, { data: post });
+    return json(route, 200, { data: { post }, error: null, meta: null });
   });
 
   await page.route('**/api/posts', async (route) => {

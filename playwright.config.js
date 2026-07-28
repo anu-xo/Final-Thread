@@ -35,6 +35,16 @@ export default defineConfig({
       testMatch: '**/flow-core*.spec.js',
       use: { browserName: 'chromium' },
     },
+    {
+      name: 'moderation-flows',
+      testMatch: '**/flow-moderation*.spec.js',
+      use: { browserName: 'chromium' },
+    },
+    {
+      name: 'social-flows',
+      testMatch: '**/flow-social*.spec.js',
+      use: { browserName: 'chromium' },
+    },
     ...(electronAvailable
       ? [
           {

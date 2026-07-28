@@ -100,7 +100,7 @@ function AppRoutes() {
 
             {/* Admin */}
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/mod/queue" element={<AdminRoute><ModQueue /></AdminRoute>} />
+            <Route path="/mod/queue" element={<AdminRoute roles={['admin', 'moderator']}><ModQueue /></AdminRoute>} />
 
             {/* Posts */}
             <Route path="/posts/:id" element={<PostDetail />} />

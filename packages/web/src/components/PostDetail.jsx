@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Helmet } from 'react-helmet-async';
@@ -7,6 +7,7 @@ import api from '../services/api.js';
 import VoteButton from './VoteButton.jsx';
 import CommentThread from './CommentThread.jsx';
 import CommentBox from './CommentBox.jsx';
+import ReportDialog from './ReportDialog.jsx';
 import SectionErrorBoundary from './SectionErrorBoundary.jsx';
 import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
@@ -73,6 +74,7 @@ export default function PostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showReport, setShowReport] = useState(false);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['posts', id],
@@ -190,6 +192,15 @@ export default function PostDetail() {
                 {post.body}
               </p>
             )}
+
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                onClick={() => setShowReport(true)}
+                className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              >
+                Report
+              </button>
+            </div>
           </div>
         </article>
 
@@ -207,6 +218,14 @@ export default function PostDetail() {
         </SectionErrorBoundary>
       </div>
       </SectionErrorBoundary>
+      {showReport && (
+        <ReportDialog
+          target={post._id}
+          targetType="post"
+          community={post.community?._id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </>
   );
 }
