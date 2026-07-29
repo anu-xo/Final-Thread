@@ -24,3 +24,7 @@ export const useCommunityStore = create((set, get) => ({
 
   isSubscribed: (slug) => !!get().subscribed[slug],
 }));
+
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  window.__communityStore = useCommunityStore;
+}

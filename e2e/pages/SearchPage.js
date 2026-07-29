@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 export class SearchPage {
   constructor(page) {
     this.page = page;
@@ -5,7 +7,7 @@ export class SearchPage {
 
   async goto(query) {
     await this.page.goto(`/search?q=${encodeURIComponent(query)}`);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async getPostResults() {
@@ -13,19 +15,27 @@ export class SearchPage {
   }
 
   async getCommunityResults() {
-    return this.page.locator('a[href^="/community/"]').all();
+    return this.page.locator('a[href^="/r/"], a[href^="/community/"]').all();
   }
 
   async getUserResults() {
     return this.page.locator('text=/u\\//').all();
   }
 
+  async getFirstPostLink() {
+    return this.page.locator('a[href^="/posts/"], a[href^="/post/"]').first();
+  }
+
   async clickFirstPost() {
-    await this.page.locator('a[href^="/posts/"], a[href^="/post/"]').first().click();
+    const link = await this.getFirstPostLink();
+    await link.waitFor({ state: 'visible', timeout: 5000 });
+    await link.click();
   }
 
   async clickFirstCommunity() {
-    await this.page.locator('a[href^="/community/"]').first().click();
+    const link = this.page.locator('a[href^="/r/"], a[href^="/community/"]').first();
+    await link.waitFor({ state: 'visible', timeout: 5000 });
+    await link.click();
   }
 
   async getResultsHeading() {
@@ -33,6 +43,6 @@ export class SearchPage {
   }
 
   async hasNoResults() {
-    return this.page.getByText('No results found').isVisible();
+    return this.page.getByText('No results found').isVisible({ timeout: 5000 }).catch(() => false);
   }
 }

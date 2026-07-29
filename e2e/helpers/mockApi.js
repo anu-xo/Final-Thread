@@ -250,24 +250,8 @@ export async function setupMocks(page, state) {
   });
 
   // ── Communities ────────────────────────────────────────────────────────
-  // Register specific patterns BEFORE the catch-all /communities
-
-  await page.route('**/api/communities/search**', async (route) => {
-    if (route.request().method() !== 'GET') return route.fallback();
-    const url = new URL(route.request().url());
-    const q = (url.searchParams.get('q') || '').toLowerCase();
-    const results = q
-      ? state.communities.filter(c => c.name.toLowerCase().includes(q))
-      : state.communities;
-    return json(route, 200, results);
-  });
-
-  await page.route('**/api/communities/me', async (route) => {
-    const user = authUser(route);
-    if (!user) return json(route, 401, { data: null, error: 'Unauthorized' });
-    const joined = state.communities.filter(c => c.members.includes(user._id));
-    return json(route, 200, joined);
-  });
+  // WARNING: Playwright uses last-match-wins. Register wildcard routes FIRST,
+  // then more specific routes LAST so they take precedence.
 
   await page.route('**/api/communities/*/join', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
@@ -320,6 +304,23 @@ export async function setupMocks(page, state) {
       return json(route, 201, { data: community });
     }
     await route.fallback();
+  });
+
+  await page.route('**/api/communities/search**', async (route) => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    const url = new URL(route.request().url());
+    const q = (url.searchParams.get('q') || '').toLowerCase();
+    const results = q
+      ? state.communities.filter(c => c.name.toLowerCase().includes(q))
+      : state.communities;
+    return json(route, 200, results);
+  });
+
+  await page.route('**/api/communities/me', async (route) => {
+    const user = authUser(route);
+    if (!user) return json(route, 401, { data: null, error: 'Unauthorized' });
+    const joined = state.communities.filter(c => c.members.includes(user._id));
+    return json(route, 200, joined);
   });
 
   // ── Posts ──────────────────────────────────────────────────────────────

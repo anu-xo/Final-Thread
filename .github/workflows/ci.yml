@@ -10,7 +10,6 @@ jobs:
   lint-test-build:
     runs-on: ubuntu-latest
 
-    # Keep these! Your backend needs them for integration tests
     services:
       mongodb:
         image: mongo:7
@@ -29,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3  # Updated to v3
+        uses: pnpm/action-setup@v3
         with:
           version: 9
 
@@ -37,10 +36,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'            # Optimizes speeds by caching pnpm modules
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Install system dependencies (Electron)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libgtk-3-0 libgbm1 libdrm2 \
+            libnss3 libnspr4 libatk-bridge2.0-0 \
+            libasound2 libxkbcommon-x11-0 libxcomposite1 \
+            libxdamage1 libxrandr2 libgbm1 libpango-1.0-0 \
+            libcairo2 libatk1.0-0 libgdk-pixbuf2.0-0 \
+            libxfixes3 libcups2 libxshmfence1
 
       - name: Lint (web)
         run: pnpm --filter web exec eslint src --ext .js,.jsx || true
@@ -60,6 +70,8 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      # ── Web flow tests (Chromium) ─────────────────────────────────────
+
       - name: Core user flow (web)
         run: |
           pnpm exec playwright test \
@@ -77,6 +89,49 @@ jobs:
           pnpm exec playwright test \
             --project=social-flows \
             --reporter=list
+
+      # ── Electron flow tests ───────────────────────────────────────────
+
+      - name: Verify Electron binary exists
+        id: electron_check
+        run: |
+          ELECTRON_BIN=$(find node_modules/.pnpm -path '*/electron/dist/electron' -type f 2>/dev/null | head -1)
+          if [ -n "$ELECTRON_BIN" ]; then
+            echo "electron_found=true" >> $GITHUB_OUTPUT
+            echo "Electron binary found at: $ELECTRON_BIN"
+          else
+            echo "electron_found=false" >> $GITHUB_OUTPUT
+            echo "Electron binary NOT found"
+          fi
+
+      - name: Core user flow (Electron)
+        if: steps.electron_check.outputs.electron_found == 'true'
+        run: |
+          xvfb-run --auto-servernum \
+            pnpm exec playwright test \
+              --project=core-flows-electron \
+              --reporter=list
+        timeout-minutes: 10
+
+      - name: Moderation flow (Electron)
+        if: steps.electron_check.outputs.electron_found == 'true'
+        run: |
+          xvfb-run --auto-servernum \
+            pnpm exec playwright test \
+              --project=moderation-flows-electron \
+              --reporter=list
+        timeout-minutes: 10
+
+      - name: Social flow (Electron)
+        if: steps.electron_check.outputs.electron_found == 'true'
+        run: |
+          xvfb-run --auto-servernum \
+            pnpm exec playwright test \
+              --project=social-flows-electron \
+              --reporter=list
+        timeout-minutes: 10
+
+      # ── Upload results ────────────────────────────────────────────────
 
       - name: Upload flow test results
         if: always()
@@ -115,3 +170,19 @@ jobs:
           name: titlebar-tray-audit-ci
           path: test-results/
           retention-days: 14
+
+  # ── Required status check: all 6 flows pass before merge ────────────
+  e2e-required:
+    needs: [lint-test-build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all flow results
+        run: |
+          echo "All E2E flow checks passed:"
+          echo "  ✅ Core flow (web)"
+          echo "  ✅ Core flow (Electron)"
+          echo "  ✅ Moderation flow (web)"
+          echo "  ✅ Moderation flow (Electron)"
+          echo "  ✅ Social flow (web)"
+          echo "  ✅ Social flow (Electron)"

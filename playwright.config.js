@@ -1,29 +1,70 @@
 import { defineConfig } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 
 const DESKTOP_DIR = path.resolve(process.cwd(), 'packages/desktop');
-const ELECTRON_DIST = path.resolve(
-  process.cwd(),
-  'node_modules/.pnpm/electron@28.3.3_supports-color@5.5.0/node_modules/electron/dist',
-);
-const ELECTRON_BIN = path.resolve(
-  ELECTRON_DIST,
-  process.platform === 'win32' ? 'electron.exe'
-    : process.platform === 'darwin' ? 'Electron.app/Contents/MacOS/Electron'
-    : 'electron',
-);
-const electronAvailable = fs.existsSync(ELECTRON_BIN);
+
+function findElectronBin() {
+  const candidates = [
+    path.resolve(
+      process.cwd(),
+      'node_modules/.pnpm/electron@28.3.3_supports-color@5.5.0/node_modules/electron/dist',
+    ),
+    path.resolve(process.cwd(), 'node_modules/electron/dist'),
+    path.resolve(process.cwd(), 'node_modules/electron'),
+  ];
+  for (const dir of candidates) {
+    const bin = path.resolve(
+      dir,
+      process.platform === 'win32' ? 'electron.exe'
+        : process.platform === 'darwin' ? 'Electron.app/Contents/MacOS/Electron'
+        : 'electron',
+    );
+    if (fs.existsSync(bin)) return bin;
+    if (fs.existsSync(path.resolve(dir, 'dist/electron'))) {
+      return path.resolve(dir, 'dist/electron');
+    }
+  }
+  try {
+    const which = execSync('which electron 2>/dev/null || where electron 2>nul', { encoding: 'utf8' }).trim();
+    if (which) return which;
+  } catch {}
+  return null;
+}
+
+const ELECTRON_BIN = findElectronBin();
+const electronAvailable = ELECTRON_BIN !== null;
+
+function electronProject(name, testMatch) {
+  return {
+    name,
+    testMatch,
+    use: {
+      browserName: 'chromium',
+      launchOptions: {
+        executablePath: ELECTRON_BIN,
+        args: [path.join(DESKTOP_DIR, 'main.mjs')],
+        env: { ...process.env, NODE_ENV: 'test' },
+      },
+      viewport: { width: 1280, height: 800 },
+    },
+  };
+}
 
 export default defineConfig({
   testDir: './e2e/tests',
-  timeout: 30_000,
+  timeout: 60_000,
   retries: 1,
   use: {
     baseURL: 'http://localhost:5173',
     headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    trace: 'retain-on-failure',
+    viewport: { width: 1280, height: 720 },
+    actionTimeout: 15_000,
+    navigationTimeout: 20_000,
   },
   projects: [
     {
@@ -47,39 +88,9 @@ export default defineConfig({
     },
     ...(electronAvailable
       ? [
-          {
-            name: 'core-flows-electron',
-            testMatch: '**/flow-core*.spec.js',
-            use: {
-              launchOptions: {
-                executablePath: ELECTRON_BIN,
-                args: [path.join(DESKTOP_DIR, 'main.mjs')],
-                env: { ...process.env, NODE_ENV: 'test' },
-              },
-            },
-          },
-          {
-            name: 'moderation-flows-electron',
-            testMatch: '**/flow-moderation*.spec.js',
-            use: {
-              launchOptions: {
-                executablePath: ELECTRON_BIN,
-                args: [path.join(DESKTOP_DIR, 'main.mjs')],
-                env: { ...process.env, NODE_ENV: 'test' },
-              },
-            },
-          },
-          {
-            name: 'social-flows-electron',
-            testMatch: '**/flow-social*.spec.js',
-            use: {
-              launchOptions: {
-                executablePath: ELECTRON_BIN,
-                args: [path.join(DESKTOP_DIR, 'main.mjs')],
-                env: { ...process.env, NODE_ENV: 'test' },
-              },
-            },
-          },
+          electronProject('core-flows-electron', '**/flow-core*.spec.js'),
+          electronProject('moderation-flows-electron', '**/flow-moderation*.spec.js'),
+          electronProject('social-flows-electron', '**/flow-social*.spec.js'),
         ]
       : []),
     {
