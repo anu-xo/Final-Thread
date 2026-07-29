@@ -492,7 +492,7 @@ export async function setupMocks(page, state) {
   });
 
   // ── Mod report resolution (frontend calls /mod/reports/:id/:action) ──
-  await page.route('**/api/mod/reports/*', async (route) => {
+  await page.route('**/api/mod/reports/**', async (route) => {
     if (route.request().method() !== 'POST') return route.fallback();
     const user = authUser(route);
     if (!user || (user.role !== 'moderator' && user.role !== 'admin')) {

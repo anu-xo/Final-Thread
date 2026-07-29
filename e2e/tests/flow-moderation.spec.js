@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupMocks, createMockState, seedDefaults } from '../helpers/mockApi.js';
+import { setupMocks, createMockState, seedDefaults, setAuthCookie } from '../helpers/mockApi.js';
 import { AuthPage } from '../pages/AuthPage.js';
 import { PostPage } from '../pages/PostPage.js';
 import { ModQueuePage } from '../pages/ModQueuePage.js';
@@ -17,6 +17,7 @@ test.describe('Moderation Flow', () => {
     const modQueue = new ModQueuePage(page);
 
     await auth.login(user.email, 'password123');
+    await setAuthCookie(page, user);
 
     await postPage.goto(post._id);
     await postPage.waitForPostLoaded();
@@ -30,6 +31,7 @@ test.describe('Moderation Flow', () => {
     await header.logout();
 
     await auth.login(mod.email, 'password123');
+    await setAuthCookie(page, mod);
 
     await modQueue.goto();
     await modQueue.waitForLoaded();
