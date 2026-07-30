@@ -24,7 +24,8 @@
     "eval:variants": "node src/scripts/evalVariants.js",
     "test:digest": "node src/scripts/testDigest.js",
     "test:sync-freshness": "node src/scripts/testSyncFreshness.js",
-    "test:sync-freshness:quick": "node src/scripts/testSyncFreshness.js --quick"
+    "test:sync-freshness:quick": "node src/scripts/testSyncFreshness.js --quick",
+    "restore:test": "node src/scripts/restoreTest/restoreTest.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
