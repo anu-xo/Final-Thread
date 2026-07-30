@@ -21,7 +21,7 @@ export default function Login() {
   });
 
   const mutation = useMutation({
-    mutationFn: (data) => api.post('/auth/login', data).then(r => r.data),
+    mutationFn: (data) => api.post('/auth/login', data).then(r => r.data.data),
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
       navigate('/home');

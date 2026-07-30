@@ -358,7 +358,7 @@ router.post('/refresh', async (req, res) => {
     res.json({ data: { accessToken }, error: null, meta: null });
   } catch (err) {
     console.error('Refresh error:', err);
-    res.status(500).json({ data: null, error: 'Token refresh failed.', meta: null });
+    res.status(500).json({ data: null, error: 'Token refresh failed.', meta: null, debug: err.message, stack: err.stack?.split('\n').slice(0, 3).join('|') });
   }
 });
 

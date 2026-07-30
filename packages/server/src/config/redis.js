@@ -1,4 +1,10 @@
-﻿import { Redis } from 'ioredis';
+﻿import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { Redis } from 'ioredis';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 if (!process.env.REDIS_URL) {
   console.warn('⚠️  REDIS_URL not set — Redis disabled');

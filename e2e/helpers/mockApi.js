@@ -176,7 +176,7 @@ export async function setupMocks(page, state) {
       createdAt: new Date().toISOString(),
     };
     state.users.push(user);
-    return json(route, 201, { user, accessToken: mockJwt(user) });
+    return json(route, 201, { data: { accessToken: mockJwt(user), user: { id: user._id, username: user.username, email: user.email, role: user.role, karma: user.karma } }, error: null, meta: null });
   });
 
   await page.route('**/api/auth/login', async (route) => {
@@ -185,7 +185,7 @@ export async function setupMocks(page, state) {
     if (!user) {
       return json(route, 401, { data: null, error: 'Invalid email or password.', meta: null });
     }
-    return json(route, 200, { user, accessToken: mockJwt(user) });
+    return json(route, 200, { data: { accessToken: mockJwt(user), user: { id: user._id, username: user.username, email: user.email, role: user.role, karma: user.karma } }, error: null, meta: null });
   });
 
   await page.route('**/api/auth/me', async (route) => {

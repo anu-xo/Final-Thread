@@ -35,8 +35,7 @@ export default function Register() {
     try {
       const res = await api.post('/auth/register', data);
 
-      // Adjust this if your backend returns a different response shape
-      const { user, accessToken } = res.data;
+      const { user, accessToken } = res.data.data;
 
       setAuth(user, accessToken);
 
