@@ -19,6 +19,7 @@ packages/*/.env
 packages/*/.env.*
 !.env.example
 !packages/*/.env.example
+!packages/*/.env.staging.example
 
 # ============================
 # Build outputs

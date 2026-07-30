@@ -66,7 +66,7 @@ jobs:
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       - name: Build Electron app (MAS)
-        if: runner.os == 'macOS' && secrets.MAS_CERTIFICATE != ''
+        if: runner.os == 'macOS'
         run: pnpm --filter desktop exec electron-builder --publish never --mac mas
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,7 +83,7 @@ jobs:
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CERTIFICATE_PASSWORD }}
 
       - name: Build Electron app (MSIX)
-        if: runner.os == 'Windows' && secrets.MSIX_CERTIFICATE != ''
+        if: runner.os == 'Windows'
         run: pnpm --filter desktop exec electron-builder --publish never --win appx
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

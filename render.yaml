@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: threadverse-server-staging
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install -g pnpm@9 && pnpm install --frozen-lockfile
+    startCommand: pnpm --filter server start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: PORT
+        value: "5000"
+      - key: API_DOCS_ENABLED
+        value: "true"
+      - key: MONGOOSE_DEBUG
+        value: "false"
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_UNSUB_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: CLIENT_URL
+        value: https://threadverse.app
+      - key: APP_URL
+        sync: false
