@@ -51,7 +51,7 @@ app.set('io', null);
 
 // ── Sentry (must be before any other middleware) ─────────────────────────────
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.VITE_SENTRY_DSN;
-if (SENTRY_DSN && SENTRY_DSN.startsWith('https://') && SENTRY_DSN.includes('@')) {
+if (SENTRY_DSN && SENTRY_DSN.startsWith('https://') && SENTRY_DSN.includes('@') && !SENTRY_DSN.includes('your-key') && !SENTRY_DSN.includes('your-project')) {
   Sentry.init({
     dsn: SENTRY_DSN,
     environment: process.env.NODE_ENV || 'development',

@@ -63,6 +63,38 @@ const store = new Store({
   },
 });
 
+// ── Sentry (Electron crash reporting) ───────────────────────────────────────
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.VITE_SENTRY_DSN;
+if (SENTRY_DSN && SENTRY_DSN.startsWith('https://') && SENTRY_DSN.includes('@') && !SENTRY_DSN.includes('your-key') && !SENTRY_DSN.includes('your-project')) {
+  try {
+    const Sentry = await import('@sentry/electron');
+    Sentry.init({
+      dsn: SENTRY_DSN,
+      environment: process.env.NODE_ENV || 'development',
+      tracesSampleRate: 0.2,
+    });
+
+    process.on('uncaughtException', (err) => {
+      console.error('[FATAL] Electron uncaught exception:', err);
+      Sentry.captureException(err, { level: 'fatal' });
+      Sentry.flush(5000).finally(() => app.exit(1));
+    });
+
+    process.on('unhandledRejection', (reason) => {
+      console.error('[FATAL] Electron unhandled rejection:', reason);
+      const err = reason instanceof Error ? reason : new Error(String(reason));
+      Sentry.captureException(err, { level: 'fatal' });
+      Sentry.flush(5000).finally(() => app.exit(1));
+    });
+
+    app.on('render-process-gone', (_event, _webContents, details) => {
+      Sentry.captureMessage(`Render process gone: ${details.reason}`, { level: 'fatal' });
+    });
+  } catch {
+    console.log('[Sentry] @sentry/electron not available');
+  }
+}
+
 let mainWindow = null;
 let tray = null;
 let isQuitting = false;

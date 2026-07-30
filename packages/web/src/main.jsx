@@ -18,7 +18,7 @@ const sentryDsn = window.electronAPI
   ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
   : import.meta.env.VITE_SENTRY_DSN;
 
-if (sentryDsn && sentryDsn.startsWith('https://') && sentryDsn.includes('@')) {
+if (sentryDsn && sentryDsn.startsWith('https://') && sentryDsn.includes('@') && !sentryDsn.includes('your-key') && !sentryDsn.includes('your-project')) {
   Sentry.init({
     dsn: sentryDsn,
     environment: import.meta.env.MODE || 'development',
