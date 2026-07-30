@@ -50,9 +50,10 @@ const app = express();
 app.set('io', null);
 
 // ── Sentry (must be before any other middleware) ─────────────────────────────
-if (process.env.SENTRY_DSN && !process.env.SENTRY_DSN.includes('your-key')) {
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.VITE_SENTRY_DSN;
+if (SENTRY_DSN && SENTRY_DSN.startsWith('https://') && SENTRY_DSN.includes('@')) {
   Sentry.init({
-    dsn: process.env.SENTRY_DSN,
+    dsn: SENTRY_DSN,
     environment: process.env.NODE_ENV || 'development',
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.2 : 1.0,
   });
@@ -282,7 +283,6 @@ Sentry.setupExpressErrorHandler(app);
 // ── Global Error Handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(`[id=${req.requestId}]`, err.stack);
-  Sentry.captureException(err);
   res.status(err.status || 500).json({
     data: null,
     error: sanitizeError(err, 'Internal server error'),

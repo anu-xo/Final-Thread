@@ -14,16 +14,18 @@ import './index.css'
 import App from './App.jsx'
 import RootErrorBoundary from './components/RootErrorBoundary.jsx'
 
-Sentry.init({
-  dsn: window.electronAPI
-    ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
-    : import.meta.env.VITE_SENTRY_DSN,
-  enabled: Boolean(
-    window.electronAPI
-      ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
-      : import.meta.env.VITE_SENTRY_DSN
-  ),
-});
+const sentryDsn = window.electronAPI
+  ? import.meta.env.VITE_SENTRY_DSN_DESKTOP
+  : import.meta.env.VITE_SENTRY_DSN;
+
+if (sentryDsn && sentryDsn.startsWith('https://') && sentryDsn.includes('@')) {
+  Sentry.init({
+    dsn: sentryDsn,
+    environment: import.meta.env.MODE || 'development',
+    tracesSampleRate: import.meta.env.PROD ? 0.2 : 1.0,
+    integrations: [Sentry.browserTracingIntegration()],
+  });
+}
 
 const root = createRoot(document.getElementById('root'));
 root.render(

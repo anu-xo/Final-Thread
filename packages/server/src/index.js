@@ -1,10 +1,24 @@
 import http from 'http';
 import { Server } from 'socket.io';
+import * as Sentry from '@sentry/node';
 import app from './app.js';
 import { initIO } from './socket.js';
 import CORS_ORIGINS from './config/corsOrigins.js';
 
 const PORT = process.env.PORT || 5000;
+
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception:', err);
+  Sentry.captureException(err, { level: 'fatal' });
+  Sentry.flush(5000).finally(() => process.exit(1));
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection:', reason);
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  Sentry.captureException(err, { level: 'fatal' });
+  Sentry.flush(5000).finally(() => process.exit(1));
+});
 
 // ── HTTP & Socket.io Server Setup ───────────────────────────────────────────
 const httpServer = http.createServer(app);

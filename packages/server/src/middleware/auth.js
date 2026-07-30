@@ -1,4 +1,5 @@
 ﻿import jwt from 'jsonwebtoken';
+import * as Sentry from '@sentry/node';
 import User from '../models/User.js';
 
 export const authMiddleware = async (req, res, next) => {
@@ -11,6 +12,8 @@ export const authMiddleware = async (req, res, next) => {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.user = { ...payload, _id: payload.userId };
 
+    Sentry.setUser({ id: payload.userId });
+
     // Check if user has been banned since the token was issued
     const user = await User.findById(payload.userId).select('isBanned').lean();
     if (!user || user.isBanned) {
@@ -20,6 +23,7 @@ export const authMiddleware = async (req, res, next) => {
     next();
   } catch (err) {
     console.error('Auth middleware error:', err.message);
+    Sentry.captureException(err, { extra: { authHeader: authHeader?.slice(0, 20) } });
     return res.status(401).json({ data: null, error: 'Invalid or expired token.', meta: null });
   }
 };
