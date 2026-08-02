@@ -10,16 +10,17 @@ import '@fontsource/inter/600.css'
 import '@fontsource/inter/700.css'
 import '@fontsource/inter/latin.css'
 
-// Fraunces — display/headlines only
-import '@fontsource/fraunces/400.css'
-import '@fontsource/fraunces/500.css'
-import '@fontsource/fraunces/600.css'
-import '@fontsource/fraunces/700.css'
+// Space Grotesk — display/headlines only (geometric, slightly futuristic)
+import '@fontsource/space-grotesk/400.css'
+import '@fontsource/space-grotesk/500.css'
+import '@fontsource/space-grotesk/600.css'
+import '@fontsource/space-grotesk/700.css'
+import '@fontsource/space-grotesk/latin.css'
 
-// IBM Plex Mono — timestamps, karma, code
-import '@fontsource/ibm-plex-mono/400.css'
-import '@fontsource/ibm-plex-mono/500.css'
-import '@fontsource/ibm-plex-mono/600.css'
+// JetBrains Mono — timestamps, karma, code
+import '@fontsource/jetbrains-mono/400.css'
+import '@fontsource/jetbrains-mono/500.css'
+import '@fontsource/jetbrains-mono/600.css'
 
 import './index.css'
 import App from './App.jsx'

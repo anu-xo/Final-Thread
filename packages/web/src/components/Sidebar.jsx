@@ -58,14 +58,14 @@ export default function Sidebar() {
         style={{ paddingTop: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
       >
         <nav className="space-y-0.5">
-          <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Feeds</p>
+          <p className="px-3 py-2 text-xs font-semibold text-gray-400 tracking-wide">Feeds</p>
           <SidebarLink to="/home" label="Home" active={location.pathname === '/home'} />
           <SidebarLink to="/popular" label="Popular" active={location.pathname === '/popular'} />
           <SidebarLink to="/all" label="All" active={location.pathname === '/all'} />
 
           {data?.data?.length > 0 && (
             <>
-              <p className="px-3 py-2 mt-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Communities</p>
+              <p className="px-3 py-2 mt-3 text-xs font-semibold text-gray-400 tracking-wide">Communities</p>
               {data.data.map(community => (
                 <SidebarLink
                   key={community._id}
@@ -84,7 +84,7 @@ export default function Sidebar() {
           {isDesktop && (
             <>
               <hr className="my-3 border-gray-100 dark:border-neutral-700" />
-              <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wide">Desktop</p>
+              <p className="px-3 py-2 text-xs font-semibold text-gray-400 tracking-wide">Desktop</p>
               <SidebarLink
                 to="/settings#desktop"
                 label="Desktop Settings"

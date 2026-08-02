@@ -22,7 +22,7 @@ function timeAgo(date) {
  * PostCard — Midnight Aurora feed card
  *
  *  • slate surface (white in light mode), mist text, emerald/amaranth accents
- *  • Fraunces (font-display) for the title
+ *  • Space Grotesk (font-display) for the title
  *  • Hover: card lifts 2px (motion whileHover) and a StitchLine briefly
  *    traces the top border, drawing in then fading out
  *  • Mounts with a fade+rise; pass `revealDelay` (ms) to stagger cards in a

@@ -81,7 +81,7 @@ export default function HomePage() {
   if (noSubscriptions && posts.length === 0) {
     return (
       <div className="rounded-3xl border border-violet/20 bg-gradient-to-br from-violet/10 to-white dark:from-violet/10 dark:to-slate p-8 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Welcome to ThreadVerse</p>
+        <p className="text-xs font-semibold tracking-wide text-emerald">Welcome to ThreadVerse</p>
         <h1 className="mt-2 font-display text-3xl font-bold text-gray-900 dark:text-mist">Join some communities to build your feed</h1>
         <p className="mt-3 max-w-2xl text-sm text-gray-600 dark:text-mist/60">
           Your home feed is personalized from the communities you subscribe to. Join a few spaces and we&apos;ll start filling this page with posts that match your interests.
@@ -121,7 +121,7 @@ export default function HomePage() {
       <div className="space-y-5">
         <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Your feed</p>
+            <p className="text-xs font-semibold tracking-wide text-emerald">Your feed</p>
             <h1 className="mt-1 font-display text-2xl font-bold text-gray-900 dark:text-mist">Home</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-mist/60">Personalized from communities you&apos;ve joined.</p>
           </div>

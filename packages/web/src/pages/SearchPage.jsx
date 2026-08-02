@@ -9,7 +9,7 @@ function ResultSection({ title, count, children }) {
   return (
     <section className="space-y-3">
       <div className="flex items-end justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+        <h2 className="text-sm font-semibold tracking-wide text-gray-500 dark:text-neutral-400">
           {title}
         </h2>
         <span className="text-xs text-gray-400">{count}</span>

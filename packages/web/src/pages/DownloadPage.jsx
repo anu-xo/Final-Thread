@@ -123,7 +123,7 @@ export default function DownloadPage() {
 
         {/* Also available on */}
         <div className="mt-12 w-full max-w-2xl">
-          <p className="text-xs uppercase tracking-widest text-gray-400 dark:text-neutral-500 mb-4">
+          <p className="text-xs tracking-widest text-gray-400 dark:text-neutral-500 mb-4">
             Also available on
           </p>
           <div className="flex flex-wrap justify-center gap-4">

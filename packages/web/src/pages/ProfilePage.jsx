@@ -107,7 +107,7 @@ export default function ProfilePage() {
                 {profile.username?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Profile</p>
+                <p className="text-xs font-semibold tracking-wide text-emerald">Profile</p>
                 <h1 className="truncate text-2xl font-bold text-gray-900 dark:text-neutral-100">u/{profile.username}</h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Joined {new Date(profile.createdAt).toLocaleDateString()}</p>
               </div>
@@ -115,11 +115,11 @@ export default function ProfilePage() {
 
             <div className="grid grid-cols-2 gap-3 text-sm sm:min-w-64">
               <div className="rounded-2xl bg-gray-50 dark:bg-neutral-700 p-4">
-                <div className="text-xs uppercase tracking-wide text-gray-400 dark:text-neutral-500">Karma</div>
+                <div className="text-xs tracking-wide text-gray-400 dark:text-neutral-500">Karma</div>
                 <div className="mt-1 text-xl font-semibold text-gray-900 dark:text-neutral-100">{profile.karma ?? 0}</div>
               </div>
               <div className="rounded-2xl bg-gray-50 dark:bg-neutral-700 p-4">
-                <div className="text-xs uppercase tracking-wide text-gray-400 dark:text-neutral-500">Role</div>
+                <div className="text-xs tracking-wide text-gray-400 dark:text-neutral-500">Role</div>
                 <div className="mt-1 text-xl font-semibold text-gray-900 dark:text-neutral-100 capitalize">{profile.role || 'user'}</div>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function ProfilePage() {
         {activeTab === 'overview' && (
           <div className="rounded-2xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm space-y-4">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">Overview</h2>
+              <h2 className="text-sm font-semibold tracking-wide text-gray-500 dark:text-neutral-400">Overview</h2>
               <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
                 Browse this user&apos;s posts and comments from the tabs above. Posts and comments load lazily so prolific profiles stay fast.
               </p>
@@ -158,11 +158,11 @@ export default function ProfilePage() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl bg-gray-50 dark:bg-neutral-700 p-4">
-                <div className="text-xs uppercase tracking-wide text-gray-400 dark:text-neutral-500">Posts</div>
+                <div className="text-xs tracking-wide text-gray-400 dark:text-neutral-500">Posts</div>
                 <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-neutral-100">{postItems.length}</div>
               </div>
               <div className="rounded-xl bg-gray-50 dark:bg-neutral-700 p-4">
-                <div className="text-xs uppercase tracking-wide text-gray-400 dark:text-neutral-500">Comments</div>
+                <div className="text-xs tracking-wide text-gray-400 dark:text-neutral-500">Comments</div>
                 <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-neutral-100">{commentItems.length}</div>
               </div>
             </div>
