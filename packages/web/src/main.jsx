@@ -10,6 +10,17 @@ import '@fontsource/inter/600.css'
 import '@fontsource/inter/700.css'
 import '@fontsource/inter/latin.css'
 
+// Fraunces — display/headlines only
+import '@fontsource/fraunces/400.css'
+import '@fontsource/fraunces/500.css'
+import '@fontsource/fraunces/600.css'
+import '@fontsource/fraunces/700.css'
+
+// IBM Plex Mono — timestamps, karma, code
+import '@fontsource/ibm-plex-mono/400.css'
+import '@fontsource/ibm-plex-mono/500.css'
+import '@fontsource/ibm-plex-mono/600.css'
+
 import './index.css'
 import App from './App.jsx'
 import RootErrorBoundary from './components/RootErrorBoundary.jsx'
