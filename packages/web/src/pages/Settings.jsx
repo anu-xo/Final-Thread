@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Helmet } from 'react-helmet-async';
 import { useDesktopSettings } from '../hooks/useDesktopSettings.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
@@ -6,6 +7,7 @@ import About from './settings/About.jsx';
 import { useUiStore } from '../store/uiStore.js';
 import { pushSharedToServer } from '../hooks/useSettingsSync.js';
 import { userApi } from '../services/userApi.js';
+import ThreadToggle from '../components/ThreadToggle.jsx';
 
 function Section({ title, children }) {
   return (
@@ -16,31 +18,18 @@ function Section({ title, children }) {
   );
 }
 
-function Toggle({ label, checked, onChange, disabled }) {
+function ToggleRow({ label, checked, onChange, disabled }) {
   return (
-    <label className="flex items-center justify-between py-2 cursor-pointer">
+    <div className="flex items-center justify-between py-3">
       <span className="text-sm">{label}</span>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        disabled={disabled}
-        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-          checked ? 'bg-orange-500' : 'bg-neutral-300 dark:bg-neutral-600'
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-      >
-        <span
-          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-4' : 'translate-x-0.5'
-          }`}
-        />
-      </button>
-    </label>
+      <ThreadToggle label={label} checked={checked} onChange={onChange} disabled={disabled} />
+    </div>
   );
 }
 
 function Select({ label, value, onChange, options, disabled }) {
   return (
-    <label className="flex items-center justify-between py-2">
+    <div className="flex items-center justify-between py-3">
       <span className="text-sm">{label}</span>
       <select
         value={value}
@@ -52,7 +41,7 @@ function Select({ label, value, onChange, options, disabled }) {
           <option key={opt.value} value={opt.value}>{opt.label}</option>
         ))}
       </select>
-    </label>
+    </div>
   );
 }
 
@@ -142,74 +131,86 @@ export default function SettingsPage() {
           )}
         </Section>
 
-        {/* Desktop-only settings */}
-        {desktop && (
-          <Section title="Desktop">
-            <Toggle
-              label="Collapse sidebar by default"
-              checked={sidebarCollapsed}
-              onChange={(val) => handleDesktopSetting('sidebarCollapsed', val)}
-            />
-            <Toggle
-              label="Notification sound"
-              checked={notificationSound}
-              onChange={(val) => handleDesktopSetting('notificationSound', val)}
-            />
-            <Toggle
-              label="Auto-open AI chat on app launch"
-              checked={aiChatAutoOpen}
-              onChange={(val) => handleDesktopSetting('aiChatAutoOpen', val)}
-            />
-            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-700 mt-2">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">Send test notification</span>
-                <button
-                  type="button"
-                  onClick={handlePingNotification}
-                  className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 transition-colors"
-                >
-                  Send
-                </button>
-              </div>
-              {notifTestResult && (
-                <p className={`text-xs mt-1 ${notifTestResult.supported ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
-                  {notifTestResult.supported
-                    ? `Delivered via ${notifTestResult.backend}`
-                    : 'No notification daemon found — install libnotify or notify-send'}
-                </p>
-              )}
-            </div>
-            <Select
-              label="Default community sort"
-              value={defaultSort}
-              onChange={(val) => handleDesktopSetting('defaultCommunitySort', val)}
-              options={[
-                { value: 'hot', label: 'Hot' },
-                { value: 'new', label: 'New' },
-                { value: 'top', label: 'Top' },
-                { value: 'rising', label: 'Rising' },
-              ]}
-            />
-          </Section>
-        )}
+        {/* Desktop-only settings — fades in only inside Electron */}
+        <AnimatePresence>
+          {desktop && (
+            <motion.div
+              key="desktop-app-section"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+            >
+              <Section title="Desktop App">
+                <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+                  <ToggleRow
+                    label="Collapse sidebar by default"
+                    checked={sidebarCollapsed}
+                    onChange={(val) => handleDesktopSetting('sidebarCollapsed', val)}
+                  />
+                  <ToggleRow
+                    label="Notification sound"
+                    checked={notificationSound}
+                    onChange={(val) => handleDesktopSetting('notificationSound', val)}
+                  />
+                  <ToggleRow
+                    label="Auto-open AI chat on app launch"
+                    checked={aiChatAutoOpen}
+                    onChange={(val) => handleDesktopSetting('aiChatAutoOpen', val)}
+                  />
+                  <div className="flex items-center justify-between py-3">
+                    <span className="text-sm">Send test notification</span>
+                    <button
+                      type="button"
+                      onClick={handlePingNotification}
+                      className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 transition-colors"
+                    >
+                      Send
+                    </button>
+                  </div>
+                  <Select
+                    label="Default community sort"
+                    value={defaultSort}
+                    onChange={(val) => handleDesktopSetting('defaultCommunitySort', val)}
+                    options={[
+                      { value: 'hot', label: 'Hot' },
+                      { value: 'new', label: 'New' },
+                      { value: 'top', label: 'Top' },
+                      { value: 'rising', label: 'Rising' },
+                    ]}
+                  />
+                </div>
+                {notifTestResult && (
+                  <p className={`text-xs mt-2 ${notifTestResult.supported ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                    {notifTestResult.supported
+                      ? `Delivered via ${notifTestResult.backend}`
+                      : 'No notification daemon found — install libnotify or notify-send'}
+                  </p>
+                )}
+              </Section>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Notifications — server-side, always shown */}
         <Section title="Notifications">
-          <Toggle
-            label="Email digest"
-            checked={notifPrefs.digest}
-            onChange={(val) => handleNotifPref('digest', val)}
-          />
-          <Toggle
-            label="Reply notifications"
-            checked={notifPrefs.replies}
-            onChange={(val) => handleNotifPref('replies', val)}
-          />
-          <Toggle
-            label="Mention notifications"
-            checked={notifPrefs.mentions}
-            onChange={(val) => handleNotifPref('mentions', val)}
-          />
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <ToggleRow
+              label="Email digest"
+              checked={notifPrefs.digest}
+              onChange={(val) => handleNotifPref('digest', val)}
+            />
+            <ToggleRow
+              label="Reply notifications"
+              checked={notifPrefs.replies}
+              onChange={(val) => handleNotifPref('replies', val)}
+            />
+            <ToggleRow
+              label="Mention notifications"
+              checked={notifPrefs.mentions}
+              onChange={(val) => handleNotifPref('mentions', val)}
+            />
+          </div>
         </Section>
 
         {saving && (
