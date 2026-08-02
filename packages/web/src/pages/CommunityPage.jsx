@@ -46,7 +46,7 @@ function CommunityBanner({ banner, reduceMotion }) {
   return (
     <div
       ref={containerRef}
-      className="relative h-24 overflow-hidden bg-gradient-to-r from-emerald to-steel"
+      className="relative h-24 overflow-hidden bg-gradient-to-r from-violet to-pink"
     >
       {banner ? (
         <div
@@ -59,7 +59,7 @@ function CommunityBanner({ banner, reduceMotion }) {
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald to-steel" />
+        <div className="absolute inset-0 bg-gradient-to-r from-violet to-pink" />
       )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 to-black/20" />
     </div>
@@ -232,7 +232,7 @@ export default function CommunityPage() {
     return (
       <div>
         {/* Banner */}
-        <div className="h-24 bg-gradient-to-r from-emerald to-steel opacity-50" />
+        <div className="h-24 bg-gradient-to-r from-violet to-pink opacity-50" />
         <div className="max-w-5xl mx-auto px-4 py-4 space-y-2">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-64" />

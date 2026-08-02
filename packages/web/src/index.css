@@ -3,38 +3,55 @@
 /* Class-based dark mode — `.dark` lives on <html> (see index.html theme script). */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── Nightloom design tokens ──────────────────────────────────────────────
-   Colors are Tailwind v4 CSS variables emitted on :root by `@theme`; the
-   `.dark` rule below swaps the light surfaces (fog/white) for the deep
-   Nightloom palette (void/slate), and those overrides flow through every
-   utility (bg-fog, bg-white, text-mist, border-emerald, …) since utilities
-   reference var(--color-*).
+/* ── Midnight Aurora design tokens ─────────────────────────────────────────
+   A dark, premium palette: near-black backgrounds with violet→pink accents
+   used in small, deliberate moments. Colors are emitted as CSS variables on
+   :root by `@theme`; utilities (bg-fog, text-mist, border-emerald, …) read
+   var(--color-*) at runtime, so the remaps below flow through every existing
+   class without a component rewrite.
 
-   Nightloom:
-     · void     #0F1115 — dark bg (also serves as near-black light text)
-     · slate    #1A1D24 — dark surface
-     · mist     #DCDCE2 — dark text
-     · emerald  #3FA37A — primary accent — votes / CTAs
-     · amaranth #C24E6B — AI / warnings accent
-     · steel    #5C7A99 — links / info
-     · fog      #F2F2F0 — light bg
-     · white    #FFFFFF — light surface
+   Aurora:
+     · bg-0 / bg-1 / bg-2   #0A0A12 / #14141F / #1B1B29 — page, surface, nested
+     · border / border-strong  #26263A hairline, violet-tinted hover border
+     · violet #8B5CF6 — primary accent (actions, highlights, links)
+     · pink   #EC4899 — secondary accent (AI, chat, upvotes)
+     · cyan   #38BDF8 — tertiary pop (one community's custom accent / a tag
+                        type) — never a default
+     · mint   #34D399 — online / success indicator
+     · text-primary / text-muted  #F1F0FA / #9291AC
+
+   Legacy aliases (fog, white, slate, void, mist, emerald, amaranth, steel)
+   map onto aurora so existing utilities land on-brand. `white` is deliberately
+   kept #FFFFFF — it doubles as text on colored buttons. Surfaces use bg-1 /
+   bg-2 via the neutral-scale remap on :root below.
 
    Fonts: Fraunces is display-only (headlines); Inter is body/UI; IBM Plex
    Mono is timestamps, karma, and code. Loaded via @fontsource in main.jsx.
 
    `@theme static` keeps the whole palette in the compiled CSS even when a
-   token isn't referenced by a utility yet — a design-system foundation
-   stays stable while components migrate onto it.                        */
+   token isn't referenced by a utility yet.                        */
 @theme static {
-  --color-void: #0f1115;
-  --color-slate: #1a1d24;
-  --color-mist: #dcdce2;
-  --color-emerald: #3fa37a;
-  --color-amaranth: #c24e6b;
-  --color-steel: #5c7a99;
-  --color-fog: #f2f2f0;
-  --color-white: #ffffff;
+  --color-bg-0: #0a0a12;
+  --color-bg-1: #14141f;
+  --color-bg-2: #1b1b29;
+  --color-border: #26263a;
+  --color-border-strong: rgba(139, 92, 246, 0.5);
+  --color-violet: #8b5cf6;
+  --color-pink: #ec4899;
+  --color-cyan: #38bdf8;
+  --color-mint: #34d399;
+  --color-text-primary: #f1f0fa;
+  --color-text-muted: #9291ac;
+
+  /* Legacy aliases → aurora */
+  --color-fog: #0a0a12; /* page background */
+  --color-white: #ffffff; /* kept white: text on colored buttons */
+  --color-slate: #1b1b29; /* nested surface */
+  --color-void: #f1f0fa; /* primary text */
+  --color-mist: #c9c8e4; /* dark-mode main text (headings/body) */
+  --color-emerald: #8b5cf6; /* primary accent */
+  --color-amaranth: #ec4899; /* secondary / AI accent */
+  --color-steel: #8b5cf6; /* links / highlights */
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
@@ -45,17 +62,52 @@
 }
 
 :root {
-  color-scheme: light;
-  --shimmer-base: #e4e6ea;
-  --shimmer-highlight: #f4f5f8;
+  /* Spec-native variables (plain CSS custom properties) */
+  --bg-0: #0a0a12;
+  --bg-1: #14141f;
+  --bg-2: #1b1b29;
+  --border: #26263a;
+  --border-strong: rgba(139, 92, 246, 0.5);
+  --violet: #8b5cf6;
+  --pink: #ec4899;
+  --cyan: #38bdf8;
+  --mint: #34d399;
+  --text-primary: #f1f0fa;
+  --text-muted: #9291ac;
+
+  /* Tailwind neutral scale → aurora. Midnight Aurora is dark-first, so the
+     whole scale lives on dark surfaces and every `dark:bg-neutral-*` /
+     `dark:border-neutral-*` / `dark:text-neutral-*` class lands on-brand.
+     Utilities read these at runtime (unlayered :root wins over Tailwind's
+     layered theme defaults). */
+  --color-neutral-100: #f1f0fa;
+  --color-neutral-200: #f1f0fa;
+  --color-neutral-300: #c9c8e4;
+  --color-neutral-400: #9291ac;
+  --color-neutral-500: #9291ac;
+  --color-neutral-600: #26263a;
+  --color-neutral-700: #26263a;
+  --color-neutral-800: #14141f;
+  --color-neutral-900: #0a0a12;
+  --color-neutral-950: #08080f;
+
+  color-scheme: dark;
+  --shimmer-base: #191925;
+  --shimmer-highlight: #2a2a3d;
 }
 
-/* Light surfaces → Nightloom dark: `.dark` flips fog→void and white→slate. */
+/* `.dark` re-asserts the same palette so the class-based theme infrastructure
+   keeps working even though Midnight Aurora is a dark-only theme. */
 .dark {
-  --color-fog: #0f1115;
-  --color-white: #1a1d24;
-  --shimmer-base: #23262d;
-  --shimmer-highlight: #3a3f49;
+  --color-fog: #0a0a12;
+  --color-slate: #1b1b29;
+  --color-void: #f1f0fa;
+  --color-mist: #c9c8e4;
+  --color-emerald: #8b5cf6;
+  --color-amaranth: #ec4899;
+  --color-steel: #8b5cf6;
+  --shimmer-base: #191925;
+  --shimmer-highlight: #2a2a3d;
   color-scheme: dark;
 }
 
@@ -72,16 +124,12 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: var(--color-fog);
-    color: var(--color-void);
+    background-color: var(--color-bg-0);
+    color: var(--color-text-primary);
   }
 
-  .dark body {
-    color: var(--color-mist);
-  }
-
-  /* Links — steel by default (Nightloom), emerald on hover/active; never the
-     browser default blue/purple. Explicit text-* utilities still win. */
+  /* Links — violet by default, brighter violet on hover; never the browser
+     default blue/purple. Explicit text-* utilities still win. */
   a {
     color: var(--color-steel);
     text-decoration: inherit;
@@ -93,12 +141,35 @@
 
   a:hover,
   a:active {
-    color: var(--color-emerald);
+    color: color-mix(in srgb, var(--color-violet) 70%, #fff);
   }
 
-  /* Focus rings — emerald instead of the browser default focus color. */
+  /* Focus rings — violet instead of the browser default focus color. */
   :focus-visible {
-    outline-color: var(--color-emerald);
+    outline-color: var(--color-violet);
+  }
+
+  /* Every element carrying both `bg-emerald` and `text-white` is a primary
+     CTA — give it the signature 135° violet→pink gradient instead of a flat
+     neon fill (spec: gradients on primary buttons, not flat fills). */
+  .bg-emerald.text-white {
+    background-image: linear-gradient(135deg, var(--color-violet), var(--color-pink));
+  }
+
+  .bg-emerald.text-white:hover {
+    filter: brightness(1.1);
+  }
+}
+
+@layer components {
+  /* Explicit primary-CTA class — violet→pink gradient at 135°. */
+  .btn-primary {
+    background-image: linear-gradient(135deg, var(--color-violet), var(--color-pink));
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
   }
 }
 

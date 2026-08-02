@@ -16,7 +16,7 @@ const SNAP_SCALE = [0, 1.15, 1];
 /**
  * VoteButton — 3-state vote widget (up / neutral / down)
  *
- * States use the Nightloom palette: upvoted → emerald, downvoted → amaranth,
+ * States use the Midnight Aurora palette: upvoted → pink, downvoted → violet,
  * neutral → mist/gray.
  *
  * Props
@@ -152,9 +152,9 @@ export default function VoteButton({
   // soft gray in light mode (where mist would vanish on fog).
   const neutralScoreColor = 'text-gray-700 dark:text-mist';
   const stitchColor = activeUp
-    ? 'text-emerald'
+    ? 'text-pink'
     : activeDown
-      ? 'text-amaranth'
+      ? 'text-violet'
       : 'text-gray-400 dark:text-neutral-500';
 
   const ScoreEl = reduceMotion ? 'span' : motion.span;
@@ -172,8 +172,8 @@ export default function VoteButton({
           isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         } ${
           activeUp
-            ? 'text-emerald scale-110'
-            : 'text-gray-400 hover:text-emerald hover:scale-110'
+            ? 'text-pink scale-110'
+            : 'text-gray-400 hover:text-pink hover:scale-110'
         }`}
       >
         <ChevronUp size={iconSize} strokeWidth={activeUp ? 2.5 : 2} />
@@ -182,7 +182,7 @@ export default function VoteButton({
       {/* ── Score — springs to each new value, no linear count-up ── */}
       <ScoreEl
         className={`${textSize} font-semibold tabular-nums ${
-          activeUp ? 'text-emerald' : activeDown ? 'text-amaranth' : neutralScoreColor
+          activeUp ? 'text-pink' : activeDown ? 'text-violet' : neutralScoreColor
         }`}
       >
         {reduceMotion ? score : animatedScore}
@@ -220,8 +220,8 @@ export default function VoteButton({
           isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         } ${
           activeDown
-            ? 'text-amaranth scale-110'
-            : 'text-gray-400 hover:text-amaranth hover:scale-110'
+            ? 'text-violet scale-110'
+            : 'text-gray-400 hover:text-violet hover:scale-110'
         }`}
       >
         <ChevronDown

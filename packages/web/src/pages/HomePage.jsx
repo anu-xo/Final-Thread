@@ -80,7 +80,7 @@ export default function HomePage() {
 
   if (noSubscriptions && posts.length === 0) {
     return (
-      <div className="rounded-3xl border border-emerald/20 bg-gradient-to-br from-emerald/10 to-white dark:from-emerald/10 dark:to-slate p-8 shadow-sm">
+      <div className="rounded-3xl border border-violet/20 bg-gradient-to-br from-violet/10 to-white dark:from-violet/10 dark:to-slate p-8 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Welcome to ThreadVerse</p>
         <h1 className="mt-2 font-display text-3xl font-bold text-gray-900 dark:text-mist">Join some communities to build your feed</h1>
         <p className="mt-3 max-w-2xl text-sm text-gray-600 dark:text-mist/60">

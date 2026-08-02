@@ -181,7 +181,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 {notifTestResult && (
-                  <p className={`text-xs mt-2 ${notifTestResult.supported ? 'text-emerald dark:text-emerald' : 'text-amaranth'}`}>
+                  <p className={`text-xs mt-2 ${notifTestResult.supported ? 'text-mint dark:text-mint' : 'text-amaranth'}`}>
                     {notifTestResult.supported
                       ? `Delivered via ${notifTestResult.backend}`
                       : 'No notification daemon found — install libnotify or notify-send'}

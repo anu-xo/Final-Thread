@@ -15,7 +15,7 @@ function CommunityCard({ community }) {
     >
       {/* Banner strip */}
       <div
-        className="h-2 rounded-full mb-4 bg-gradient-to-r from-emerald to-steel"
+        className="h-2 rounded-full mb-4 bg-gradient-to-r from-violet to-pink"
         style={community.banner ? { backgroundImage: `url(${community.banner})` } : {}}
       />
 

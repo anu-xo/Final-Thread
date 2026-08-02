@@ -6,12 +6,12 @@ const isDesktop = typeof window !== 'undefined' && window.electronAPI !== undefi
 function getInitialTheme() {
   if (isDesktop) {
     try {
-      return window.electronAPI.getThemeSync() || 'light';
+      return window.electronAPI.getThemeSync() || 'dark';
     } catch {
-      return 'light';
+      return 'dark';
     }
   }
-  return localStorage.getItem('threadverse-theme') || 'light';
+  return localStorage.getItem('threadverse-theme') || 'dark';
 }
 
 function resolveTheme(theme) {

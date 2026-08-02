@@ -36,7 +36,7 @@ function StreamingWords({ text, reduceMotion }) {
 
 function AIAvatar() {
   return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amaranth text-white">
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet to-pink text-white">
       <StitchIcon className="h-3.5 w-3.5" />
     </span>
   );

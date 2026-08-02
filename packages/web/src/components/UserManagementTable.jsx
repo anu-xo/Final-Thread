@@ -69,7 +69,7 @@ export default function UserManagementTable() {
               <td className="py-1.5">{u.username}</td>
               <td>{u.email}</td>
               <td className="text-right tabular-nums">{u.karma}</td>
-              <td className={u.isBanned ? 'text-amaranth font-medium' : 'text-emerald font-medium'}>
+              <td className={u.isBanned ? 'text-amaranth font-medium' : 'text-mint font-medium'}>
                 {u.isBanned ? 'Banned' : 'Active'}
               </td>
               <td className="text-right">

@@ -19,7 +19,7 @@ function timeAgo(date) {
 }
 
 /**
- * PostCard — Nightloom feed card
+ * PostCard — Midnight Aurora feed card
  *
  *  • slate surface (white in light mode), mist text, emerald/amaranth accents
  *  • Fraunces (font-display) for the title
@@ -116,7 +116,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
         </h3>
 
         {post?.media?.length > 0 && (
-          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50 dark:bg-void border-gray-200 dark:border-white/10">
+          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50 dark:bg-void/15 border-gray-200 dark:border-white/10">
             <img
               src={post.media[0]}
               alt={title}

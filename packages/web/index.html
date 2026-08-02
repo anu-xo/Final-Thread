@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://res.cloudinary.com; font-src 'self'; connect-src 'self' http://localhost:5000 ws://localhost:5000 https://api.threadverse.app wss://api.threadverse.app https://api.cloudinary.com https://*.sentry.io; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#3FA37A" />
+    <meta name="theme-color" content="#8B5CF6" />
     <link rel="apple-touch-icon" href="/icons/icon-180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ThreadVerse - Community Platform</title>
@@ -19,7 +19,7 @@
           }
         } catch (_) {}
         if (!theme) {
-          theme = localStorage.getItem('threadverse-theme') || 'light';
+          theme = localStorage.getItem('threadverse-theme') || 'dark';
           if (theme === 'system') {
             theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
@@ -28,21 +28,26 @@
       })();
     </script>
     <style>
-      /* Nightloom tokens — pre-hydration copy of index.css so the splash never
-         falls back to browser-default colors. */
+      /* Midnight Aurora tokens — pre-hydration copy of index.css so the splash
+         never falls back to browser-default colors. */
       :root {
-        --color-void: #0f1115;
-        --color-slate: #1a1d24;
-        --color-mist: #dcdce2;
-        --color-emerald: #3fa37a;
-        --color-amaranth: #c24e6b;
-        --color-steel: #5c7a99;
-        --color-fog: #f2f2f0;
-        --color-white: #ffffff;
-      }
-      .dark {
-        --color-fog: #0f1115;
-        --color-white: #1a1d24;
+        --bg-0: #0a0a12;
+        --bg-1: #14141f;
+        --bg-2: #1b1b29;
+        --border: #26263a;
+        --border-strong: rgba(139, 92, 246, 0.5);
+        --violet: #8b5cf6;
+        --pink: #ec4899;
+        --cyan: #38bdf8;
+        --mint: #34d399;
+        --text-primary: #f1f0fa;
+        --text-muted: #9291ac;
+        --color-fog: #0a0a12;
+        --color-white: #14141f;
+        --color-void: #f1f0fa;
+        --color-mist: #9291ac;
+        --color-emerald: #8b5cf6;
+        color-scheme: dark;
       }
       #splash {
         background: var(--color-fog);
@@ -50,7 +55,7 @@
       }
       #splash header {
         background: var(--color-white);
-        border-bottom: 1px solid color-mix(in srgb, var(--color-void) 12%, transparent);
+        border-bottom: 1px solid rgba(241, 240, 250, 0.1);
       }
       #splash .brand {
         color: var(--color-emerald);
@@ -59,33 +64,19 @@
         color: var(--color-void);
       }
       #splash p {
-        color: color-mix(in srgb, var(--color-void) 60%, transparent);
+        color: var(--color-mist);
       }
       #splash .btn-primary {
-        background: var(--color-emerald);
-        color: var(--color-white);
+        background-image: linear-gradient(135deg, var(--violet), var(--pink));
+        color: #fff;
       }
       #splash .btn-secondary {
-        border: 1px solid color-mix(in srgb, var(--color-void) 25%, transparent);
-        color: color-mix(in srgb, var(--color-void) 75%, transparent);
+        border: 1px solid rgba(241, 240, 250, 0.25);
+        color: var(--color-mist);
       }
       #splash footer {
-        border-top: 1px solid color-mix(in srgb, var(--color-void) 12%, transparent);
-        color: color-mix(in srgb, var(--color-void) 55%, transparent);
-      }
-      .dark #splash h1 {
+        border-top: 1px solid rgba(241, 240, 250, 0.1);
         color: var(--color-mist);
-      }
-      .dark #splash p {
-        color: color-mix(in srgb, var(--color-mist) 85%, transparent);
-      }
-      .dark #splash .btn-secondary {
-        border-color: color-mix(in srgb, var(--color-mist) 40%, transparent);
-        color: var(--color-mist);
-      }
-      .dark #splash footer {
-        border-top-color: color-mix(in srgb, var(--color-mist) 20%, transparent);
-        color: color-mix(in srgb, var(--color-mist) 70%, transparent);
       }
     </style>
   </head>

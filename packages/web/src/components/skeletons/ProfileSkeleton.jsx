@@ -4,7 +4,7 @@ export default function ProfileSkeleton() {
   return (
     <div className="space-y-5">
       {/* Profile header card — matches rounded-3xl border bg-white p-6 */}
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-3xl border border-gray-200 bg-white dark:bg-neutral-900 p-6 shadow-sm">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4 min-w-0">
             {/* Avatar circle — 64x64 */}
@@ -40,7 +40,7 @@ export default function ProfileSkeleton() {
       {/* Content area — 3 post-like cards */}
       <div className="space-y-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="flex gap-3 border border-gray-200 rounded-lg p-3 bg-white">
+          <div key={i} className="flex gap-3 border border-gray-200 dark:border-white/10 rounded-lg p-3 bg-white dark:bg-neutral-900">
             <div className="shrink-0 flex flex-col items-center gap-0.5 pt-0.5">
               <Skeleton className="h-4 w-4 rounded" />
               <Skeleton className="h-3 w-5 rounded" />

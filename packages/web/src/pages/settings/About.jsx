@@ -97,7 +97,7 @@ export default function About() {
           )}
 
           {!checking && !updateStatus && remote && currentVersion && currentVersion === remote.latest && (
-            <p className="text-emerald dark:text-emerald">You&apos;re up to date.</p>
+            <p className="text-mint dark:text-mint">You&apos;re up to date.</p>
           )}
         </div>
 
