@@ -37,6 +37,6 @@ test('debug register', async ({ page }) => {
   console.log('URL after click:', page.url());
 
   // Check for errors
-  const errorText = await page.locator('.text-red-500').allTextContents();
+  const errorText = await page.locator('.text-amaranth').allTextContents();
   console.log('Error elements:', errorText);
 });

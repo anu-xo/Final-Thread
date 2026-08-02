@@ -19,7 +19,7 @@ function OfflineBanner() {
       style={{ top: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
     >
       <div className="rounded-lg bg-amaranth/10 dark:bg-amaranth/15 border border-amaranth/30 dark:border-amaranth/40 px-4 py-2.5 text-sm text-amaranth dark:text-amaranth mt-3 shadow-sm">
-        You&apos;re offline â€” showing cached content
+        You&apos;re offline — showing cached content
       </div>
     </div>
   );
@@ -67,7 +67,7 @@ export default function AppLayout() {
         <SectionErrorBoundary sectionName="Sidebar">
           <Sidebar />
         </SectionErrorBoundary>
-        {/* Main content area â€” child routes render here */}
+        {/* Main content area — child routes render here */}
         <main className="flex-1 py-4 min-w-0">
           <SectionErrorBoundary sectionName="Feed">
             <Outlet />

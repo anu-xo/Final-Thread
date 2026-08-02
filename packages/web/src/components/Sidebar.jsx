@@ -35,7 +35,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile overlay backdrop â€” only shows below lg breakpoint */}
+      {/* Mobile overlay backdrop — only shows below lg breakpoint */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -43,7 +43,7 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar â€” CSS-driven responsive behavior:
+      {/* Sidebar — CSS-driven responsive behavior:
           Below lg: fixed overlay drawer (shown/hidden via translateX)
           lg+: inline alongside content (always visible, no overlay) */}
       <aside
@@ -107,7 +107,7 @@ function SidebarLink({ to, label, active }) {
       to={to}
       className={`block px-3 py-1.5 text-sm rounded-md transition-colors ${
         active
-          ? 'bg-orange-50 text-emerald font-medium'
+          ? 'bg-emerald/10 text-emerald font-medium'
           : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
       }`}
     >

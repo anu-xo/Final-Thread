@@ -25,7 +25,7 @@ function PostBody({ post }) {
       <div className="min-w-0">
         <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">{post.title}</div>
         <div className="mt-0.5 text-xs text-gray-500 dark:text-neutral-400 line-clamp-1">
-          r/{post.community?.name} Â· u/{post.author?.username}
+          r/{post.community?.name} · u/{post.author?.username}
         </div>
       </div>
       <span className="shrink-0 rounded-full bg-gray-100 dark:bg-neutral-700 px-2 py-1 text-xs font-medium text-gray-600 dark:text-neutral-300 tabular-nums">
@@ -44,7 +44,7 @@ function CommunityBody({ community }) {
           {community.description || 'No description provided.'}
         </div>
       </div>
-      <span className="shrink-0 rounded-full bg-orange-50 px-2 py-1 text-xs font-medium text-emerald tabular-nums">
+      <span className="shrink-0 rounded-full bg-emerald/10 px-2 py-1 text-xs font-medium text-emerald tabular-nums">
         {community.members ?? 0}
       </span>
     </div>
@@ -273,7 +273,7 @@ export default function SearchModal({ open, onClose }) {
               </button>
             </div>
 
-            {/* Tabs â€” shared emerald underline slides between them */}
+            {/* Tabs — shared emerald underline slides between them */}
             <div className="flex gap-1 border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4">
               {TABS.map((tab) => {
                 const count = results[tab.key]?.length ?? 0;
@@ -322,7 +322,7 @@ export default function SearchModal({ open, onClose }) {
               ) : isLoading ? (
                 <SearchResultsSkeleton />
               ) : isError ? (
-                <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-red-50 dark:bg-amaranth/10 p-8 text-sm text-amaranth dark:text-amaranth">
+                <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/10 p-8 text-sm text-amaranth dark:text-amaranth">
                   Unable to load results.
                 </div>
               ) : items.length > 0 ? (

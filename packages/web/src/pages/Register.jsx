@@ -79,11 +79,11 @@ export default function Register() {
               id="username"
               {...register('username')}
               placeholder="cooluser123"
-              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald"
             />
 
             {errors.username && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-amaranth text-xs mt-1">
                 {errors.username.message}
               </p>
             )}
@@ -102,11 +102,11 @@ export default function Register() {
               type="email"
               {...register('email')}
               placeholder="you@example.com"
-              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald"
             />
 
             {errors.email && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-amaranth text-xs mt-1">
                 {errors.email.message}
               </p>
             )}
@@ -125,18 +125,18 @@ export default function Register() {
               type="password"
               {...register('password')}
               placeholder="At least 8 characters"
-              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald"
             />
 
             {errors.password && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="text-amaranth text-xs mt-1">
                 {errors.password.message}
               </p>
             )}
           </div>
 
           {serverError && (
-            <p className="text-red-500 text-sm text-center">
+            <p className="text-amaranth text-sm text-center">
               {serverError}
             </p>
           )}
@@ -144,7 +144,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-indigo-600 text-white py-2 rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-emerald text-white py-2 rounded-lg font-medium hover:bg-emerald/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Creating account...' : 'Register'}
           </button>
@@ -154,7 +154,7 @@ export default function Register() {
           Already have an account?{' '}
           <Link
             to="/login"
-            className="text-indigo-600 font-medium hover:underline"
+            className="text-emerald font-medium hover:underline"
           >
             Log in
           </Link>

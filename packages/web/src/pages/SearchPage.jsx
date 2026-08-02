@@ -23,7 +23,7 @@ function CommunityResult({ community }) {
   return (
     <Link
       to={`/community/${community.slug}`}
-      className="block rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm transition hover:border-orange-200 dark:hover:border-orange-700 hover:shadow-md"
+      className="block rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm transition hover:border-emerald dark:hover:border-emerald hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -32,7 +32,7 @@ function CommunityResult({ community }) {
             {community.description || 'No description provided.'}
           </p>
         </div>
-        <span className="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700">
+        <span className="shrink-0 rounded-full bg-emerald/10 px-2.5 py-1 text-xs font-medium text-emerald">
           {community.members ?? 0} members
         </span>
       </div>
@@ -97,9 +97,9 @@ export default function SearchPage() {
       ) : isLoading ? (
         <SearchResultsSkeleton />
       ) : isError ? (
-        <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300 shadow-sm">
+        <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/15 p-6 text-sm text-amaranth dark:text-amaranth shadow-sm">
           <p className="mb-2">{(error)?.message || 'Unable to load search results.'}</p>
-          <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       ) : (
         <SectionErrorBoundary sectionName="Search Results">
@@ -110,7 +110,7 @@ export default function SearchPage() {
                 <p className="text-sm text-gray-500 dark:text-neutral-400 mb-4">
                   No results found for &quot;{query}&quot;. Try different keywords.
                 </p>
-                <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
+                <Link to="/communities" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Browse communities</Link>
               </div>
             ) : (
               <>

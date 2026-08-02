@@ -64,7 +64,7 @@ export default function Header() {
       className="fixed left-0 right-0 z-50 h-14 bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700 flex items-center px-4 gap-3"
       style={{ top: 'var(--tv-titlebar-h, 0px)' }}
     >
-      {/* Hamburger menu â€” hidden on lg+ (1024px+) where sidebar is always inline */}
+      {/* Hamburger menu — hidden on lg+ (1024px+) where sidebar is always inline */}
       <button
         onClick={toggleSidebar}
         className="lg:hidden p-1.5 rounded-md text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -82,10 +82,10 @@ export default function Header() {
 
       {/* Logo */}
       <Link to="/home" className="flex items-center gap-2 font-bold text-emerald text-lg shrink-0">
-        âš¡ ThreadVerse
+        ⚡ ThreadVerse
       </Link>
 
-      {/* Search bar â€” visible sm+ (640px+); on xs show a search icon button instead */}
+      {/* Search bar — visible sm+ (640px+); on xs show a search icon button instead */}
       <form onSubmit={handleSearch} className="hidden sm:flex flex-1 max-w-xl">
         <input
           ref={searchInputRef}
@@ -97,7 +97,7 @@ export default function Header() {
           className="w-full px-4 py-1.5 rounded-full border border-gray-300 dark:border-neutral-600 bg-gray-50 dark:bg-neutral-800 text-sm focus:outline-none focus:border-emerald focus:bg-white dark:focus:bg-neutral-700 dark:text-neutral-200 placeholder:text-gray-400 dark:placeholder:text-neutral-500"
         />
       </form>
-      {/* Mobile search icon â€” visible below sm (640px) */}
+      {/* Mobile search icon — visible below sm (640px) */}
       <button
         onClick={() => navigate('/search')}
         className="sm:hidden p-1.5 rounded-md text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800"
@@ -121,12 +121,12 @@ export default function Header() {
                 aria-expanded={menuOpen}
                 aria-haspopup="true"
               >
-                {/* Avatar placeholder â€” real avatar on Day 7 */}
+                {/* Avatar placeholder — real avatar on Day 7 */}
                 <div className="w-7 h-7 rounded-full bg-emerald/10 flex items-center justify-center text-emerald font-bold text-xs">
                   {user.username?.[0]?.toUpperCase()}
                 </div>
                 <span className="hidden sm:block">{user.username}</span>
-                <span className="text-xs text-gray-400">â–¾</span>
+                <span className="text-xs text-gray-400">▾</span>
               </button>
 
               {/* Dropdown */}
@@ -138,7 +138,7 @@ export default function Header() {
                   <Link to={`/u/${user.username}`} className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-neutral-700" role="menuitem" onClick={() => setMenuOpen(false)}>Profile</Link>
                   <Link to="/settings" className="block px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-neutral-700" role="menuitem" onClick={() => setMenuOpen(false)}>Settings</Link>
                   <hr className="my-1 border-gray-200 dark:border-neutral-700" />
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-amaranth hover:bg-red-50 dark:hover:bg-amaranth/15" role="menuitem">
+                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-amaranth hover:bg-amaranth/10 dark:hover:bg-amaranth/15" role="menuitem">
                     Log Out
                   </button>
                 </div>
@@ -147,7 +147,7 @@ export default function Header() {
           </>
         ) : (
           <div className="flex gap-1.5 sm:gap-2">
-            <Link to="/login" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-emerald text-emerald rounded-full hover:bg-orange-50 dark:hover:bg-emerald/10">Log In</Link>
+            <Link to="/login" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm border border-emerald text-emerald rounded-full hover:bg-emerald/10 dark:hover:bg-emerald/10">Log In</Link>
             <Link to="/register" className="px-2 sm:px-3 py-1.5 text-xs sm:text-sm bg-emerald text-white rounded-full hover:bg-emerald/90">Sign Up</Link>
           </div>
         )}

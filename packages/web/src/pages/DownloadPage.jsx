@@ -54,12 +54,12 @@ export default function DownloadPage() {
 
       {/* Nav */}
       <header className="h-14 bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 flex items-center px-4">
-        <Link to="/" className="font-bold text-orange-500 text-lg">⚡ ThreadVerse</Link>
+        <Link to="/" className="font-bold text-emerald text-lg">⚡ ThreadVerse</Link>
         <div className="ml-auto flex gap-2">
-          <Link to="/login" className="px-3 py-1.5 text-sm border border-orange-500 text-orange-500 rounded-full hover:bg-orange-50">
+          <Link to="/login" className="px-3 py-1.5 text-sm border border-emerald text-emerald rounded-full hover:bg-emerald/10">
             Log In
           </Link>
-          <Link to="/register" className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded-full hover:bg-orange-600">
+          <Link to="/register" className="px-3 py-1.5 text-sm bg-emerald text-white rounded-full hover:bg-emerald/90">
             Sign Up
           </Link>
         </div>
@@ -81,9 +81,9 @@ export default function DownloadPage() {
         )}
 
         {error && (
-          <div className="mt-2 text-sm text-red-500">
+          <div className="mt-2 text-sm text-amaranth">
             <p>Could not reach download server — try again later.</p>
-            <button onClick={() => window.location.reload()} className="mt-1 underline hover:text-red-600">Retry</button>
+            <button onClick={() => window.location.reload()} className="mt-1 underline hover:text-amaranth/80">Retry</button>
           </div>
         )}
 
@@ -92,7 +92,7 @@ export default function DownloadPage() {
           <a
             href={platforms[primary] ?? '#'}
             download
-            className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold bg-orange-500 text-white rounded-full hover:bg-orange-600 transition-colors"
+            className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-semibold bg-emerald text-white rounded-full hover:bg-emerald/90 transition-colors"
           >
             <span>{PLATFORM_META[primary]?.icon}</span>
             <span>
@@ -111,7 +111,7 @@ export default function DownloadPage() {
               key={key}
               href={platforms[key] ?? '#'}
               download
-              className="hover:text-orange-500 transition-colors"
+              className="hover:text-emerald transition-colors"
             >
               {PLATFORM_META[key]?.icon} {PLATFORM_META[key]?.label}
               <span className="ml-1 text-xs font-mono text-gray-400 dark:text-neutral-500">
@@ -133,7 +133,7 @@ export default function DownloadPage() {
                 href={store.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-gray-600 dark:text-neutral-300 hover:border-orange-300 dark:hover:border-orange-600 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-sm text-gray-600 dark:text-neutral-300 hover:border-emerald dark:hover:border-emerald transition-colors"
               >
                 <StoreIcon name={store.name} />
                 <span>{store.name}</span>
@@ -149,7 +149,7 @@ export default function DownloadPage() {
             href={version?.downloadUrl ?? '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-orange-500"
+            className="underline hover:text-emerald"
           >
             GitHub Releases
           </a>

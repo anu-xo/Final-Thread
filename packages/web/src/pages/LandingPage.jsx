@@ -17,21 +17,21 @@ export default function LandingPage() {
     >
       {/* Nav */}
       <header className="h-14 bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 flex items-center px-4">
-        <span className="font-bold text-orange-500 text-lg">⚡ ThreadVerse</span>
+        <span className="font-bold text-emerald text-lg">⚡ ThreadVerse</span>
         <div className="ml-auto flex gap-2">
           {user ? (
             <Link
               to="/home"
-              className="px-4 py-1.5 text-sm bg-orange-500 text-white rounded-full hover:bg-orange-600"
+              className="px-4 py-1.5 text-sm bg-emerald text-white rounded-full hover:bg-emerald/90"
             >
               Go to Feed
             </Link>
           ) : (
             <>
-              <Link to="/login" className="px-3 py-1.5 text-sm border border-orange-500 text-orange-500 rounded-full hover:bg-orange-50">
+              <Link to="/login" className="px-3 py-1.5 text-sm border border-emerald text-emerald rounded-full hover:bg-emerald/10">
                 Log In
               </Link>
-              <Link to="/register" className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded-full hover:bg-orange-600">
+              <Link to="/register" className="px-3 py-1.5 text-sm bg-emerald text-white rounded-full hover:bg-emerald/90">
                 Sign Up
               </Link>
             </>
@@ -52,7 +52,7 @@ export default function LandingPage() {
           {user ? (
             <Link
               to="/home"
-              className="px-6 py-3 text-sm font-semibold bg-orange-500 text-white rounded-full hover:bg-orange-600"
+              className="px-6 py-3 text-sm font-semibold bg-emerald text-white rounded-full hover:bg-emerald/90"
             >
               Go to Feed
             </Link>
@@ -60,7 +60,7 @@ export default function LandingPage() {
             <>
               <Link
                 to="/register"
-                className="px-6 py-3 text-sm font-semibold bg-orange-500 text-white rounded-full hover:bg-orange-600"
+                className="px-6 py-3 text-sm font-semibold bg-emerald text-white rounded-full hover:bg-emerald/90"
               >
                 Get Started
               </Link>

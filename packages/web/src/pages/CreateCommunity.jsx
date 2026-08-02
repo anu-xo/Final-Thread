@@ -66,9 +66,9 @@ export default function CreateCommunity() {
             {...register('name')}
             onChange={handleNameChange}
             placeholder="React Developers"
-            className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald"
           />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+          {errors.name && <p className="text-amaranth text-xs mt-1">{errors.name.message}</p>}
         </div>
 
         {/* Slug */}
@@ -85,7 +85,7 @@ export default function CreateCommunity() {
               className="flex-1 px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none"
             />
           </div>
-          {errors.slug && <p className="text-red-500 text-xs mt-1">{errors.slug.message}</p>}
+          {errors.slug && <p className="text-amaranth text-xs mt-1">{errors.slug.message}</p>}
         </div>
 
         {/* Description */}
@@ -95,7 +95,7 @@ export default function CreateCommunity() {
             {...register('description')}
             rows={3}
             placeholder="What is this community about?"
-            className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+            className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald resize-none"
           />
         </div>
 
@@ -106,7 +106,7 @@ export default function CreateCommunity() {
             <button
               type="button"
               onClick={() => append({ title: '', body: '' })}
-              className="text-sm text-orange-500 hover:text-orange-600 font-medium"
+              className="text-sm text-emerald hover:text-emerald/80 font-medium"
             >
               + Add Rule
             </button>
@@ -124,18 +124,18 @@ export default function CreateCommunity() {
                     <input
                       {...register(`rules.${index}.title`)}
                       placeholder="Rule title"
-                      className="w-full border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald"
                     />
                     <input
                       {...register(`rules.${index}.body`)}
                       placeholder="Description (optional)"
-                      className="w-full border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-orange-500"
+                      className="w-full border border-neutral-200 dark:border-neutral-700 rounded px-2 py-1 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-emerald"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="text-red-400 hover:text-red-600 text-sm pt-1.5"
+                    className="text-amaranth hover:text-amaranth/80 text-sm pt-1.5"
                   >
                     ✕
                   </button>
@@ -146,7 +146,7 @@ export default function CreateCommunity() {
         </div>
 
         {error && (
-          <p className="text-red-500 text-sm">
+          <p className="text-amaranth text-sm">
             {error.response?.data?.error || 'Something went wrong.'}
           </p>
         )}
@@ -154,7 +154,7 @@ export default function CreateCommunity() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
+          className="w-full bg-emerald hover:bg-emerald/90 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition-colors"
         >
           {isPending ? 'Creating...' : 'Create Community'}
         </button>

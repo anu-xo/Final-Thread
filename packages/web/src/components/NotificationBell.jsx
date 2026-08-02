@@ -8,10 +8,10 @@ import StitchLine from './StitchLine.jsx';
 import NumberFlip from './NumberFlip.jsx';
 
 const ICONS = {
-  reply: 'ðŸ’¬',
-  mention: 'ðŸ“£',
-  mod_action: 'ðŸ›¡ï¸',
-  ai_response: 'ðŸ¤–',
+  reply: '💬',
+  mention: '📣',
+  mod_action: '🛡️',
+  ai_response: '🤖',
 };
 
 function BellIcon() {
@@ -71,7 +71,7 @@ export default function NotificationBell() {
   // reconciled against the refetched unread count.
   const [knotKey, setKnotKey] = useState(0);
   const [liveCount, setLiveCount] = useState(0);
-  // Notifications locally treated as read â€” lets the stitch marks fade out
+  // Notifications locally treated as read — lets the stitch marks fade out
   // staggered even before the server refetch lands.
   const [locallyRead, setLocallyRead] = useState(() => new Set());
 
@@ -215,7 +215,7 @@ export default function NotificationBell() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                <span>{ICONS[n.type] || 'ðŸ””'}</span>
+                <span>{ICONS[n.type] || '🔔'}</span>
                 <div className="flex-1 text-sm">
                   <span className="font-medium text-gray-900 dark:text-neutral-100">{n.actor?.username}</span>{' '}
                   <span className="text-gray-700 dark:text-neutral-300">{notificationText(n.type)}</span>

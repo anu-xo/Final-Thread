@@ -45,7 +45,7 @@ export default function AIChatPage() {
       </div>
 
       {!isOnline && (
-        <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 px-4 py-2.5 text-sm text-yellow-800 dark:text-yellow-300 mb-3">
+        <div className="rounded-lg bg-amaranth/10 dark:bg-amaranth/15 border border-amaranth/30 dark:border-amaranth/40 px-4 py-2.5 text-sm text-amaranth dark:text-amaranth mb-3">
           You are offline — messages will fail until you reconnect.
         </div>
       )}
@@ -53,7 +53,7 @@ export default function AIChatPage() {
       {!selected ? (
         <div className="flex-1 flex flex-col items-center justify-center text-sm text-gray-400 dark:text-neutral-500 gap-4">
           <p>Join a community first to start chatting with AI.</p>
-          <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
+          <Link to="/communities" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Browse communities</Link>
         </div>
       ) : (
         <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">

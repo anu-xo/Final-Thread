@@ -15,7 +15,7 @@ function ProfileCommentCard({ comment }) {
           <div className="text-xs text-gray-500 dark:text-neutral-400">
             <Link
               to={`/posts/${comment.post?._id}`}
-              className="font-medium text-orange-600 hover:text-orange-700"
+              className="font-medium text-emerald hover:text-emerald"
             >
               {comment.post?.title || 'View post'}
             </Link>
@@ -69,7 +69,7 @@ export default function ProfilePage() {
     const is404 = profileError?.response?.status === 404;
     return (
       <div className="max-w-3xl mx-auto text-center py-20">
-        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-5xl font-bold text-emerald mb-4">{is404 ? '404' : '500'}</p>
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
           {is404 ? 'User not found' : 'Something went wrong'}
         </p>
@@ -78,7 +78,7 @@ export default function ProfilePage() {
         </p>
         <div className="flex items-center justify-center gap-3">
           <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       </div>
     );
@@ -103,11 +103,11 @@ export default function ProfilePage() {
         <div className="rounded-3xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6 shadow-sm">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4 min-w-0">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 text-xl font-bold text-orange-700">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald/10 text-xl font-bold text-emerald">
                 {profile.username?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-orange-600">Profile</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald">Profile</p>
                 <h1 className="truncate text-2xl font-bold text-gray-900 dark:text-neutral-100">u/{profile.username}</h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Joined {new Date(profile.createdAt).toLocaleDateString()}</p>
               </div>
@@ -138,7 +138,7 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                 activeTab === tab
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-emerald text-white'
                     : 'bg-gray-100 dark:bg-neutral-700 text-gray-600 dark:text-neutral-300 hover:bg-gray-200 dark:hover:bg-neutral-600'
               }`}
             >
@@ -178,16 +178,16 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : postsQuery.isError ? (
-              <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/15 p-6 text-sm text-amaranth dark:text-amaranth">
                 <p className="mb-2">Failed to load posts.</p>
-                <button onClick={() => postsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+                <button onClick={() => postsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-emerald text-white hover:bg-emerald/90">Try again</button>
               </div>
             ) : postItems.length > 0 ? (
               postItems.map((post) => <PostCard key={post._id} post={post} />)
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-center text-sm text-gray-500 dark:text-neutral-400">
                 <p className="mb-3">No posts yet.</p>
-                <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
+                <Link to="/communities" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Browse communities</Link>
               </div>
             )}
 
@@ -213,16 +213,16 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : commentsQuery.isError ? (
-              <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300">
+              <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/15 p-6 text-sm text-amaranth dark:text-amaranth">
                 <p className="mb-2">Failed to load comments.</p>
-                <button onClick={() => commentsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+                <button onClick={() => commentsQuery.refetch()} className="text-sm px-3 py-1 rounded bg-emerald text-white hover:bg-emerald/90">Try again</button>
               </div>
             ) : commentItems.length > 0 ? (
               commentItems.map((comment) => <ProfileCommentCard key={comment._id} comment={comment} />)
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 p-6 text-center text-sm text-gray-500 dark:text-neutral-400">
                 <p className="mb-3">No comments yet.</p>
-                <Link to="/communities" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Browse communities</Link>
+                <Link to="/communities" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Browse communities</Link>
               </div>
             )}
 

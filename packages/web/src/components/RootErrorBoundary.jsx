@@ -24,7 +24,7 @@ export default class RootErrorBoundary extends Component {
       return (
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center px-4">
           <div className="max-w-md w-full text-center">
-            <div className="text-5xl mb-4">ðŸ’¥</div>
+            <div className="text-5xl mb-4">💥</div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">
               Something went wrong
             </h1>
@@ -46,7 +46,7 @@ export default class RootErrorBoundary extends Component {
               </button>
             </div>
             {import.meta.env.DEV && this.state.error && (
-              <pre className="mt-6 p-4 bg-red-50 dark:bg-amaranth/10 border border-amaranth/30 dark:border-amaranth/40 rounded-lg text-xs text-amaranth dark:text-amaranth text-left overflow-auto max-h-48">
+              <pre className="mt-6 p-4 bg-amaranth/10 dark:bg-amaranth/10 border border-amaranth/30 dark:border-amaranth/40 rounded-lg text-xs text-amaranth dark:text-amaranth text-left overflow-auto max-h-48">
                 {this.state.error.message}
                 {'\n'}
                 {this.state.error.stack}

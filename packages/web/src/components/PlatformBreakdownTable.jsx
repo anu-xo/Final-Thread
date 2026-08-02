@@ -3,8 +3,8 @@ import { TableSkeleton } from './skeletons/index.js';
 
 function badgeColor(platform) {
   return platform === 'desktop'
-    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
-    : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300';
+    ? 'bg-amaranth/10 text-amaranth dark:bg-amaranth/15 dark:text-amaranth'
+    : 'bg-steel/10 text-steel dark:bg-steel/15 dark:text-steel';
 }
 
 export default function PlatformBreakdownTable() {
@@ -77,7 +77,7 @@ export default function PlatformBreakdownTable() {
               {desktopVersions.map((v) => (
                 <span
                   key={v._id}
-                  className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+                  className="text-xs px-2 py-0.5 rounded-full bg-amaranth/10 text-amaranth dark:bg-amaranth/15 dark:text-amaranth"
                 >
                   v{v._id} ({v.count})
                 </span>
@@ -93,8 +93,8 @@ export default function PlatformBreakdownTable() {
             <thead>
               <tr className="bg-neutral-50 dark:bg-neutral-800">
                 <th className="text-left px-4 py-2 font-medium text-neutral-500">Event</th>
-                <th className="text-right px-4 py-2 font-medium text-orange-600">Desktop</th>
-                <th className="text-right px-4 py-2 font-medium text-indigo-600">Web</th>
+                <th className="text-right px-4 py-2 font-medium text-amaranth">Desktop</th>
+                <th className="text-right px-4 py-2 font-medium text-steel">Web</th>
                 <th className="text-right px-4 py-2 font-medium text-neutral-500">Total</th>
               </tr>
             </thead>

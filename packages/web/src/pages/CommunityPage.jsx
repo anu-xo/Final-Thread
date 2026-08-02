@@ -46,7 +46,7 @@ function CommunityBanner({ banner, reduceMotion }) {
   return (
     <div
       ref={containerRef}
-      className="relative h-24 overflow-hidden bg-gradient-to-r from-orange-400 to-red-400"
+      className="relative h-24 overflow-hidden bg-gradient-to-r from-emerald to-steel"
     >
       {banner ? (
         <div
@@ -59,7 +59,7 @@ function CommunityBanner({ banner, reduceMotion }) {
           }}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400" />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald to-steel" />
       )}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 to-black/20" />
     </div>
@@ -157,8 +157,8 @@ function CommunityHeader({ community }) {
           whileTap={reduceMotion ? undefined : { scale: 0.96 }}
           className={`inline-flex items-center gap-1.5 rounded-full border px-5 py-2 text-sm font-semibold transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-60 ${
             joined
-              ? 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:border-red-400 hover:text-red-500 dark:hover:border-red-400 dark:hover:text-red-400'
-              : 'border-orange-500 bg-orange-500 text-white hover:border-orange-600 hover:bg-orange-600'
+              ? 'border-neutral-300 dark:border-neutral-600 text-neutral-600 dark:text-neutral-200 hover:border-amaranth/60 hover:text-amaranth dark:hover:border-amaranth/60 dark:hover:text-amaranth'
+              : 'border-emerald bg-emerald text-white hover:border-emerald hover:bg-emerald/90'
           }`}
         >
           <AnimatePresence mode="popLayout" initial={false}>
@@ -232,7 +232,7 @@ export default function CommunityPage() {
     return (
       <div>
         {/* Banner */}
-        <div className="h-24 bg-gradient-to-r from-orange-400 to-red-400 opacity-50" />
+        <div className="h-24 bg-gradient-to-r from-emerald to-steel opacity-50" />
         <div className="max-w-5xl mx-auto px-4 py-4 space-y-2">
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-64" />
@@ -274,7 +274,7 @@ export default function CommunityPage() {
     const is404 = error?.response?.status === 404;
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-5xl font-bold text-emerald mb-4">{is404 ? '404' : '500'}</p>
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
           {is404 ? 'Community not found' : 'Something went wrong'}
         </p>
@@ -283,7 +283,7 @@ export default function CommunityPage() {
         </p>
         <div className="flex items-center justify-center gap-3">
           <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       </div>
     );
@@ -332,7 +332,7 @@ export default function CommunityPage() {
                   onClick={() => setSort(opt.value)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
                     sort === opt.value
-                      ? 'bg-orange-500 text-white'
+                      ? 'bg-emerald text-white'
                       : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
                   }`}
                 >

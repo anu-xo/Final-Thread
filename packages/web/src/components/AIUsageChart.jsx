@@ -13,7 +13,7 @@ const AXIS_STYLE = {
 const MESSAGE_COLOR = 'var(--color-steel)';
 const COST_COLOR = 'var(--color-emerald)';
 
-function useAxisColor() {
+function getAxisColor() {
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   return isDark ? 'var(--color-mist)' : 'color-mix(in srgb, var(--color-void) 55%, transparent)';
 }
@@ -97,7 +97,7 @@ export default function AIUsageChart() {
   if (isLoading) return <ChartSkeleton height={260} />;
   if (!chartData.length) return <p className="text-sm text-neutral-500">No AI usage data yet.</p>;
 
-  const axisColor = useAxisColor();
+  const axisColor = getAxisColor();
 
   return (
     <ResponsiveContainer width="100%" height={260}>

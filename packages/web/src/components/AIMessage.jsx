@@ -16,7 +16,7 @@ export function FeedbackButtons({ messageId, initialRating }) {
   // ...unchanged, exactly as you have it...
 }
 
-// Added `isStreaming` â€” true only for the in-progress assistant message
+// Added `isStreaming` — true only for the in-progress assistant message
 export default function AIMessage({ message, isStreaming = false }) {
   const navigate = useNavigate();
   const isAssistant = message.role === 'assistant';
@@ -28,7 +28,7 @@ export default function AIMessage({ message, isStreaming = false }) {
       <div className="ai-message__content">
         <p className="whitespace-pre-wrap">
           {message.content}
-          {isAssistant && isStreaming && <span className="animate-pulse ml-0.5">â–</span>}
+          {isAssistant && isStreaming && <span className="animate-pulse ml-0.5">▍</span>}
         </p>
 
         {isAssistant && message.sources?.length > 0 && (
@@ -38,7 +38,7 @@ export default function AIMessage({ message, isStreaming = false }) {
               {message.sources.map((s) => (
                 <li key={s.postId}>
                   <button
-                    className="text-xs text-blue-600 hover:underline text-left"
+                    className="text-xs text-steel hover:text-emerald hover:underline text-left"
                     onClick={() => navigate(`/post/${s.postId}`)}
                   >
                     {s.title}
@@ -49,7 +49,7 @@ export default function AIMessage({ message, isStreaming = false }) {
           </div>
         )}
 
-        {/* Don't show feedback buttons while still streaming â€” nothing to rate yet */}
+        {/* Don't show feedback buttons while still streaming — nothing to rate yet */}
         {isAssistant && !isStreaming && (
           <FeedbackButtons messageId={message._id} initialRating={message.rating} />
         )}

@@ -163,7 +163,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       onClick={handlePingNotification}
-                      className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-1.5 transition-colors"
+                      className="rounded-lg bg-emerald hover:bg-emerald/90 text-white text-xs px-3 py-1.5 transition-colors"
                     >
                       Send
                     </button>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 {notifTestResult && (
-                  <p className={`text-xs mt-2 ${notifTestResult.supported ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                  <p className={`text-xs mt-2 ${notifTestResult.supported ? 'text-emerald dark:text-emerald' : 'text-amaranth'}`}>
                     {notifTestResult.supported
                       ? `Delivered via ${notifTestResult.backend}`
                       : 'No notification daemon found — install libnotify or notify-send'}

@@ -11,11 +11,11 @@ function CommunityCard({ community }) {
   return (
     <Link
       to={`/community/${community.slug}`}
-      className="block border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-orange-400 transition-colors bg-white dark:bg-neutral-900"
+      className="block border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-emerald transition-colors bg-white dark:bg-neutral-900"
     >
       {/* Banner strip */}
       <div
-        className="h-2 rounded-full mb-4 bg-gradient-to-r from-orange-400 to-red-400"
+        className="h-2 rounded-full mb-4 bg-gradient-to-r from-emerald to-steel"
         style={community.banner ? { backgroundImage: `url(${community.banner})` } : {}}
       />
 
@@ -25,7 +25,7 @@ function CommunityCard({ community }) {
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{community.name}</p>
         </div>
         {isSubscribed && (
-          <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium shrink-0">
+          <span className="text-xs bg-emerald/10 dark:bg-emerald/15 text-emerald dark:text-emerald px-2 py-0.5 rounded-full font-medium shrink-0">
             Joined
           </span>
         )}
@@ -70,9 +70,9 @@ export default function CommunityBrowser() {
   if (isError) {
     return (
       <div className="max-w-5xl mx-auto py-8 px-4">
-        <div className="rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-300 text-center">
+        <div className="rounded-2xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/15 p-6 text-sm text-amaranth dark:text-amaranth text-center">
           <p className="mb-2">{error?.message || 'Failed to load communities.'}</p>
-          <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ export default function CommunityBrowser() {
           </div>
           <Link
             to="/communities/create"
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            className="bg-emerald hover:bg-emerald/90 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             + Create Community
           </Link>
@@ -97,7 +97,7 @@ export default function CommunityBrowser() {
         {communities.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-neutral-400 text-lg">No communities yet.</p>
-            <Link to="/communities/create" className="text-orange-500 hover:underline mt-2 block">
+            <Link to="/communities/create" className="text-emerald hover:underline mt-2 block">
               Be the first to create one
             </Link>
           </div>

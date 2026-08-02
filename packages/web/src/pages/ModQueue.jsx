@@ -34,12 +34,12 @@ export default function ModQueue() {
   if (error) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center">
-        <p className="text-5xl font-bold text-orange-500 mb-4">!</p>
+        <p className="text-5xl font-bold text-emerald mb-4">!</p>
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">Failed to load mod queue</p>
         <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">You may not have moderator permissions.</p>
         <div className="flex items-center justify-center gap-3">
           <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       </div>
     );
@@ -89,7 +89,7 @@ export default function ModQueue() {
                       <button
                         onClick={() => resolveMutation.mutate({ reportId: report._id, action: 'remove' })}
                         disabled={resolveMutation.isPending}
-                        className="px-3 py-1 text-xs bg-red-600 text-white rounded-full hover:bg-red-700"
+                        className="px-3 py-1 text-xs bg-amaranth text-white rounded-full hover:bg-amaranth/90"
                       >
                         Remove
                       </button>

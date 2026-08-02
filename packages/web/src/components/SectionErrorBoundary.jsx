@@ -31,7 +31,7 @@ export default class SectionErrorBoundary extends Component {
     if (error) {
       const isDev = import.meta.env?.DEV ?? false;
       return (
-        <div className="rounded-xl border border-amaranth/30 dark:border-amaranth/40 bg-red-50 dark:bg-amaranth/10 p-4 text-sm">
+        <div className="rounded-xl border border-amaranth/30 dark:border-amaranth/40 bg-amaranth/10 dark:bg-amaranth/10 p-4 text-sm">
           <p className="font-medium text-amaranth dark:text-amaranth">Something went wrong</p>
           {isDev && (
             <p className="mt-1 font-mono text-xs text-amaranth dark:text-amaranth/70 break-all">

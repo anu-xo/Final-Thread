@@ -72,7 +72,7 @@ export default function About() {
           )}
 
           {!checking && updateStatus === 'update-downloaded' && (
-            <div className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-lg p-3">
+            <div className="bg-steel/10 dark:bg-steel/20 text-steel dark:text-steel rounded-lg p-3">
               <p className="mb-2">A new version has been downloaded.</p>
               <button
                 onClick={() => electronAPI?.installUpdate()}
@@ -90,14 +90,14 @@ export default function About() {
           {!checking && !updateStatus && remote && currentVersion && currentVersion !== remote.latest && (
             <button
               onClick={handleCheckForUpdates}
-              className="px-3 py-1.5 rounded-lg bg-orange-500 text-white text-sm font-medium hover:bg-orange-600 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-emerald text-white text-sm font-medium hover:bg-emerald/90 transition-colors"
             >
               Check for Updates
             </button>
           )}
 
           {!checking && !updateStatus && remote && currentVersion && currentVersion === remote.latest && (
-            <p className="text-green-600 dark:text-green-400">You&apos;re up to date.</p>
+            <p className="text-emerald dark:text-emerald">You&apos;re up to date.</p>
           )}
         </div>
 
@@ -106,7 +106,7 @@ export default function About() {
             href={releaseUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block text-orange-500 hover:underline pt-1"
+            className="inline-block text-emerald hover:underline pt-1"
           >
             Release notes for {releaseTag}
           </a>

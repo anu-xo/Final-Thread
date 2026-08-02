@@ -195,7 +195,7 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
           placeholder={
             isOnline
               ? 'Ask AI anything...'
-              : 'Offline â€” input disabled'
+              : 'Offline — input disabled'
           }
           className="flex-1 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-4 py-2.5 text-sm disabled:bg-gray-100 dark:disabled:bg-neutral-800 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amaranth/60"
         />
