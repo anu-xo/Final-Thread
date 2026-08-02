@@ -1,4 +1,4 @@
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 
 export default function StitchLine({
   orientation = 'vertical',
@@ -10,9 +10,11 @@ export default function StitchLine({
   duration = 0.9,
   delay = 0,
   ease = 'easeOut',
+  revealed = true,
   className = '',
   ...props
 }) {
+  const reducedMotion = useReducedMotion()
   const isVertical = orientation === 'vertical'
   const viewWidth = isVertical ? strokeWidth : length
   const viewHeight = isVertical ? length : strokeWidth
@@ -34,19 +36,33 @@ export default function StitchLine({
       className={className}
       {...props}
     >
-      <motion.line
-        x1={isVertical ? mid : 0}
-        y1={isVertical ? 0 : mid}
-        x2={isVertical ? mid : length}
-        y2={isVertical ? length : mid}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={strokeDasharray}
-        initial={{ strokeDashoffset: length }}
-        animate={{ strokeDashoffset: 0 }}
-        transition={{ duration, delay, ease }}
-      />
+      {reducedMotion ? (
+        <line
+          x1={isVertical ? mid : 0}
+          y1={isVertical ? 0 : mid}
+          x2={isVertical ? mid : length}
+          y2={isVertical ? length : mid}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={strokeDasharray}
+          strokeDashoffset={revealed ? 0 : length}
+        />
+      ) : (
+        <motion.line
+          x1={isVertical ? mid : 0}
+          y1={isVertical ? 0 : mid}
+          x2={isVertical ? mid : length}
+          y2={isVertical ? length : mid}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={strokeDasharray}
+          initial={{ strokeDashoffset: revealed ? length : 0 }}
+          animate={{ strokeDashoffset: revealed ? 0 : length }}
+          transition={{ duration, delay, ease }}
+        />
+      )}
     </svg>
   )
 }

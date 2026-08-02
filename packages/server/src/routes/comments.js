@@ -138,6 +138,19 @@ router.post('/:id/comments', authMiddleware, writeLimiter, async (req, res) => {
       'username karma'
     );
 
+    const io = req.app.get('io');
+
+    if (io) {
+      io.to(`post:${postId}`).emit('comment:new', {
+        postId,
+        comment: {
+          ...populated.toObject(),
+          children: [],
+          userVote: 0,
+        },
+      });
+    }
+
     return res.status(201).json({
       data: populated,
       error: null,

@@ -33,7 +33,7 @@ function timeAgo(date) {
 }
 
 /** Fetches the nested comment tree and renders one CommentThread per root */
-function CommentList({ postId }) {
+function CommentList({ postId, newCommentId }) {
   const { data: comments, isLoading, isError } = useQuery({
     queryKey: ['comments', postId],
     queryFn: async () => {
@@ -63,11 +63,35 @@ function CommentList({ postId }) {
           key={comment._id}
           comment={comment}
           postId={postId}
-          currentUserVote={0} /* fast-follow: needs backend $lookup to populate per-user vote */
+          currentUserVote={comment.userVote ?? 0}
+          newCommentId={newCommentId}
         />
       ))}
     </div>
   );
+}
+
+/** Immutably inserts a socket-arrived comment into the cached tree by parentId */
+function insertComment(comments, newComment) {
+  const node = { ...newComment, children: [] };
+  const parentId = newComment.parent;
+  if (!parentId) return [...comments, node];
+
+  let inserted = false;
+  const mapTree = (list) =>
+    list.map((c) => {
+      if (String(c._id) === String(parentId)) {
+        inserted = true;
+        return { ...c, children: [...(c.children ?? []), node] };
+      }
+      if (c.children?.length) {
+        return { ...c, children: mapTree(c.children) };
+      }
+      return c;
+    });
+
+  const next = mapTree(comments);
+  return inserted ? next : [...comments, node];
 }
 
 export default function PostDetail() {
@@ -75,6 +99,7 @@ export default function PostDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showReport, setShowReport] = useState(false);
+  const [newCommentId, setNewCommentId] = useState(null);
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['posts', id],
@@ -97,10 +122,23 @@ export default function PostDetail() {
       queryClient.invalidateQueries({ queryKey: ['posts', id] });
     };
 
+    const handleCommentNew = ({ postId: eventPostId, comment: newComment }) => {
+      if (eventPostId !== id) return;
+      setNewCommentId(newComment._id);
+      queryClient.setQueryData(['comments', id], (old) =>
+        Array.isArray(old) ? insertComment(old, newComment) : old
+      );
+      queryClient.setQueryData(['posts', id], (old) =>
+        old ? { ...old, commentCount: (old.commentCount ?? 0) + 1 } : old
+      );
+    };
+
     socket.on('vote:updated', handleVoteUpdated);
+    socket.on('comment:new', handleCommentNew);
 
     return () => {
       socket.off('vote:updated', handleVoteUpdated);
+      socket.off('comment:new', handleCommentNew);
       socket.emit('leave_post', { postId: id });
     };
   }, [id, queryClient]);
@@ -213,7 +251,7 @@ export default function PostDetail() {
             <h2 className="text-sm font-semibold text-gray-600 dark:text-neutral-400 mb-2">
               Comments ({post?.commentCount ?? 0})
             </h2>
-            <CommentList postId={id} />
+            <CommentList postId={id} newCommentId={newCommentId} />
           </section>
         </SectionErrorBoundary>
       </div>
