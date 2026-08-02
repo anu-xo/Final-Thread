@@ -101,6 +101,18 @@ export function useAIChat(communityId, communityName, isOnline = true) {
           }
 
           if (data.type === 'done') {
+            setMessages(prev => {
+              const copy = [...prev];
+              const last = copy[copy.length - 1];
+              if (last?.role === 'assistant') {
+                copy[copy.length - 1] = {
+                  ...last,
+                  sources: data.sources || [],
+                  conversationId: data.conversationId,
+                };
+              }
+              return copy;
+            });
             setStreaming(false);
             if (window.electronAPI) {
               window.electronAPI.notifyAIResponse(communityName);

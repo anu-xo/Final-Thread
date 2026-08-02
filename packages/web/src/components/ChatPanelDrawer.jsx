@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useUiStore } from '../store/uiStore.js';
 import { useCommunityStore } from '../store/communityStore.js';
 import ChatPanel from './ChatPanel.jsx';
+import StitchIcon from './StitchIcon.jsx';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 
 export default function ChatPanelDrawer() {
@@ -35,8 +36,12 @@ export default function ChatPanelDrawer() {
         style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 h-14 border-b border-gray-200 dark:border-neutral-700">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-neutral-100">
+        <div className="relative flex items-center justify-between px-4 h-14 border-b border-gray-200 dark:border-neutral-700">
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-amaranth" />
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-neutral-100">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amaranth text-white">
+              <StitchIcon className="h-3.5 w-3.5" />
+            </span>
             AI Chat{community?.slug ? ` — r/${community.slug}` : ''}
           </h2>
           <button

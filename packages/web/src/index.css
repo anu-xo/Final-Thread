@@ -99,9 +99,29 @@
   animation: shimmer-slide 1.6s ease-in-out infinite;
 }
 
+/* ── AI chat streaming — each word soft-blurs in as SSE tokens arrive ────── */
+@keyframes blur-in {
+  from {
+    filter: blur(8px);
+    opacity: 0.2;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
+.blur-in-word {
+  animation: blur-in 0.35s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer {
     animation: none;
     background-position: 0 0;
+  }
+
+  .blur-in-word {
+    animation: none;
   }
 }

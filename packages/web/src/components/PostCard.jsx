@@ -53,6 +53,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
   return (
     <motion.div
       ref={cardRef}
+      data-post-id={_id}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
