@@ -3,22 +3,33 @@
 /* Class-based dark mode — `.dark` lives on <html> (see index.html theme script). */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── Design tokens ────────────────────────────────────────────────────────
+/* ── Nightloom design tokens ──────────────────────────────────────────────
    Colors are Tailwind v4 CSS variables emitted on :root by `@theme`; the
-   `.dark` rule below overrides the light surfaces (paper/white) with the
-   deep palette, and those overrides flow through every utility (bg-ink,
-   text-bone, border-gold, …) since utilities reference var(--color-*).
+   `.dark` rule below swaps the light surfaces (fog/white) for the deep
+   Nightloom palette (void/slate), and those overrides flow through every
+   utility (bg-fog, bg-white, text-mist, border-emerald, …) since utilities
+   reference var(--color-*).
+
+   Nightloom:
+     · void     #0F1115 — dark bg (also serves as near-black light text)
+     · slate    #1A1D24 — dark surface
+     · mist     #DCDCE2 — dark text
+     · emerald  #3FA37A — primary accent — votes / CTAs
+     · amaranth #C24E6B — AI / warnings accent
+     · steel    #5C7A99 — links / info
+     · fog      #F2F2F0 — light bg
+     · white    #FFFFFF — light surface
 
    Fonts: Fraunces is display-only (headlines); Inter is body/UI; IBM Plex
    Mono is timestamps, karma, and code. Loaded via @fontsource in main.jsx.  */
 @theme {
-  --color-ink: #15171c;
-  --color-canvas: #1d2028;
-  --color-bone: #edeae3;
-  --color-gold: #d4a64a;
-  --color-madder: #a8443b;
-  --color-indigo: #3e5c86;
-  --color-paper: #f7f5f0;
+  --color-void: #0f1115;
+  --color-slate: #1a1d24;
+  --color-mist: #dcdce2;
+  --color-emerald: #3fa37a;
+  --color-amaranth: #c24e6b;
+  --color-steel: #5c7a99;
+  --color-fog: #f2f2f0;
   --color-white: #ffffff;
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -33,10 +44,10 @@
   color-scheme: light;
 }
 
-/* Ink on paper: dark mode swaps the light surfaces for the deep palette. */
+/* Light surfaces → Nightloom dark: `.dark` flips fog→void and white→slate. */
 .dark {
-  --color-paper: #15171c;
-  --color-white: #1d2028;
+  --color-fog: #0f1115;
+  --color-white: #1a1d24;
   color-scheme: dark;
 }
 
@@ -53,12 +64,12 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    background-color: var(--color-paper);
-    color: var(--color-ink);
+    background-color: var(--color-fog);
+    color: var(--color-void);
   }
 
   .dark body {
-    color: var(--color-bone);
+    color: var(--color-mist);
   }
 }
 

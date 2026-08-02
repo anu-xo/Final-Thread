@@ -42,7 +42,7 @@ function PageSkeleton() {
       className="flex h-screen items-center justify-center"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald border-t-transparent" />
     </div>
   );
 }
