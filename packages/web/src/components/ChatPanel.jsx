@@ -165,9 +165,12 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
         {waitingFirstToken && (
           <div className="flex items-start gap-2">
             <AIAvatar />
-            <div className="flex items-center gap-2 rounded-lg border border-amaranth/30 bg-amaranth/5 px-4 py-3 text-amaranth dark:bg-amaranth/10">
-              <PulsingStitch />
-              <span className="text-xs font-medium">Thinking…</span>
+            <div
+              role="status"
+              aria-label="Thinking"
+              className="flex h-7 items-center justify-center text-amaranth"
+            >
+              <PulsingStitch className="h-3.5 w-3.5" />
             </div>
           </div>
         )}
