@@ -1,9 +1,10 @@
 // packages/web/src/components/NumberFlip.jsx
 import { motion, useReducedMotion } from 'motion/react';
 
-function formatNumber(value) {
+function formatNumber(value, grouped) {
   const safe = Math.max(0, Number.isFinite(value) ? value : 0);
-  return Math.round(safe).toLocaleString('en-US');
+  const rounded = Math.round(safe);
+  return grouped ? rounded.toLocaleString('en-US') : String(rounded);
 }
 
 function FlipDigit({ char, flipKey }) {
@@ -25,8 +26,8 @@ function FlipDigit({ char, flipKey }) {
   );
 }
 
-export default function NumberFlip({ value, className = '' }) {
-  const str = formatNumber(value);
+export default function NumberFlip({ value, className = '', grouped = true }) {
+  const str = formatNumber(value, grouped);
 
   return (
     <span className={`inline-flex overflow-hidden ${className}`} aria-live="polite">
