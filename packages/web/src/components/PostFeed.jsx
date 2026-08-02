@@ -70,18 +70,18 @@ export default function PostFeed({ communityId, sort }) {
 
   if (isError) {
     return (
-      <div className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 p-6 text-center">
-        <p className="text-sm text-red-600 dark:text-red-400 mb-3">Failed to load posts: {error.message}</p>
-        <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+      <div className="rounded-xl border border-amaranth/30 bg-amaranth/10 p-6 text-center">
+        <p className="text-sm text-amaranth mb-3">Failed to load posts: {error.message}</p>
+        <button onClick={() => window.location.reload()} className="text-sm px-3 py-1 rounded bg-emerald text-white hover:bg-emerald/90">Try again</button>
       </div>
     );
   }
 
   if (posts.length === 0) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 p-10 text-center">
-        <p className="text-sm text-gray-500 dark:text-neutral-400 mb-3">No posts yet. Be the first to post!</p>
-        <Link to="/submit" className="inline-flex items-center rounded-full bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition">Create a post</Link>
+      <div className="rounded-xl border border-dashed border-gray-300 dark:border-white/10 bg-white dark:bg-slate p-10 text-center">
+        <p className="text-sm text-gray-500 dark:text-mist/60 mb-3">No posts yet. Be the first to post!</p>
+        <Link to="/submit" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Create a post</Link>
       </div>
     );
   }

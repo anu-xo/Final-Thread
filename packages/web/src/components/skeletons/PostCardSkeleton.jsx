@@ -2,7 +2,7 @@ import Skeleton from './Skeleton.jsx';
 
 export default function PostCardSkeleton() {
   return (
-    <div className="flex gap-3 border border-gray-200 dark:border-neutral-700 rounded-lg p-3 bg-white dark:bg-neutral-900">
+    <div className="flex gap-3 border border-gray-200 dark:border-white/10 rounded-lg p-3 bg-white dark:bg-slate">
       {/* Vote column — matches VoteButton size="sm": 16px icons, p-0.5 */}
       <div className="shrink-0 flex flex-col items-center gap-0.5 pt-0.5">
         <Skeleton className="h-4 w-4 rounded" />
