@@ -2,8 +2,8 @@ import Skeleton from './Skeleton.jsx';
 
 export default function CommentSkeleton({ depth = 0 }) {
   const borderColors = [
-    'border-gray-300', 'border-blue-300', 'border-green-300',
-    'border-yellow-300', 'border-purple-300', 'border-red-300',
+    'border-gray-300', 'border-steel/50', 'border-emerald/50',
+    'border-amaranth/50', 'border-steel/80', 'border-emerald/80',
   ];
   const borderColor = borderColors[Math.min(depth, borderColors.length - 1)];
 

@@ -79,6 +79,27 @@
   .dark body {
     color: var(--color-mist);
   }
+
+  /* Links — steel by default (Nightloom), emerald on hover/active; never the
+     browser default blue/purple. Explicit text-* utilities still win. */
+  a {
+    color: var(--color-steel);
+    text-decoration: inherit;
+  }
+
+  a:visited {
+    color: var(--color-steel);
+  }
+
+  a:hover,
+  a:active {
+    color: var(--color-emerald);
+  }
+
+  /* Focus rings — emerald instead of the browser default focus color. */
+  :focus-visible {
+    outline-color: var(--color-emerald);
+  }
 }
 
 /* ── Skeleton shimmer — diagonal sheen, not a flat pulse ────────────────── */

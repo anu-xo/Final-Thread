@@ -53,7 +53,7 @@ function CommentList({ postId, newCommentId }) {
       </div>
     );
   }
-  if (isError)   return <p className="text-sm text-red-400">Could not load comments.</p>;
+  if (isError)   return <p className="text-sm text-amaranth">Could not load comments.</p>;
   if (!comments?.length) return <p className="text-sm text-gray-400">No comments yet. Be the first!</p>;
 
   return (
@@ -161,7 +161,7 @@ export default function PostDetail() {
     const is404 = error?.response?.status === 404;
     return (
       <div className="max-w-3xl mx-auto p-4 text-center py-20">
-        <p className="text-5xl font-bold text-orange-500 mb-4">{is404 ? '404' : '500'}</p>
+        <p className="text-5xl font-bold text-emerald mb-4">{is404 ? '404' : '500'}</p>
         <p className="text-lg text-gray-900 dark:text-neutral-100 mb-2">
           {is404 ? 'Post not found' : 'Something went wrong'}
         </p>
@@ -170,7 +170,7 @@ export default function PostDetail() {
         </p>
         <div className="flex items-center justify-center gap-3">
           <button onClick={() => navigate(-1)} className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-neutral-600 text-gray-700 dark:text-neutral-300 hover:bg-gray-50 dark:hover:bg-neutral-800">Go back</button>
-          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-orange-500 text-white hover:bg-orange-600">Try again</button>
+          <button onClick={() => window.location.reload()} className="px-4 py-2 text-sm rounded-lg bg-emerald text-white hover:bg-emerald/90">Try again</button>
         </div>
       </div>
     );
@@ -179,7 +179,7 @@ export default function PostDetail() {
   return (
     <>
       <Helmet>
-        <title>{post.title} — ThreadVerse</title>
+        <title>{post.title} â€” ThreadVerse</title>
         <meta name="description" content={post.body?.slice(0, 160)} />
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.body?.slice(0, 160)} />
@@ -189,7 +189,7 @@ export default function PostDetail() {
       </Helmet>
       <SectionErrorBoundary sectionName="Post">
         <div className="max-w-3xl mx-auto p-4 space-y-4">
-        {/* ── Post header ─────────────────────────────────────────────── */}
+        {/* â”€â”€ Post header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <article className="flex gap-3 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg p-4">
           {/* Vote column */}
           <div className="shrink-0">
@@ -207,8 +207,8 @@ export default function PostDetail() {
               <span className="font-medium text-gray-700 dark:text-neutral-300">
                 r/{post?.community?.name}
               </span>
-              <span>· u/{post?.author?.username}</span>
-              <span>· {timeAgo(post?.createdAt)}</span>
+              <span>Â· u/{post?.author?.username}</span>
+              <span>Â· {timeAgo(post?.createdAt)}</span>
             </div>
 
             <h1 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 leading-snug mb-2">
@@ -234,7 +234,7 @@ export default function PostDetail() {
             <div className="mt-3 flex items-center gap-3">
               <button
                 onClick={() => setShowReport(true)}
-                className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                className="text-xs text-gray-400 hover:text-amaranth dark:hover:text-amaranth transition-colors"
               >
                 Report
               </button>
@@ -242,10 +242,10 @@ export default function PostDetail() {
           </div>
         </article>
 
-        {/* ── Comment composer ────────────────────────────────────────── */}
+        {/* â”€â”€ Comment composer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <CommentBox postId={id} parentId={null} />
 
-        {/* ── Comment tree ────────────────────────────────────────────── */}
+        {/* â”€â”€ Comment tree â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <SectionErrorBoundary sectionName="Comments">
           <section>
             <h2 className="text-sm font-semibold text-gray-600 dark:text-neutral-400 mb-2">

@@ -20,7 +20,7 @@ export class HeaderPage {
   }
 
   async getUnreadCount() {
-    const badge = this.page.locator('span.bg-red-500, .bg-red-500');
+    const badge = this.page.locator('span.bg-amaranth, .bg-amaranth');
     if (await badge.isVisible({ timeout: 3000 }).catch(() => false)) {
       const text = await badge.textContent();
       const match = text.match(/(\d+)/);

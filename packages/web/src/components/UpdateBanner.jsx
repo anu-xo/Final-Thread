@@ -15,7 +15,7 @@ export default function UpdateBanner() {
 
   return (
     <div className="w-full bg-indigo-600 text-white text-sm px-4 py-2 flex items-center justify-between">
-      <span>New version available — restart to update.</span>
+      <span>New version available â€” restart to update.</span>
       <div className="flex gap-3">
         <button onClick={() => window.electronAPI.installUpdate()} className="font-semibold underline">
           Restart Now

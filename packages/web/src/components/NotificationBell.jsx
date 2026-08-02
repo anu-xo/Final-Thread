@@ -8,10 +8,10 @@ import StitchLine from './StitchLine.jsx';
 import NumberFlip from './NumberFlip.jsx';
 
 const ICONS = {
-  reply: '💬',
-  mention: '📣',
-  mod_action: '🛡️',
-  ai_response: '🤖',
+  reply: 'ðŸ’¬',
+  mention: 'ðŸ“£',
+  mod_action: 'ðŸ›¡ï¸',
+  ai_response: 'ðŸ¤–',
 };
 
 function BellIcon() {
@@ -71,7 +71,7 @@ export default function NotificationBell() {
   // reconciled against the refetched unread count.
   const [knotKey, setKnotKey] = useState(0);
   const [liveCount, setLiveCount] = useState(0);
-  // Notifications locally treated as read — lets the stitch marks fade out
+  // Notifications locally treated as read â€” lets the stitch marks fade out
   // staggered even before the server refetch lands.
   const [locallyRead, setLocallyRead] = useState(() => new Set());
 
@@ -172,7 +172,7 @@ export default function NotificationBell() {
         {displayCount > 0 && (
           <span
             data-testid="notification-badge"
-            className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
+            className="absolute -top-1 -right-1 bg-amaranth text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1"
           >
             {displayCount > 99 ? '99+' : <NumberFlip value={displayCount} grouped={false} />}
           </span>
@@ -183,7 +183,7 @@ export default function NotificationBell() {
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl z-50">
           <div className="flex justify-between items-center p-3 border-b border-gray-200 dark:border-neutral-700">
             <span className="font-medium text-gray-900 dark:text-neutral-100">Notifications</span>
-            <button onClick={handleMarkAllRead} className="text-xs text-blue-500 hover:underline">
+            <button onClick={handleMarkAllRead} className="text-xs text-steel hover:underline">
               Mark all as read
             </button>
           </div>
@@ -197,7 +197,7 @@ export default function NotificationBell() {
                 to={buildNotificationLink(n)}
                 onClick={() => setOpen(false)}
                 className={`relative flex gap-2 p-3 pl-5 border-b border-gray-100 dark:border-neutral-800 hover:bg-gray-50 dark:hover:bg-neutral-800 ${
-                  !isRead(n) ? 'bg-orange-50/60 dark:bg-orange-900/10' : ''
+                  !isRead(n) ? 'bg-emerald/5 dark:bg-emerald/5' : ''
                 }`}
               >
                 <AnimatePresence>
@@ -215,7 +215,7 @@ export default function NotificationBell() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                <span>{ICONS[n.type] || '🔔'}</span>
+                <span>{ICONS[n.type] || 'ðŸ””'}</span>
                 <div className="flex-1 text-sm">
                   <span className="font-medium text-gray-900 dark:text-neutral-100">{n.actor?.username}</span>{' '}
                   <span className="text-gray-700 dark:text-neutral-300">{notificationText(n.type)}</span>

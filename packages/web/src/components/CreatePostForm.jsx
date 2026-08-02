@@ -109,7 +109,7 @@ function CommunityPicker({ value, onChange, error }) {
                     No communities match &quot;{query}&quot;.
                 </div>
             )}
-            {error && <p className="text-red-500 text-xs mt-1">{error.message}</p>}
+            {error && <p className="text-amaranth text-xs mt-1">{error.message}</p>}
         </div>
     );
 }
@@ -310,7 +310,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                     placeholder="Title"
                     className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2 text-lg"
                 />
-                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>}
+                {errors.title && <p className="text-amaranth text-xs mt-1">{errors.title.message}</p>}
             </div>
 
             <Controller
@@ -324,7 +324,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                                 type="button"
                                 onClick={() => field.onChange(t)}
                                 className={`px-3 py-1 rounded-md text-sm border transition-colors ${field.value === t
-                                        ? 'bg-blue-600 text-white'
+                                        ? 'bg-steel text-white'
                                         : 'bg-white dark:bg-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-600 text-gray-900 dark:text-neutral-100 border-gray-300 dark:border-neutral-600'
                                     }`}
                             >
@@ -342,7 +342,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                         placeholder="https://..."
                         className="w-full border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 rounded-md px-3 py-2"
                     />
-                    {errors.linkUrl && <p className="text-red-500 text-xs mt-1">{errors.linkUrl.message}</p>}
+                    {errors.linkUrl && <p className="text-amaranth text-xs mt-1">{errors.linkUrl.message}</p>}
                 </div>
             ) : postType === 'image' ? (
                 <div className="space-y-3">
@@ -375,7 +375,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                         </span>
                     </div>
 
-                    {uploadError && <p className="text-red-500 text-xs mt-1">{uploadError}</p>}
+                    {uploadError && <p className="text-amaranth text-xs mt-1">{uploadError}</p>}
 
                     {selectedFiles.length > 0 && (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -394,7 +394,7 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                         </div>
                     )}
 
-                    {errors.media && <p className="text-red-500 text-xs mt-1">{errors.media.message}</p>}
+                    {errors.media && <p className="text-amaranth text-xs mt-1">{errors.media.message}</p>}
                 </div>
             ) : (
                 <Controller
@@ -420,12 +420,12 @@ export default function CreatePostForm({ defaultCommunityId, onSuccess }) {
                 )}
             />
 
-            {submitError && <p className="text-red-500 text-sm">{submitError.message}</p>}
+            {submitError && <p className="text-amaranth text-sm">{submitError.message}</p>}
 
             <button
                 type="submit"
                 disabled={isPending}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                className="bg-steel text-white px-4 py-2 rounded-md disabled:opacity-50"
             >
                 {isPending ? 'Posting...' : 'Post'}
             </button>

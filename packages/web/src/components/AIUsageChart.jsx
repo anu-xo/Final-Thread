@@ -10,8 +10,13 @@ const AXIS_STYLE = {
   tickLine: false,
 };
 
-const MESSAGE_COLOR = '#5c7a99'; // steel
-const COST_COLOR = '#3fa37a'; // emerald
+const MESSAGE_COLOR = 'var(--color-steel)';
+const COST_COLOR = 'var(--color-emerald)';
+
+function useAxisColor() {
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  return isDark ? 'var(--color-mist)' : 'color-mix(in srgb, var(--color-void) 55%, transparent)';
+}
 
 function formatCost(value) {
   const num = Number(value) || 0;
@@ -92,12 +97,14 @@ export default function AIUsageChart() {
   if (isLoading) return <ChartSkeleton height={260} />;
   if (!chartData.length) return <p className="text-sm text-neutral-500">No AI usage data yet.</p>;
 
+  const axisColor = useAxisColor();
+
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <XAxis dataKey="day" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
-        <YAxis yAxisId="left" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
-        <YAxis yAxisId="right" orientation="right" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
+        <XAxis dataKey="day" tick={{ fill: axisColor, ...AXIS_STYLE }} />
+        <YAxis yAxisId="left" tick={{ fill: axisColor, ...AXIS_STYLE }} />
+        <YAxis yAxisId="right" orientation="right" tick={{ fill: axisColor, ...AXIS_STYLE }} />
         <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(60, 70, 90, 0.12)' }} />
         <Bar
           yAxisId="left"

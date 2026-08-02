@@ -176,7 +176,7 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
         )}
 
         {warning && (
-          <div className="rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 px-4 py-2 text-xs text-yellow-800 dark:text-yellow-300">
+          <div className="rounded-lg bg-amaranth/10 dark:bg-amaranth/15 border border-amaranth/30 dark:border-amaranth/40 px-4 py-2 text-xs text-amaranth dark:text-amaranth">
             {warning}
           </div>
         )}
@@ -195,7 +195,7 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
           placeholder={
             isOnline
               ? 'Ask AI anything...'
-              : 'Offline — input disabled'
+              : 'Offline â€” input disabled'
           }
           className="flex-1 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-4 py-2.5 text-sm disabled:bg-gray-100 dark:disabled:bg-neutral-800 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amaranth/60"
         />

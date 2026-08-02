@@ -27,21 +27,82 @@
         if (theme === 'dark') document.documentElement.classList.add('dark');
       })();
     </script>
+    <style>
+      /* Nightloom tokens — pre-hydration copy of index.css so the splash never
+         falls back to browser-default colors. */
+      :root {
+        --color-void: #0f1115;
+        --color-slate: #1a1d24;
+        --color-mist: #dcdce2;
+        --color-emerald: #3fa37a;
+        --color-amaranth: #c24e6b;
+        --color-steel: #5c7a99;
+        --color-fog: #f2f2f0;
+        --color-white: #ffffff;
+      }
+      .dark {
+        --color-fog: #0f1115;
+        --color-white: #1a1d24;
+      }
+      #splash {
+        background: var(--color-fog);
+        color: var(--color-void);
+      }
+      #splash header {
+        background: var(--color-white);
+        border-bottom: 1px solid color-mix(in srgb, var(--color-void) 12%, transparent);
+      }
+      #splash .brand {
+        color: var(--color-emerald);
+      }
+      #splash h1 {
+        color: var(--color-void);
+      }
+      #splash p {
+        color: color-mix(in srgb, var(--color-void) 60%, transparent);
+      }
+      #splash .btn-primary {
+        background: var(--color-emerald);
+        color: var(--color-white);
+      }
+      #splash .btn-secondary {
+        border: 1px solid color-mix(in srgb, var(--color-void) 25%, transparent);
+        color: color-mix(in srgb, var(--color-void) 75%, transparent);
+      }
+      #splash footer {
+        border-top: 1px solid color-mix(in srgb, var(--color-void) 12%, transparent);
+        color: color-mix(in srgb, var(--color-void) 55%, transparent);
+      }
+      .dark #splash h1 {
+        color: var(--color-mist);
+      }
+      .dark #splash p {
+        color: color-mix(in srgb, var(--color-mist) 85%, transparent);
+      }
+      .dark #splash .btn-secondary {
+        border-color: color-mix(in srgb, var(--color-mist) 40%, transparent);
+        color: var(--color-mist);
+      }
+      .dark #splash footer {
+        border-top-color: color-mix(in srgb, var(--color-mist) 20%, transparent);
+        color: color-mix(in srgb, var(--color-mist) 70%, transparent);
+      }
+    </style>
   </head>
   <body>
-    <div id="splash" style="min-height:100vh;background:#f9fafb;display:flex;flex-direction:column;font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji'">
-      <header style="height:56px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;padding:0 16px">
-        <span style="font-weight:700;color:#f97316;font-size:18px">&#9889; ThreadVerse</span>
+    <div id="splash" style="min-height:100vh;display:flex;flex-direction:column;font-family:'Inter',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji'">
+      <header style="height:56px;display:flex;align-items:center;padding:0 16px">
+        <span class="brand" style="font-weight:700;font-size:18px">&#9889; ThreadVerse</span>
       </header>
       <main style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center">
-        <h1 style="font-size:clamp(2.25rem,5vw,3rem);font-weight:800;color:#111827;letter-spacing:-0.025em">ThreadVerse</h1>
-        <p style="margin-top:16px;max-width:576px;font-size:18px;color:#4b5563">A modern community platform built with the MERN stack. Create communities, share posts, and connect in real-time.</p>
+        <h1 style="font-size:clamp(2.25rem,5vw,3rem);font-weight:800;letter-spacing:-0.025em">ThreadVerse</h1>
+        <p style="margin-top:16px;max-width:576px;font-size:18px">A modern community platform built with the MERN stack. Create communities, share posts, and connect in real-time.</p>
         <div style="margin-top:32px;display:flex;gap:12px">
-          <a href="/register" style="padding:12px 24px;font-size:14px;font-weight:600;background:#f97316;color:#fff;border-radius:9999px;text-decoration:none">Get Started</a>
-          <a href="/login" style="padding:12px 24px;font-size:14px;font-weight:600;border:1px solid #d1d5db;color:#374151;border-radius:9999px;text-decoration:none">Log In</a>
+          <a href="/register" class="btn-primary" style="padding:12px 24px;font-size:14px;font-weight:600;border-radius:9999px;text-decoration:none">Get Started</a>
+          <a href="/login" class="btn-secondary" style="padding:12px 24px;font-size:14px;font-weight:600;border-radius:9999px;text-decoration:none">Log In</a>
         </div>
       </main>
-      <footer style="border-top:1px solid #e5e7eb;padding:24px;text-align:center;font-size:12px;color:#9ca3af">ThreadVerse &mdash; Built with the MERN stack</footer>
+      <footer style="padding:24px;text-align:center;font-size:12px">ThreadVerse &mdash; Built with the MERN stack</footer>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

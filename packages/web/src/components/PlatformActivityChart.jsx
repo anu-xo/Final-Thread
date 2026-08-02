@@ -11,10 +11,10 @@ const AXIS_STYLE = {
 function useChartColors() {
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
   return {
-    axis: isDark ? '#a1a1aa' : '#6b7280',
-    tooltipBg: isDark ? '#1a1a1d' : '#ffffff',
-    tooltipBorder: isDark ? '#2a2a2d' : '#e5e7eb',
-    tooltipText: isDark ? '#e4e4e7' : '#1c1c1c',
+    axis: isDark ? 'var(--color-mist)' : 'color-mix(in srgb, var(--color-void) 55%, transparent)',
+    tooltipBg: isDark ? 'var(--color-slate)' : 'var(--color-white)',
+    tooltipBorder: isDark ? 'color-mix(in srgb, var(--color-mist) 18%, transparent)' : 'color-mix(in srgb, var(--color-void) 10%, transparent)',
+    tooltipText: isDark ? 'var(--color-mist)' : 'var(--color-void)',
   };
 }
 
@@ -68,8 +68,8 @@ export default function PlatformActivityChart() {
         <YAxis tick={{ fill: colors.axis, ...AXIS_STYLE }} />
         <Tooltip content={<ChartTooltip colors={colors} />} />
         <Legend />
-        <Area type="monotone" dataKey="web" stackId="1" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} name="Web" />
-        <Area type="monotone" dataKey="desktop" stackId="1" stroke="#f97316" fill="#f97316" fillOpacity={0.3} name="Desktop" />
+        <Area type="monotone" dataKey="web" stackId="1" stroke="var(--color-steel)" fill="var(--color-steel)" fillOpacity={0.3} name="Web" />
+        <Area type="monotone" dataKey="desktop" stackId="1" stroke="var(--color-amaranth)" fill="var(--color-amaranth)" fillOpacity={0.3} name="Desktop" />
       </AreaChart>
     </ResponsiveContainer>
   );

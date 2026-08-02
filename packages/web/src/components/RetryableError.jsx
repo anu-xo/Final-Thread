@@ -3,9 +3,9 @@ export function RetryableError({ message, onRetry }) {
   return (
     <button
       onClick={onRetry}
-      className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 px-4 py-3 text-sm text-red-700 dark:text-red-400 text-left transition hover:bg-red-100 dark:hover:bg-red-900/20"
+      className="rounded-xl border border-amaranth/30 dark:border-amaranth/40 bg-red-50 dark:bg-amaranth/10 px-4 py-3 text-sm text-amaranth dark:text-amaranth text-left transition hover:bg-amaranth/10 dark:hover:bg-amaranth/15"
     >
-      ⚠ {message} — tap to retry
+      âš  {message} â€” tap to retry
     </button>
   );
 }

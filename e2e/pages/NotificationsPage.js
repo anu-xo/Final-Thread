@@ -6,7 +6,7 @@ export class NotificationsPage {
     this.bellBtn = page.getByRole('button', { name: /notifications/i }).first();
     this.dropdown = page.locator('[role="menu"], [aria-label="Notifications"], .notifications-dropdown, .w-80');
     this.markAllReadBtn = page.getByRole('button', { name: /mark all as read/i });
-    this.unreadBadge = page.locator('span.bg-red-500, .bg-red-500');
+    this.unreadBadge = page.locator('span.bg-amaranth, .bg-amaranth');
   }
 
   async openDropdown() {

@@ -11,7 +11,7 @@
 //   Minimise (—), Maximise/Restore (☐/❐), Close (✕).
 //   Hover states match the Windows 10/11 convention:
 //     • Min/Max hover → light translucent overlay
-//     • Close hover   → red (#c42b1c) background, white glyph
+//     • Close hover   → amaranth (#c24e6b) background, white glyph
 //
 // Linux — Same custom bar as Windows.  GNOME / KDE / XFCE have no strong
 //   tray/title-bar conventions, so matching the Windows pattern is the
@@ -104,7 +104,7 @@ function useTitleBarCSSVar(height) {
  * Windows / Linux custom title bar buttons.
  * Hover colours follow the Windows 10/11 Fluent convention:
  *   • Min / Max → rgba(0,0,0,0.06)  (light) / rgba(255,255,255,0.08) (dark)
- *   • Close     → #c42b1c (red), white glyph
+ *   • Close     → amaranth (#c24e6b), white glyph
  */
 function WinLinuxTitleBar({ isDark }) {
   const [isMaximized, setIsMaximized] = useState(false);
@@ -124,14 +124,14 @@ function WinLinuxTitleBar({ isDark }) {
   // Fluent hover overlays (light / dark variants)
   const hoverBg =
     hoveredButton === 'close'
-      ? 'bg-[#c42b1c]'
+      ? 'bg-amaranth'
       : isDark
         ? 'bg-white/10'
         : 'bg-black/[0.06]';
 
   const closeHoverBg =
     hoveredButton === 'close'
-      ? 'bg-[#c42b1c]'
+      ? 'bg-amaranth'
       : isDark
         ? 'bg-white/10'
         : 'bg-black/[0.06]';
@@ -252,12 +252,15 @@ export default function TitleBar({ pageTitle }) {
       style={{
         WebkitAppRegion: 'drag',
         height: WIN_LINUX_TITLE_HEIGHT,
-        background: isDark ? '#1a1a1d' : '#ffffff',
-        borderBottom: `1px solid ${isDark ? '#2a2a2d' : '#e5e7eb'}`,
+        background: isDark ? 'var(--color-slate)' : 'var(--color-white)',
+        borderBottom: `1px solid ${isDark ? 'color-mix(in srgb, var(--color-mist) 18%, transparent)' : 'color-mix(in srgb, var(--color-void) 10%, transparent)'}`,
       }}
     >
       {/* Left spacer — drag region */}
-      <div className="flex-1 px-3 text-xs truncate" style={{ color: isDark ? '#a1a1aa' : '#71717a' }}>
+      <div
+        className="flex-1 px-3 text-xs truncate"
+        style={{ color: isDark ? 'var(--color-mist)' : 'color-mix(in srgb, var(--color-void) 55%, transparent)' }}
+      >
         {pageTitle || 'ThreadVerse'}
       </div>
 

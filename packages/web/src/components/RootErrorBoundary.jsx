@@ -24,7 +24,7 @@ export default class RootErrorBoundary extends Component {
       return (
         <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center px-4">
           <div className="max-w-md w-full text-center">
-            <div className="text-5xl mb-4">💥</div>
+            <div className="text-5xl mb-4">ðŸ’¥</div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">
               Something went wrong
             </h1>
@@ -34,7 +34,7 @@ export default class RootErrorBoundary extends Component {
             <div className="flex gap-3 justify-center">
               <button
                 onClick={this.handleReset}
-                className="px-5 py-2 bg-orange-500 text-white text-sm font-semibold rounded-full hover:bg-orange-600 transition"
+                className="px-5 py-2 bg-emerald text-white text-sm font-semibold rounded-full hover:bg-emerald/90 transition"
               >
                 Go Home
               </button>
@@ -46,7 +46,7 @@ export default class RootErrorBoundary extends Component {
               </button>
             </div>
             {import.meta.env.DEV && this.state.error && (
-              <pre className="mt-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-700 dark:text-red-400 text-left overflow-auto max-h-48">
+              <pre className="mt-6 p-4 bg-red-50 dark:bg-amaranth/10 border border-amaranth/30 dark:border-amaranth/40 rounded-lg text-xs text-amaranth dark:text-amaranth text-left overflow-auto max-h-48">
                 {this.state.error.message}
                 {'\n'}
                 {this.state.error.stack}

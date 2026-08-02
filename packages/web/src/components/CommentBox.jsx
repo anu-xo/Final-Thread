@@ -40,7 +40,7 @@ export default function CommentBox({ postId, parentId = null, onSubmitted }) {
     <div className="border border-gray-200 dark:border-neutral-700 rounded-md p-2 mt-2 bg-white dark:bg-neutral-900">
       <EditorContent editor={editor} />
       {submitMutation.isError && (
-        <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+        <p className="text-xs text-amaranth dark:text-amaranth mt-2">
           Failed to post comment: {submitMutation.error?.response?.data?.error || 'Unknown error'}
         </p>
       )}
@@ -48,7 +48,7 @@ export default function CommentBox({ postId, parentId = null, onSubmitted }) {
         <button
           onClick={submit}
           disabled={submitMutation.isPending}
-          className="text-sm bg-orange-500 text-white px-3 py-1 rounded disabled:opacity-50"
+          className="text-sm bg-emerald text-white px-3 py-1 rounded disabled:opacity-50"
         >
           {submitMutation.isPending ? 'Posting…' : 'Comment'}
         </button>

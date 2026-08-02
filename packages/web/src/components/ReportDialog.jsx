@@ -54,14 +54,14 @@ export default function ReportDialog({ target, targetType, community, onClose })
         <div className="flex justify-end gap-2">
           <button onClick={onClose} className="px-4 py-2 text-sm dark:text-neutral-300">Cancel</button>
           {mutation.isError && (
-            <p className="text-xs text-red-500 dark:text-red-400 self-center mr-2">
+            <p className="text-xs text-amaranth dark:text-amaranth self-center mr-2">
               {mutation.error?.response?.data?.error || 'Failed to submit'}
             </p>
           )}
           <button
             onClick={() => mutation.mutate()}
             disabled={mutation.isPending}
-            className="px-4 py-2 bg-red-600 text-white rounded text-sm"
+            className="px-4 py-2 bg-amaranth text-white rounded text-sm"
           >
             {mutation.isPending ? 'Submitting...' : 'Submit Report'}
           </button>
