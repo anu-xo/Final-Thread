@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { motion, useReducedMotion } from 'motion/react';
 import api from '../services/api';
 import { ChartSkeleton } from './skeletons/index.js';
 
@@ -8,30 +10,61 @@ const AXIS_STYLE = {
   tickLine: false,
 };
 
-function useChartColors() {
-  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-  return {
-    axis: isDark ? '#a1a1aa' : '#6b7280',
-    tooltipBg: isDark ? '#1a1a1d' : '#ffffff',
-    tooltipBorder: isDark ? '#2a2a2d' : '#e5e7eb',
-    tooltipText: isDark ? '#e4e4e7' : '#1c1c1c',
-  };
+const MESSAGE_COLOR = '#5c7a99'; // steel
+const COST_COLOR = '#3fa37a'; // emerald
+
+function formatCost(value) {
+  const num = Number(value) || 0;
+  return num >= 0.01 ? `$${num.toFixed(2)}` : `$${num.toFixed(4)}`;
 }
 
-function ChartTooltip({ active, payload, label, colors }) {
+function ChartTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
+
+  const entry = payload[0];
+  const label = entry?.payload?.fullDay || entry?.payload?.day;
+
   return (
-    <div
-      className="rounded-lg border px-3 py-2 text-xs shadow-lg"
-      style={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder, color: colors.tooltipText }}
-    >
-      <p className="font-medium mb-1">{label}</p>
-      {payload.map((entry) => (
-        <p key={entry.dataKey} style={{ color: entry.color }}>
-          {entry.name}: {entry.value}
-        </p>
+    <div className="rounded-xl border border-emerald/70 bg-slate px-3 py-2.5 text-xs text-mist shadow-2xl">
+      <p className="mb-1.5 font-medium">{label}</p>
+      {payload.map((item) => (
+        <div key={item.dataKey} className="flex items-center gap-2 py-0.5 tabular-nums">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
+          <span className="text-mist/70">{item.name}</span>
+          <span className="ml-auto font-medium">
+            {item.dataKey === 'estimatedCostUsd'
+              ? formatCost(item.value)
+              : Math.round(Number(item.value)).toLocaleString('en-US')}
+          </span>
+        </div>
       ))}
     </div>
+  );
+}
+
+// Recharts passes final bar geometry (x/y/width/height) once isAnimationActive
+// is off; this shape owns the entrance so bars grow in staggered left-to-right.
+function GrowingBar(props) {
+  const reduceMotion = useReducedMotion();
+  const { x, y, width, height, fill, index = 0 } = props;
+
+  if (height <= 0) return null;
+
+  if (reduceMotion) {
+    return <rect x={x} y={y} width={width} height={height} rx={3} fill={fill} />;
+  }
+
+  return (
+    <motion.rect
+      x={x}
+      width={width}
+      height={height}
+      rx={3}
+      fill={fill}
+      initial={{ height: 0, y: y + height }}
+      animate={{ height, y }}
+      transition={{ delay: index * 0.05, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+    />
   );
 }
 
@@ -41,21 +74,48 @@ export default function AIUsageChart() {
     queryFn: async () => (await api.get('/admin/ai/costs')).data.data,
   });
 
-  const colors = useChartColors();
+  const chartData = useMemo(() => {
+    if (!costs?.length) return [];
+
+    return costs.map((item) => {
+      const day = item._id?.day;
+      const label = typeof day === 'string' && day.length >= 10 ? day.slice(5).replace('-', '/') : day;
+      return {
+        day: label || day,
+        fullDay: day,
+        messageCount: item.messageCount ?? 0,
+        estimatedCostUsd: item.estimatedCostUsd ?? 0,
+      };
+    });
+  }, [costs]);
 
   if (isLoading) return <ChartSkeleton height={260} />;
-  if (!costs?.length) return <p className="text-sm text-neutral-500">No AI usage data yet.</p>;
+  if (!chartData.length) return <p className="text-sm text-neutral-500">No AI usage data yet.</p>;
 
   return (
     <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={costs}>
-        <XAxis dataKey="_id.day" tick={{ fill: colors.axis, ...AXIS_STYLE }} />
-        <YAxis yAxisId="left" tick={{ fill: colors.axis, ...AXIS_STYLE }} />
-        <YAxis yAxisId="right" orientation="right" tick={{ fill: colors.axis, ...AXIS_STYLE }} />
-        <Tooltip content={<ChartTooltip colors={colors} />} />
-        <Line yAxisId="left" type="monotone" dataKey="messageCount" stroke="#6366f1" name="Messages" />
-        <Line yAxisId="right" type="monotone" dataKey="estimatedCostUsd" stroke="#f97316" name="Cost (USD)" />
-      </LineChart>
+      <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <XAxis dataKey="day" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
+        <YAxis yAxisId="left" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
+        <YAxis yAxisId="right" orientation="right" tick={{ fill: '#a1a1aa', ...AXIS_STYLE }} />
+        <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(60, 70, 90, 0.12)' }} />
+        <Bar
+          yAxisId="left"
+          dataKey="messageCount"
+          name="Messages"
+          fill={MESSAGE_COLOR}
+          isAnimationActive={false}
+          shape={GrowingBar}
+        />
+        <Bar
+          yAxisId="right"
+          dataKey="estimatedCostUsd"
+          name="Cost (USD)"
+          fill={COST_COLOR}
+          isAnimationActive={false}
+          shape={GrowingBar}
+        />
+      </BarChart>
     </ResponsiveContainer>
   );
 }

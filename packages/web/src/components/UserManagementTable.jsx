@@ -2,9 +2,12 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { TableSkeleton } from './skeletons/index.js';
+import ThreadSnipIcon from './ThreadSnipIcon.jsx';
+import ThreadTieIcon from './ThreadTieIcon.jsx';
 
 export default function UserManagementTable() {
   const [search, setSearch] = useState('');
+  const [actionTick, setActionTick] = useState({});
   const queryClient = useQueryClient();
 
   const { data: users, isLoading } = useQuery({
@@ -22,13 +25,19 @@ export default function UserManagementTable() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
   });
 
+  function tickAction(userId) {
+    setActionTick((prev) => ({ ...prev, [userId]: (prev[userId] || 0) + 1 }));
+  }
+
   function handleToggleBan(user) {
     if (user.isBanned) {
       unbanMutation.mutate(user._id);
+      tickAction(user._id);
     } else {
       const reason = window.prompt(`Ban reason for ${user.username}:`);
       if (reason === null) return; // cancelled
       banMutation.mutate({ userId: user._id, reason: reason || undefined });
+      tickAction(user._id);
     }
   }
 
@@ -59,15 +68,28 @@ export default function UserManagementTable() {
             <tr key={u._id} className="border-t border-gray-200 dark:border-neutral-700">
               <td className="py-1.5">{u.username}</td>
               <td>{u.email}</td>
-              <td className="text-right">{u.karma}</td>
-              <td>{u.isBanned ? 'Banned' : 'Active'}</td>
+              <td className="text-right tabular-nums">{u.karma}</td>
+              <td className={u.isBanned ? 'text-amaranth font-medium' : 'text-emerald font-medium'}>
+                {u.isBanned ? 'Banned' : 'Active'}
+              </td>
               <td className="text-right">
                 <button
+                  type="button"
                   onClick={() => handleToggleBan(u)}
                   disabled={banMutation.isPending || unbanMutation.isPending}
-                  className={u.isBanned ? 'text-green-600 hover:underline' : 'text-red-600 hover:underline'}
+                  aria-label={u.isBanned ? `Unban ${u.username}` : `Ban ${u.username}`}
+                  className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    u.isBanned
+                      ? 'text-emerald hover:bg-emerald/10'
+                      : 'text-amaranth hover:bg-amaranth/10'
+                  }`}
                 >
-                  {u.isBanned ? 'Unban' : 'Ban'}
+                  {u.isBanned ? (
+                    <ThreadTieIcon className="h-4 w-4" tie={actionTick[u._id] || 0} />
+                  ) : (
+                    <ThreadSnipIcon className="h-4 w-4" snip={actionTick[u._id] || 0} />
+                  )}
+                  <span>{u.isBanned ? 'Unban' : 'Ban'}</span>
                 </button>
               </td>
             </tr>
