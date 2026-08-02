@@ -21,8 +21,12 @@
      · white    #FFFFFF — light surface
 
    Fonts: Fraunces is display-only (headlines); Inter is body/UI; IBM Plex
-   Mono is timestamps, karma, and code. Loaded via @fontsource in main.jsx.  */
-@theme {
+   Mono is timestamps, karma, and code. Loaded via @fontsource in main.jsx.
+
+   `@theme static` keeps the whole palette in the compiled CSS even when a
+   token isn't referenced by a utility yet — a design-system foundation
+   stays stable while components migrate onto it.                        */
+@theme static {
   --color-void: #0f1115;
   --color-slate: #1a1d24;
   --color-mist: #dcdce2;
