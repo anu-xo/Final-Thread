@@ -1,11 +1,23 @@
 // packages/web/src/components/VoteButton.jsx
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { motion, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import api from '../services/api';
+import StitchLine from './StitchLine.jsx';
+
+// Count spring — snappy enough to feel alive, damped enough to settle fast.
+const COUNT_SPRING = { stiffness: 280, damping: 24, mass: 0.55 };
+
+// Stitch "snap taut" — quick squash-and-release on the wrapper's scaleX.
+const SNAP_TIMES = [0, 0.55, 1];
+const SNAP_SCALE = [0, 1.15, 1];
 
 /**
  * VoteButton — 3-state vote widget (up / neutral / down)
+ *
+ * States use the Nightloom palette: upvoted → emerald, downvoted → amaranth,
+ * neutral → mist/gray.
  *
  * Props
  *  targetId       — MongoDB _id of the post or comment
@@ -21,8 +33,11 @@ import api from '../services/api';
  *  • onError rolls back to the snapshot captured in onMutate's context
  *  • onSuccess reconciles with the server-returned score to handle
  *    concurrent voters that landed between our request firing and settling
- *  • The score <span> is keyed on the score value so the CSS animation
- *    re-triggers on every change, including rollbacks
+ *  • The count springs to each new value via a Framer Motion spring (no
+ *    linear count-up)
+ *  • Every score/vote change re-snaps a thin horizontal StitchLine beneath
+ *    the count (quick scaleX squash-and-release) to confirm the vote landed
+ *  • prefers-reduced-motion: count jumps instantly, stitch appears statically
  *  • Buttons are disabled while a mutation is in flight to prevent
  *    double-clicks accumulating into a runaway delta
  */
@@ -52,6 +67,24 @@ export default function VoteButton({
 
   scoreRef.current = score;
   userVoteRef.current = userVote;
+
+  const reduceMotion = useReducedMotion();
+
+  // Spring-animated count — retargets whenever `score` changes (optimistic
+  // apply, rollback, or server reconcile).
+  const springScore = useSpring(score, COUNT_SPRING);
+  const animatedScore = useTransform(springScore, (v) => Math.round(v).toString());
+
+  // StitchLine "snap taut" confirmation — re-runs on any score/vote change.
+  const [stitchKey, setStitchKey] = useState(0);
+  const prevStateRef = useRef({ score: initialScore, userVote: initialUserVote });
+  useEffect(() => {
+    const prev = prevStateRef.current;
+    if (prev.score !== score || prev.userVote !== userVote) {
+      setStitchKey((k) => k + 1);
+      prevStateRef.current = { score, userVote };
+    }
+  }, [score, userVote]);
 
   const voteMutation = useMutation({
     mutationFn: (value) =>
@@ -112,6 +145,19 @@ export default function VoteButton({
       : 'flex flex-col items-center gap-0.5';
 
   const isPending = voteMutation.isPending;
+  const activeUp = userVote === 1;
+  const activeDown = userVote === -1;
+
+  // Neutral score reads as mist in dark mode (legible on void) and as a
+  // soft gray in light mode (where mist would vanish on fog).
+  const neutralScoreColor = 'text-gray-700 dark:text-mist';
+  const stitchColor = activeUp
+    ? 'text-emerald'
+    : activeDown
+      ? 'text-amaranth'
+      : 'text-gray-400 dark:text-neutral-500';
+
+  const ScoreEl = reduceMotion ? 'span' : motion.span;
 
   return (
     <div className={containerClass}>
@@ -121,31 +167,47 @@ export default function VoteButton({
         onClick={() => handleVote(1)}
         disabled={isPending}
         aria-label="Upvote"
-        aria-pressed={userVote === 1}
+        aria-pressed={activeUp}
         className={`${padding} rounded transition-all duration-150 ${
           isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         } ${
-          userVote === 1
-            ? 'text-orange-500 scale-110'
-            : 'text-gray-400 hover:text-orange-400 hover:scale-110'
+          activeUp
+            ? 'text-emerald scale-110'
+            : 'text-gray-400 hover:text-emerald hover:scale-110'
         }`}
       >
-        <ChevronUp size={iconSize} strokeWidth={userVote === 1 ? 2.5 : 2} />
+        <ChevronUp size={iconSize} strokeWidth={activeUp ? 2.5 : 2} />
       </button>
 
-      {/* ── Score — keyed on value so animation re-fires every change ── */}
-      <span
-        key={score}
-        className={`${textSize} font-semibold tabular-nums vote-score-pop ${
-          userVote === 1
-            ? 'text-orange-500'
-            : userVote === -1
-            ? 'text-blue-500'
-            : 'text-gray-700 dark:text-neutral-300'
+      {/* ── Score — springs to each new value, no linear count-up ── */}
+      <ScoreEl
+        className={`${textSize} font-semibold tabular-nums ${
+          activeUp ? 'text-emerald' : activeDown ? 'text-amaranth' : neutralScoreColor
         }`}
       >
-        {score}
-      </span>
+        {reduceMotion ? score : animatedScore}
+      </ScoreEl>
+
+      {/* ── StitchLine confirmation — snaps taut on every state change ── */}
+      {stitchKey > 0 && (
+        <motion.div
+          key={stitchKey}
+          initial={reduceMotion ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
+          animate={reduceMotion ? { scaleX: 1, opacity: 1 } : { scaleX: SNAP_SCALE, opacity: [0, 1, 1] }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.32, times: SNAP_TIMES, ease: 'easeOut' }}
+          style={{ originX: 0.5 }}
+          className={`w-12 ${stitchColor}`}
+        >
+          <StitchLine
+            orientation="horizontal"
+            length={48}
+            strokeWidth={2}
+            dash={5}
+            gap={5}
+            duration={0.15}
+          />
+        </motion.div>
+      )}
 
       {/* ── Downvote ── */}
       <button
@@ -153,18 +215,18 @@ export default function VoteButton({
         onClick={() => handleVote(-1)}
         disabled={isPending}
         aria-label="Downvote"
-        aria-pressed={userVote === -1}
+        aria-pressed={activeDown}
         className={`${padding} rounded transition-all duration-150 ${
           isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
         } ${
-          userVote === -1
-            ? 'text-blue-500 scale-110'
-            : 'text-gray-400 hover:text-blue-400 hover:scale-110'
+          activeDown
+            ? 'text-amaranth scale-110'
+            : 'text-gray-400 hover:text-amaranth hover:scale-110'
         }`}
       >
         <ChevronDown
           size={iconSize}
-          strokeWidth={userVote === -1 ? 2.5 : 2}
+          strokeWidth={activeDown ? 2.5 : 2}
         />
       </button>
     </div>
