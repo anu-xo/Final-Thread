@@ -118,6 +118,16 @@ export const joinCommunity = async (req, res) => {
     ]);
 
     const updated = await Community.findById(community._id).lean();
+
+    // Notify live viewers of the new member count
+    const io = req.app.get('io');
+    if (io && updated) {
+      io.to(`community:${updated.slug}`).emit('community:members', {
+        slug: updated.slug,
+        members: updated.members,
+      });
+    }
+
     res.json({ data: updated, error: null, meta: null });
   } catch (err) {
     res.status(500).json({ data: null, error: sanitizeError(err), meta: null });
@@ -155,6 +165,16 @@ export const leaveCommunity = async (req, res) => {
         $pull: { mods: req.user._id },
       }),
     ]);
+
+    // Notify live viewers of the new member count
+    const updated = await Community.findById(community._id).lean();
+    const io = req.app.get('io');
+    if (io && updated) {
+      io.to(`community:${updated.slug}`).emit('community:members', {
+        slug: updated.slug,
+        members: updated.members,
+      });
+    }
 
     res.json({ data: { message: 'Left community successfully.' }, error: null, meta: null });
   } catch (err) {

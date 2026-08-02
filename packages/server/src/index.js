@@ -70,6 +70,17 @@ io.on('connection', (socket) => {
     socket.leave(`user:${userId}`);
   });
 
+  socket.on('join_community', ({ slug }) => {
+    if (!slug) return;
+    socket.join(`community:${slug}`);
+    console.log(`🪡 [Socket.io] ${socket.id} joined room community:${slug}`);
+  });
+
+  socket.on('leave_community', ({ slug }) => {
+    if (!slug) return;
+    socket.leave(`community:${slug}`);
+  });
+
   socket.on('disconnect', () => {
     console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
   });
