@@ -179,15 +179,34 @@
 /* ── Aurora backdrop — ambient color mesh behind all page content ───────────
    Three large, heavily blurred radial-gradient blobs in the palette hues
    (violet / pink / cyan) painted fixed behind every page. Purely ambient:
-   zero motion, pointer-events: none, z-index 0 while App wraps content at
-   z-index 10+. The heavy 120px blur plus 0.35 opacity reads as a soft mesh,
-   never a solid neon fill. */
+   pointer-events: none, z-index 0 while App wraps content at z-index 10+.
+   The heavy 120px blur plus 0.35 opacity reads as a soft mesh, never a solid
+   neon fill.
+
+   Each blob drifts on its own 70–100s ease-in-out loop (never syncing) so the
+   mesh feels alive without drawing attention. prefers-reduced-motion: blobs
+   freeze into the static mesh below. */
 .aurora-bg {
   position: fixed;
   inset: 0;
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(4vw, -3vh) scale(1.08); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-5vw, 4vh) scale(0.95); }
+}
+
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(3vw, 5vh) scale(1.05); }
 }
 
 .aurora-blob {
@@ -199,14 +218,17 @@
 
 .aurora-blob--violet {
   background: radial-gradient(circle at 50% 50%, var(--color-violet) 0%, var(--color-violet) 35%, transparent 72%);
+  animation: drift-a 80s ease-in-out infinite;
 }
 
 .aurora-blob--pink {
   background: radial-gradient(circle at 50% 50%, var(--color-pink) 0%, var(--color-pink) 35%, transparent 72%);
+  animation: drift-b 95s ease-in-out infinite;
 }
 
 .aurora-blob--cyan {
   background: radial-gradient(circle at 50% 50%, var(--color-cyan) 0%, var(--color-cyan) 35%, transparent 72%);
+  animation: drift-c 70s ease-in-out infinite;
 }
 
 /* ── Skeleton shimmer — diagonal sheen, not a flat pulse ────────────────── */
@@ -343,6 +365,11 @@
   .streaming-glow {
     animation: none !important;
     box-shadow: none;
+  }
+
+  /* Aurora blobs freeze — the static mesh must still read as intentional. */
+  .aurora-blob {
+    animation: none;
   }
 
   .shimmer {

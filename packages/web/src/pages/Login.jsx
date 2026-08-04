@@ -6,11 +6,50 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
+import AuroraBackground from '../components/AuroraBackground.jsx';
 
 const loginSchema = z.object({
   email:    z.string().email('Invalid email'),
   password: z.string().min(1, 'Password is required'),
 });
+
+// Boldest aurora scene — the login page is the visual centerpiece. Larger
+// blobs (50–65vw) at higher opacity, framed so the violet sits top-left and
+// pink bottom-right with only the small cyan accent near the card's center
+// (behind it), so the mesh never washes across the form fields at full
+// strength. Drift stays full-speed via the shared drift-a/b/c keyframes.
+const LOGIN_BLOBS = [
+  {
+    color: 'violet',
+    style: {
+      top: '-18%',
+      left: '-16%',
+      width: '62vw',
+      height: '62vw',
+      '--blob-opacity': 0.45,
+    },
+  },
+  {
+    color: 'pink',
+    style: {
+      bottom: '-16%',
+      right: '-14%',
+      width: '60vw',
+      height: '60vw',
+      '--blob-opacity': 0.4,
+    },
+  },
+  {
+    color: 'cyan',
+    style: {
+      top: '34%',
+      left: '42%',
+      width: '34vw',
+      height: '34vw',
+      '--blob-opacity': 0.35,
+    },
+  },
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -37,10 +76,11 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent"
+      className="relative min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
-      <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-8">
+      <AuroraBackground blobs={LOGIN_BLOBS} />
+      <div className="relative z-10 w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-neutral-100 mb-6">Welcome back</h1>
 
         {banReason && (

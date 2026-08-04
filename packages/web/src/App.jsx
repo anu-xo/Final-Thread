@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 
@@ -162,6 +162,16 @@ function DesktopShortcutBridge() {
   return null;
 }
 
+/**
+ * Renders the default global aurora — except on /login, where the Login page
+ * owns its own bolder, custom-composed scene.
+ */
+function RouteAwareBackground() {
+  const location = useLocation();
+  if (location.pathname === '/login') return null;
+  return <AuroraBackground />;
+}
+
 export default function App() {
   return (
     <HelmetProvider>
@@ -170,7 +180,7 @@ export default function App() {
           <BrowserRouter>
             {/* Aurora sits at z-index 0; everything below is wrapped at
                 z-index 10 so the ambient mesh stays behind all content. */}
-            <AuroraBackground />
+            <RouteAwareBackground />
             <div className="relative z-10">
               <TitleBar />
               <DesktopShortcutBridge />
