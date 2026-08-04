@@ -77,6 +77,9 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-transparent">
+      {/* Feed aurora lives in this persistent layout shell — NOT inside the
+          scrolling feed component — so it never remounts on infinite-scroll
+          or feed re-renders (perf rule). */}
       {location.pathname === '/home' && <AuroraBackground blobs={FEED_BLOBS} fade />}
       {isDesktop && <UpdateBanner />}
       <Header />

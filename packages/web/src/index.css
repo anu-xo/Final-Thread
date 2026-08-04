@@ -219,6 +219,11 @@
   border-radius: 50%;
   filter: blur(120px);
   opacity: var(--blob-opacity, 0.35);
+  /* Perf: placement (top/left/width/height) is set once, statically — never
+     animated. All drift motion is transform-only (translate + scale), which
+     is GPU-accelerated; will-change promotes drifting blobs to compositor
+     layers so the 120px blur isn't re-rasterized every frame. */
+  will-change: transform;
 }
 
 .aurora-blob--violet {
@@ -246,9 +251,12 @@
 }
 
 /* Static blob — no drift. Defined after the color modifiers so it wins the
-   cascade and freezes the keyframe loop (inline `transform` then applies). */
+   cascade and freezes the keyframe loop (inline `transform` then applies).
+   Also drops the will-change compositor layer: a frozen blob has no per-frame
+   motion to accelerate. */
 .aurora-blob--static {
   animation: none;
+  will-change: auto;
 }
 
 /* ── Skeleton shimmer — diagonal sheen, not a flat pulse ────────────────── */
