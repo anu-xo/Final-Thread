@@ -10,6 +10,27 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
 import UpdateBanner from './UpdateBanner.jsx';
 import ChatPanelDrawer from './ChatPanelDrawer.jsx';
+import AuroraBackground from './AuroraBackground.jsx';
+
+// Feed-scene aurora — minimal by design: a single violet blob, dim (0.14),
+// hugging the top of the page and fading out below 60% viewport height via
+// the `.aurora-bg--fade-bottom` mask so the dense card list below the fold
+// scrolls over clean space. Static (no drift) — the feed is a dense scanning
+// surface and any motion here fatigues.
+const FEED_BLOBS = [
+  {
+    color: 'violet',
+    static: true,
+    style: {
+      top: '-35%',
+      left: '50%',
+      width: '72vw',
+      height: '72vw',
+      transform: 'translateX(-50%)',
+      '--blob-opacity': 0.14,
+    },
+  },
+];
 
 function OfflineBanner() {
   const isOnline = useOnlineStatus();
@@ -56,6 +77,9 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-transparent">
+      {location.pathname === '/home' && (
+        <AuroraBackground blobs={FEED_BLOBS} fade className="aurora-bg--behind" />
+      )}
       {isDesktop && <UpdateBanner />}
       <Header />
       <OfflineBanner />

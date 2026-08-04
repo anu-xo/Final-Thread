@@ -218,17 +218,39 @@
 
 .aurora-blob--violet {
   background: radial-gradient(circle at 50% 50%, var(--color-violet) 0%, var(--color-violet) 35%, transparent 72%);
-  animation: drift-a 80s ease-in-out infinite;
+  animation: drift-a var(--drift-duration, 80s) ease-in-out infinite;
 }
 
 .aurora-blob--pink {
   background: radial-gradient(circle at 50% 50%, var(--color-pink) 0%, var(--color-pink) 35%, transparent 72%);
-  animation: drift-b 95s ease-in-out infinite;
+  animation: drift-b var(--drift-duration, 95s) ease-in-out infinite;
 }
 
 .aurora-blob--cyan {
   background: radial-gradient(circle at 50% 50%, var(--color-cyan) 0%, var(--color-cyan) 35%, transparent 72%);
-  animation: drift-c 70s ease-in-out infinite;
+  animation: drift-c var(--drift-duration, 70s) ease-in-out infinite;
+}
+
+/* Feed-scene modifiers — a single static blob near the top of the page that
+   fades out below ~60% viewport height, so dense card content scrolls over
+   clean space. No drift: users scan dense scrolling lists here and motion
+   causes fatigue. */
+.aurora-bg--fade-bottom {
+  mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
+}
+
+/* Paints behind in-flow content when rendered inside App's z-10 wrapper
+   (login/landing use `relative z-10` content instead; this variant is for
+   layouts whose children are already opaque cards). */
+.aurora-bg--behind {
+  z-index: -1;
+}
+
+/* Static blob — no drift. Defined after the color modifiers so it wins the
+   cascade and freezes the keyframe loop (inline `transform` then applies). */
+.aurora-blob--static {
+  animation: none;
 }
 
 /* ── Skeleton shimmer — diagonal sheen, not a flat pulse ────────────────── */

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore.js';
+import AuroraBackground from '../components/AuroraBackground.jsx';
 
 const FEATURES = [
   { icon: '🌐', title: 'Communities', desc: 'Create and join topic-specific communities.' },
@@ -7,14 +8,55 @@ const FEATURES = [
   { icon: '⚡', title: 'Real-time', desc: 'Live updates powered by Socket.io.' },
 ];
 
+// Medium aurora scene — smaller blobs (30–40vw) at low opacity, tucked toward
+// the viewport corners so they frame the centered hero instead of sitting
+// behind the headline. Slower drift keeps content the clear focal point.
+const LANDING_BLOBS = [
+  {
+    color: 'violet',
+    style: {
+      top: '-16%',
+      left: '-12%',
+      width: '40vw',
+      height: '40vw',
+      '--blob-opacity': 0.26,
+      '--drift-duration': '100s',
+    },
+  },
+  {
+    color: 'cyan',
+    style: {
+      top: '4%',
+      right: '-14%',
+      width: '30vw',
+      height: '30vw',
+      '--blob-opacity': 0.2,
+      '--drift-duration': '90s',
+    },
+  },
+  {
+    color: 'pink',
+    style: {
+      bottom: '-12%',
+      right: '-8%',
+      width: '34vw',
+      height: '34vw',
+      '--blob-opacity': 0.24,
+      '--drift-duration': '115s',
+    },
+  },
+];
+
 export default function LandingPage() {
   const user = useAuthStore((s) => s.user);
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-transparent flex flex-col"
+      className="relative min-h-screen bg-gray-50 dark:bg-transparent flex flex-col"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
+      <AuroraBackground blobs={LANDING_BLOBS} />
+      <div className="relative z-10 flex flex-col flex-1">
       {/* Nav */}
       <header className="h-14 bg-white dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-700 flex items-center px-4">
         <span className="font-bold text-emerald text-lg">⚡ ThreadVerse</span>
@@ -90,6 +132,7 @@ export default function LandingPage() {
       <footer className="border-t border-gray-200 dark:border-neutral-700 py-6 text-center text-xs text-gray-400 dark:text-neutral-500">
         ThreadVerse &mdash; Built with the MERN stack
       </footer>
+      </div>
     </div>
   );
 }

@@ -11,7 +11,9 @@
 // z-index 0 via `.aurora-bg`; page content is wrapped at z-index 10+.
 //
 // Pass a `blobs` array to compose a custom scene (e.g. a bolder Login
-// variant with larger blobs and per-blob `--blob-opacity`).
+// variant with larger blobs and per-blob `--blob-opacity`). `fade` adds the
+// bottom fade-out mask (feed); a `static: true` blob drops its drift loop.
+// `className` is appended to the container for layout-specific variants.
 
 const DEFAULT_BLOBS = [
   { color: 'violet', style: { top: '-12%', left: '-10%', width: '56vw', height: '56vw' } },
@@ -19,13 +21,16 @@ const DEFAULT_BLOBS = [
   { color: 'cyan', style: { bottom: '-18%', left: '12%', width: '52vw', height: '52vw' } },
 ];
 
-export default function AuroraBackground({ blobs = DEFAULT_BLOBS }) {
+export default function AuroraBackground({ blobs = DEFAULT_BLOBS, fade = false, className = '' }) {
   return (
-    <div className="aurora-bg" aria-hidden="true">
+    <div
+      className={`aurora-bg${fade ? ' aurora-bg--fade-bottom' : ''}${className ? ` ${className}` : ''}`}
+      aria-hidden="true"
+    >
       {blobs.map((blob) => (
         <span
           key={blob.color}
-          className={`aurora-blob aurora-blob--${blob.color}`}
+          className={`aurora-blob aurora-blob--${blob.color}${blob.static ? ' aurora-blob--static' : ''}`}
           style={blob.style}
         />
       ))}

@@ -163,12 +163,18 @@ function DesktopShortcutBridge() {
 }
 
 /**
- * Renders the default global aurora — except on /login, where the Login page
- * owns its own bolder, custom-composed scene.
+ * Renders the default global aurora — except on /login, the landing page (/)
+ * and the feed (/home), where those pages own their own custom scenes.
  */
 function RouteAwareBackground() {
   const location = useLocation();
-  if (location.pathname === '/login') return null;
+  if (
+    location.pathname === '/login' ||
+    location.pathname === '/' ||
+    location.pathname === '/home'
+  ) {
+    return null;
+  }
   return <AuroraBackground />;
 }
 
