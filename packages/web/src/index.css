@@ -177,11 +177,16 @@
 }
 
 /* ── Aurora backdrop — ambient color mesh behind all page content ───────────
-   Three large, heavily blurred radial-gradient blobs in the palette hues
-   (violet / pink / cyan) painted fixed behind every page. Purely ambient:
-   pointer-events: none, z-index 0 while App wraps content at z-index 10+.
-   The heavy 120px blur plus 0.35 opacity reads as a soft mesh, never a solid
-   neon fill.
+   Layering contract (see spec): the mesh sits at z-index 0 and is painted
+   over the page base background (body bg = var(--bg-0) #0a0a12); blobs blend
+   into that base via the heavy blur — they never replace it. All real content
+   (nav, cards, forms) is positioned at z-index 1+ (App wraps everything in a
+   `relative z-10`; individual pages keep their own `relative z-10` content
+   when they compose custom scenes).
+
+   Purely ambient: pointer-events: none; opacity is set once per blob and is
+   NEVER raised on hover/scroll/interaction. The heavy 120px blur plus 0.35
+   default opacity reads as a soft mesh, never a solid neon fill.
 
    Each blob drifts on its own 70–100s ease-in-out loop (never syncing) so the
    mesh feels alive without drawing attention. prefers-reduced-motion: blobs
@@ -238,13 +243,6 @@
 .aurora-bg--fade-bottom {
   mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
   -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
-}
-
-/* Paints behind in-flow content when rendered inside App's z-10 wrapper
-   (login/landing use `relative z-10` content instead; this variant is for
-   layouts whose children are already opaque cards). */
-.aurora-bg--behind {
-  z-index: -1;
 }
 
 /* Static blob — no drift. Defined after the color modifiers so it wins the

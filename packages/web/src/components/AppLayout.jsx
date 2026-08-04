@@ -77,16 +77,14 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-transparent">
-      {location.pathname === '/home' && (
-        <AuroraBackground blobs={FEED_BLOBS} fade className="aurora-bg--behind" />
-      )}
+      {location.pathname === '/home' && <AuroraBackground blobs={FEED_BLOBS} fade />}
       {isDesktop && <UpdateBanner />}
       <Header />
       <OfflineBanner />
       {/* pt-14 pushes content below the fixed Header; on Win/Linux the TitleBar
           adds --tv-titlebar-h (32px) above it, so we use calc() to combine. */}
       <div
-        className="max-w-6xl mx-auto px-4 flex gap-6"
+        className="relative z-10 max-w-6xl mx-auto px-4 flex gap-6"
         style={{ paddingTop: 'calc(3.5rem + var(--tv-titlebar-h, 0px))' }}
       >
         <SectionErrorBoundary sectionName="Sidebar">
