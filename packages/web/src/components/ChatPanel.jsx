@@ -138,7 +138,11 @@ function ChatPanel({ communityId, communityName, isOnline = true, threadContext 
           return (
             <div key={i} className="flex items-start gap-2">
               <AIAvatar />
-              <div className="max-w-[80%] rounded-lg border border-amaranth/30 bg-amaranth/5 px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-neutral-200 dark:bg-amaranth/10">
+              <div
+                className={`max-w-[80%] rounded-lg border border-amaranth/30 bg-amaranth/5 px-4 py-2.5 text-sm leading-relaxed text-gray-800 dark:text-neutral-200 dark:bg-amaranth/10 ${
+                  isStreamingMsg ? 'streaming-glow' : ''
+                }`}
+              >
                 <div className="break-words whitespace-pre-wrap">
                   {isStreamingMsg ? (
                     <StreamingWords text={msg.content} reduceMotion={reduceMotion} />

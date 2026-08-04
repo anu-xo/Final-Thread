@@ -27,7 +27,7 @@ export default function VerifyEmail() {
       <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-8 text-center">
         {status === 'verifying' && (
           <>
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald border-t-transparent mx-auto mb-4" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-gradient-to-br from-violet to-pink mx-auto mb-4" />
             <p className="text-gray-600 dark:text-neutral-300">Verifying your email...</p>
           </>
         )}

@@ -175,23 +175,25 @@ export default function VoteButton({
 
   return (
     <div className={containerClass}>
-      {/* ── Upvote ── */}
-      <button
-        id={`vote-up-${targetId}`}
-        onClick={() => handleVote(1)}
-        disabled={isPending}
-        aria-label="Upvote"
-        aria-pressed={activeUp}
-        className={`${padding} rounded transition-all duration-150 ${
-          isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-        } ${
-          activeUp
-            ? 'text-pink scale-110'
-            : upNeutralClass
-        }`}
-      >
-        <ChevronUp size={iconSize} strokeWidth={activeUp ? 2.5 : 2} />
-      </button>
+  // ── Upvote ──
+  <motion.button
+    id={`vote-up-${targetId}`}
+    onClick={() => handleVote(1)}
+    disabled={isPending}
+    aria-label="Upvote"
+    aria-pressed={activeUp}
+    whileTap={reduceMotion || isPending ? undefined : { scale: 0.72 }}
+    transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+    className={`${padding} rounded transition-all duration-150 ${
+      isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+    } ${
+      activeUp
+        ? 'text-pink scale-110'
+        : upNeutralClass
+    }`}
+  >
+    <ChevronUp size={iconSize} strokeWidth={activeUp ? 2.5 : 2} />
+  </motion.button>
 
       {/* ── Score — springs to each new value, no linear count-up ── */}
       <ScoreEl
@@ -223,26 +225,28 @@ export default function VoteButton({
         </motion.div>
       )}
 
-      {/* ── Downvote ── */}
-      <button
-        id={`vote-down-${targetId}`}
-        onClick={() => handleVote(-1)}
-        disabled={isPending}
-        aria-label="Downvote"
-        aria-pressed={activeDown}
-        className={`${padding} rounded transition-all duration-150 ${
-          isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-        } ${
-          activeDown
-            ? 'text-violet scale-110'
-            : downNeutralClass
-        }`}
-      >
-        <ChevronDown
-          size={iconSize}
-          strokeWidth={activeDown ? 2.5 : 2}
-        />
-      </button>
+  {/* ── Downvote ── */}
+  <motion.button
+    id={`vote-down-${targetId}`}
+    onClick={() => handleVote(-1)}
+    disabled={isPending}
+    aria-label="Downvote"
+    aria-pressed={activeDown}
+    whileTap={reduceMotion || isPending ? undefined : { scale: 0.72 }}
+    transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+    className={`${padding} rounded transition-all duration-150 ${
+      isPending ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+    } ${
+      activeDown
+        ? 'text-violet scale-110'
+        : downNeutralClass
+    }`}
+  >
+    <ChevronDown
+      size={iconSize}
+      strokeWidth={activeDown ? 2.5 : 2}
+    />
+  </motion.button>
     </div>
   );
 }

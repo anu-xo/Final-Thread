@@ -271,7 +271,47 @@
   }
 }
 
+/* ── AI chat streaming — soft glow pulse on the assistant bubble ────────────
+   A gentle violet→pink ambient glow that breathes while tokens stream and
+   stops as soon as the message completes. Purely a box-shadow pulse — never
+   a spinning/rotating border or dashed/dotted outline. */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(236, 72, 153, 0.14),
+      0 0 16px -6px rgba(236, 72, 153, 0.32);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(236, 72, 153, 0.32),
+      0 0 30px -4px rgba(236, 72, 153, 0.55);
+  }
+}
+
+.streaming-glow {
+  animation: glow-pulse 1.6s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  /* Global kill-switch for every CSS animation/transition (Tailwind motion
+     utilities included). Framer Motion reads the same media query via
+     useReducedMotion() and switches to instant/no-op variants itself, so JS
+     animation is covered at the component level — this covers the rest. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .streaming-glow {
+    animation: none !important;
+    box-shadow: none;
+  }
+
   .shimmer {
     animation: none;
     background-position: 0 0;

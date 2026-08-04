@@ -29,16 +29,11 @@ export default function OnlinePill({ count, accent = null }) {
       className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
       style={{ color: dot, backgroundColor: accentRgba(accentKey, 0.1) }}
     >
-      <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-        <span
-          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-          style={{ backgroundColor: dot }}
-        />
-        <span
-          className="relative inline-flex h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: dot }}
-        />
-      </span>
+      <span
+        className="inline-block h-1.5 w-1.5 animate-pulse rounded-full"
+        style={{ backgroundColor: dot }}
+        aria-hidden="true"
+      />
       {compactCount(count)} online
     </span>
   );

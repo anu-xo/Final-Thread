@@ -10,11 +10,19 @@ import { PostCardSkeleton } from './skeletons/index.js';
 
 const ITEM_HEIGHT = 200;
 const OVERSCAN = 5;
+const STAGGER_MS = 40;
+const STAGGER_CAP = 400;
 
-function PostRow({ index, style, posts }) {
+// Stagger the fade-up for rows that belong to the first page — the same
+// ~40ms cadence the non-virtualized Home feed uses. Rows loaded by later
+// pages (index >= firstPageCount) mount instantly so infinite scroll never
+// feels delayed; only the initial feed load cascades.
+function PostRow({ index, style, posts, firstPageCount }) {
+  const revealDelay =
+    index < firstPageCount ? Math.min(index * STAGGER_MS, STAGGER_CAP) : 0;
   return (
     <div style={style}>
-      <PostCard post={posts[index]} />
+      <PostCard post={posts[index]} revealDelay={revealDelay} />
     </div>
   );
 }
@@ -33,6 +41,7 @@ export default function PostFeed({ communityId, sort }) {
   usePostRealtimeVotes();
 
   const posts = data ? data.pages.flatMap((page) => page.posts) : [];
+  const firstPageCount = data?.pages?.[0]?.posts?.length ?? 0;
 
   const [listHeight, setListHeight] = useState(
     typeof window !== 'undefined' ? window.innerHeight - 64 : 800
@@ -91,7 +100,7 @@ export default function PostFeed({ communityId, sort }) {
       rowHeight={ITEM_HEIGHT}
       rowCount={posts.length}
       rowComponent={PostRow}
-      rowProps={{ posts }}
+      rowProps={{ posts, firstPageCount }}
       overscanCount={OVERSCAN}
       onRowsRendered={handleRowsRendered}
       style={{ height: listHeight, width: '100%' }}

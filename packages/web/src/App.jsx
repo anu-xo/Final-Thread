@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
+import { motion, useReducedMotion } from 'motion/react';
 
 import { AuthProvider } from './context/AuthContext.jsx';
 import { useAuthInit } from './hooks/useAuthInit.js';
@@ -42,8 +43,32 @@ function PageSkeleton() {
       className="flex h-screen items-center justify-center"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald border-t-transparent" />
+      <div className="h-8 w-8 animate-pulse rounded-full bg-gradient-to-br from-violet to-pink" />
     </div>
+  );
+}
+
+/**
+ * RouteTransition — quick crossfade on navigation.
+ *
+ * Keyed on `location.pathname`, so every route change remounts the matched
+ * page and fades it in over ~180ms instead of a hard swap. Query-param-only
+ * changes (e.g. `/home?sort=new`) keep the same key and don't re-animate.
+ * prefers-reduced-motion: no fade, instant swap.
+ */
+function RouteTransition({ children }) {
+  const location = useLocation();
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      key={location.pathname}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduceMotion ? 0 : 0.18, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
@@ -72,47 +97,49 @@ function AppRoutes() {
 
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/download" element={<DownloadPage />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
+      <RouteTransition>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/download" element={<DownloadPage />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
 
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/submit" element={<SubmitPostPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/ai/chat" element={<AIChatPage />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/home" element={<HomePage />} />
+              <Route path="/submit" element={<SubmitPostPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/ai/chat" element={<AIChatPage />} />
 
-            {/* Community */}
-            <Route path="/communities" element={<CommunityBrowser />} />
-            <Route path="/communities/create" element={<CreateCommunity />} />
-            <Route path="/community/:slug" element={<CommunityPage />} />
-            <Route path="/r/:slug" element={<CommunityPage />} />
+              {/* Community */}
+              <Route path="/communities" element={<CommunityBrowser />} />
+              <Route path="/communities/create" element={<CreateCommunity />} />
+              <Route path="/community/:slug" element={<CommunityPage />} />
+              <Route path="/r/:slug" element={<CommunityPage />} />
 
-            {/* User */}
-            <Route path="/u/:username" element={<ProfilePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+              {/* User */}
+              <Route path="/u/:username" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
 
-            {/* Admin */}
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/mod/queue" element={<AdminRoute roles={['admin', 'moderator']}><ModQueue /></AdminRoute>} />
+              {/* Admin */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/mod/queue" element={<AdminRoute roles={['admin', 'moderator']}><ModQueue /></AdminRoute>} />
 
-            {/* Posts */}
-            <Route path="/posts/:id" element={<PostDetail />} />
-            <Route path="/post/:id" element={<PostDetail />} />
+              {/* Posts */}
+              <Route path="/posts/:id" element={<PostDetail />} />
+              <Route path="/post/:id" element={<PostDetail />} />
 
-            {/* Dev */}
-            <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
+              {/* Dev */}
+              <Route path="/tiptap-smoke" element={<TiptapSmokePage />} />
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </RouteTransition>
     </Suspense>
   );
 }

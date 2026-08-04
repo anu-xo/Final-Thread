@@ -49,7 +49,7 @@ function CommunityAvatar({ community }) {
  *  • Hover: the signature glow-lift (`.card-glow`) — card lifts 3px with a
  *    violet→pink glow shadow, border transitions to --border-strong, and a
  *    one-shot diagonal sheen sweeps across once (it never loops on hover)
- *  • Mounts with a fade; pass `revealDelay` (ms) to stagger cards in a
+ *  • Mounts with a fade-up; pass `revealDelay` (ms) to stagger cards in a
  *    freshly loaded first page (feed virtualization keeps delay 0 so only
  *    newly-visible rows animate)
  *  • prefers-reduced-motion disables the entry animation and hover lift/sheen
@@ -80,9 +80,9 @@ export default function PostCard({ post, revealDelay = 0 }) {
   return (
     <motion.div
       data-post-id={_id}
-      initial={reduceMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.35, ease: 'easeOut', delay: revealDelay / 1000 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut', delay: revealDelay / 1000 }}
       className="relative flex flex-col gap-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate p-3.5 card-glow"
     >
       {/* ── Top row — community avatar · r/community · time · online pill ── */}

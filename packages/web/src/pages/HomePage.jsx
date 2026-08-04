@@ -7,7 +7,7 @@ import { useHomeFeed } from '../hooks/useHomeFeed.js';
 import { useFeedRealtimeVotes } from '../hooks/useFeedRealtimeVotes.js';
 
 const SORT_OPTIONS = ['hot', 'new', 'top', 'rising'];
-const FIRST_PAGE_STAGGER_MS = 60;
+const FIRST_PAGE_STAGGER_MS = 40;
 
 export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -44,7 +44,7 @@ export default function HomePage() {
   const posts = pages.flatMap((page) => page.data || []);
   const noSubscriptions = pages[0]?.meta?.noSubscriptions === true;
 
-  // Stagger the fade-in by ~60ms per card only for the first page. Once a
+  // Stagger the fade-in by ~40ms per card only for the first page. Once a
   // later page lands (pages.length > 1) every delay collapses to 0; the
   // already-mounted cards keep their settled state (motion doesn't re-run on
   // an unchanged target), so only the new cards animate in.
