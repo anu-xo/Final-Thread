@@ -4,6 +4,7 @@ import Header from './Header.jsx';
 import Sidebar from './Sidebar.jsx';
 import SearchModal from './SearchModal.jsx';
 import SectionErrorBoundary from './SectionErrorBoundary.jsx';
+import RouteFade from './RouteFade.jsx';
 import { useNotificationSocket } from '../hooks/useNotifications.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
@@ -67,10 +68,13 @@ export default function AppLayout() {
         <SectionErrorBoundary sectionName="Sidebar">
           <Sidebar />
         </SectionErrorBoundary>
-        {/* Main content area — child routes render here */}
+        {/* Main content area — child routes render here. RouteFade is keyed on
+            pathname so each page crossfades in while the shell stays mounted. */}
         <main className="flex-1 py-4 min-w-0">
           <SectionErrorBoundary sectionName="Feed">
-            <Outlet />
+            <RouteFade key={location.pathname}>
+              <Outlet />
+            </RouteFade>
           </SectionErrorBoundary>
         </main>
       </div>
