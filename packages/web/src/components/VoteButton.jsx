@@ -26,6 +26,8 @@ const SNAP_SCALE = [0, 1.15, 1];
  *  initialUserVote — -1 | 0 | 1 (defaults to 0 = not voted)
  *  size           — 'sm' | 'md' (md is default, sm for comment rows)
  *  layout         — 'vertical' (default) | 'horizontal'
+ *  variant        — 'default' (default) | 'pill' (rounded pill container for
+ *                    the feed-card footer; resting up-arrow pink, down muted)
  *
  * Behaviour
  *  • Clicking the already-active arrow sends value:0 (toggle/remove vote)
@@ -48,6 +50,7 @@ export default function VoteButton({
   initialUserVote = 0,
   size = 'md',
   layout = 'vertical',
+  variant = 'default',
 }) {
   // We track score + vote in local state rather than deriving from React Query
   // because VoteButton is used both in the feed (query-backed) and in comment
@@ -139,8 +142,10 @@ export default function VoteButton({
   const padding  = size === 'sm' ? 'p-0.5' : 'p-1';
 
   // ── Layout ───────────────────────────────────────────────────────────────
-  const containerClass =
-    layout === 'horizontal'
+  const isPill = variant === 'pill';
+  const containerClass = isPill
+    ? 'flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-1 py-0.5'
+    : layout === 'horizontal'
       ? 'flex flex-row items-center gap-0.5'
       : 'flex flex-col items-center gap-0.5';
 
@@ -156,6 +161,15 @@ export default function VoteButton({
     : activeDown
       ? 'text-violet'
       : 'text-gray-400 dark:text-neutral-500';
+
+  // Pill variant (feed card footer): resting up-arrow is pink, resting
+  // down-arrow is muted; active states keep the app's pink/violet feedback.
+  const upNeutralClass = isPill
+    ? 'text-pink hover:scale-110'
+    : 'text-gray-400 hover:text-pink hover:scale-110';
+  const downNeutralClass = isPill
+    ? 'text-gray-400 dark:text-neutral-500 hover:scale-110'
+    : 'text-gray-400 hover:text-violet hover:scale-110';
 
   const ScoreEl = reduceMotion ? 'span' : motion.span;
 
@@ -173,7 +187,7 @@ export default function VoteButton({
         } ${
           activeUp
             ? 'text-pink scale-110'
-            : 'text-gray-400 hover:text-pink hover:scale-110'
+            : upNeutralClass
         }`}
       >
         <ChevronUp size={iconSize} strokeWidth={activeUp ? 2.5 : 2} />
@@ -189,7 +203,7 @@ export default function VoteButton({
       </ScoreEl>
 
       {/* ── StitchLine confirmation — snaps taut on every state change ── */}
-      {stitchKey > 0 && (
+      {!isPill && stitchKey > 0 && (
         <motion.div
           key={stitchKey}
           initial={reduceMotion ? { scaleX: 1, opacity: 1 } : { scaleX: 0, opacity: 0 }}
@@ -221,7 +235,7 @@ export default function VoteButton({
         } ${
           activeDown
             ? 'text-violet scale-110'
-            : 'text-gray-400 hover:text-violet hover:scale-110'
+            : downNeutralClass
         }`}
       >
         <ChevronDown

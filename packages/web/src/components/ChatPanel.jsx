@@ -1,6 +1,7 @@
 // packages/web/src/components/ChatPanel.jsx
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { Sparkles } from 'lucide-react';
 import { useAIChat } from '../hooks/useAIChat.js';
 import { RetryableError } from './RetryableError.jsx';
 import StitchIcon from './StitchIcon.jsx';
@@ -56,11 +57,12 @@ function PulsingStitch({ className = 'h-4 w-4' }) {
   );
 }
 
-function ChatPanel({ communityId, communityName, isOnline = true }) {
+function ChatPanel({ communityId, communityName, isOnline = true, threadContext = null }) {
   const { messages, streaming, warning, error, sendMessage, retry } = useAIChat(
     communityId,
     communityName,
     isOnline,
+    threadContext,
   );
   const reduceMotion = useReducedMotion();
   const [input, setInput] = useState('');
@@ -87,6 +89,13 @@ function ChatPanel({ communityId, communityName, isOnline = true }) {
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
+        {threadContext && (
+          <div className="flex items-center gap-2 rounded-lg border border-violet/30 bg-violet/10 px-3 py-2 text-xs text-violet">
+            <Sparkles size={13} className="shrink-0 text-pink" />
+            <span className="truncate">Analyzing this thread: {threadContext.title}</span>
+          </div>
+        )}
+
         {!isOnline && (
           <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-gray-400/60 dark:border-neutral-600 px-3 py-2 text-xs text-gray-500 dark:text-neutral-400 opacity-80">
             <svg

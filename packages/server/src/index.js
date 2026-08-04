@@ -40,6 +40,33 @@ const io = new Server(httpServer, {
 app.set('io', io);
 initIO(io);
 
+// ── Per-community presence ──────────────────────────────────────────────
+// communityPresence: slug -> Set of socket ids currently in the room.
+// socketCommunities:  socketId -> Set of community slugs it joined, so a
+//                      disconnect can clean every room it was counted in.
+const communityPresence = new Map();
+const socketCommunities = new Map();
+
+function getCommunityCount(slug) {
+  return communityPresence.get(slug)?.size || 0;
+}
+
+function broadcastPresence(slug) {
+  io.to(`community:${slug}`).emit('presence:update', {
+    slug,
+    count: getCommunityCount(slug),
+  });
+}
+
+function removePresence(socketId, slug) {
+  const set = communityPresence.get(slug);
+  set?.delete(socketId);
+  if (set?.size === 0) communityPresence.delete(slug);
+  socketCommunities.get(socketId)?.delete(slug);
+  if (socketCommunities.get(socketId)?.size === 0) socketCommunities.delete(socketId);
+  broadcastPresence(slug);
+}
+
 io.on('connection', (socket) => {
   console.log(`🔌 [Socket.io] Client connected: ${socket.id}`);
 
@@ -73,15 +100,40 @@ io.on('connection', (socket) => {
   socket.on('join_community', ({ slug }) => {
     if (!slug) return;
     socket.join(`community:${slug}`);
-    console.log(`🪡 [Socket.io] ${socket.id} joined room community:${slug}`);
+
+    let sockets = communityPresence.get(slug);
+    if (!sockets) {
+      sockets = new Set();
+      communityPresence.set(slug, sockets);
+    }
+    sockets.add(socket.id);
+
+    let slugs = socketCommunities.get(socket.id);
+    if (!slugs) {
+      slugs = new Set();
+      socketCommunities.set(socket.id, slugs);
+    }
+    slugs.add(slug);
+
+    broadcastPresence(slug);
+    console.log(`🪡 [Socket.io] ${socket.id} joined room community:${slug} (${getCommunityCount(slug)} online)`);
   });
 
   socket.on('leave_community', ({ slug }) => {
     if (!slug) return;
     socket.leave(`community:${slug}`);
+    removePresence(socket.id, slug);
   });
 
   socket.on('disconnect', () => {
+    const slugs = socketCommunities.get(socket.id);
+    if (slugs) {
+      for (const slug of slugs) {
+        socket.leave(`community:${slug}`);
+        removePresence(socket.id, slug);
+      }
+      socketCommunities.delete(socket.id);
+    }
     console.log(`❌ [Socket.io] Client disconnected: ${socket.id}`);
   });
 });

@@ -4,6 +4,7 @@ import Groq from 'groq-sdk';
 import mongoose from 'mongoose';
 import PostEmbedding from '../models/PostEmbedding.js';
 import Post from '../models/Post.js';
+import Comment from '../models/Comment.js';
 import AIMessage from '../models/AIMessage.js';
 import Community from '../models/Community.js';
 import AIConversation from '../models/AIConversation.js';
@@ -19,6 +20,32 @@ const groq = new Groq({
 });
 
 const MAX_CONTEXT_TOKENS = 5500;
+
+// Thread-context caps — keep the pinned post + its top comments small enough
+// to fit alongside RAG context inside the prompt budget.
+const MAX_THREAD_COMMENTS = 12;
+const MAX_THREAD_BODY_CHARS = 600;
+const MAX_COMMENT_CHARS = 180;
+
+// Build a compact "discussion thread" context block from a post + comments
+// so "Ask AI about this thread" answers are grounded in the actual thread.
+export function buildThreadContext(post, comments) {
+  const lines = [`[Thread] ${post.title}`];
+  if (post.body) {
+    lines.push(`Post body: ${truncateText(post.body, MAX_THREAD_BODY_CHARS)}`);
+  }
+  if (comments.length > 0) {
+    lines.push('Top comments:');
+    for (const c of comments) {
+      lines.push(`- u/${c.author?.username || 'unknown'}: ${truncateText(c.body, MAX_COMMENT_CHARS)}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+function truncateText(text, max) {
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
 
 export async function buildPromptWithinBudget({
   systemPrompt,
@@ -359,12 +386,33 @@ export async function buildRagPrompt({ message, communityId }) {
 
 // 12. Stream chat response — used by POST /ai/chat route
 // Returns { stream: ReadableStream, sources: Array, tokenCount: number }
-export async function streamChatResponse({ message, communityId, conversationId }) {
+export async function streamChatResponse({ message, communityId, conversationId, thread }) {
   const community = await Community.findById(communityId).select('name');
   if (!community) throw new Error(`Community not found: ${communityId}`);
 
   const queryEmbedding = await embedQuery(message);
   const contextChunks = await retrieveContext(queryEmbedding, communityId);
+
+  // Optional pinned thread context — the post + its top comments are prepended
+  // so the AI answers about THIS thread specifically (not just RAG neighbors).
+  let threadChunk = null;
+  if (thread?.postId) {
+    const post = await Post.findById(thread.postId)
+      .select('title body author')
+      .populate('author', 'username')
+      .lean();
+
+    if (post) {
+      const comments = await Comment.find({ post: post._id, isRemoved: false })
+        .sort({ score: -1, createdAt: -1 })
+        .limit(MAX_THREAD_COMMENTS)
+        .populate('author', 'username')
+        .lean();
+      threadChunk = { text: buildThreadContext(post, comments), postId: post._id };
+    }
+  }
+
+  const allChunks = threadChunk ? [threadChunk, ...contextChunks] : contextChunks;
 
   const history = await AIMessage.find({ conversation: conversationId })
     .sort({ createdAt: -1 })
@@ -373,19 +421,19 @@ export async function streamChatResponse({ message, communityId, conversationId 
 
   const { prompt, tokenCount } = await buildPromptWithinBudget({
     systemPrompt: SYSTEM_PROMPT.replace('{community}', community.name),
-    contextChunks: contextChunks.map((c) => c.text),
+    contextChunks: allChunks.map((c) => c.text),
     history: history.reverse(),
     userMessage: message,
   });
 
-  const postIds = [...new Set(contextChunks.map((c) => c.postId.toString()))];
+  const postIds = [...new Set(allChunks.map((c) => c.postId.toString()))];
   const posts = await Post.find({ _id: { $in: postIds } }).select('title').lean();
   const postTitleMap = posts.reduce((map, post) => {
     map[post._id.toString()] = post.title;
     return map;
   }, {});
 
-  const sources = contextChunks.map((c) => ({
+  const sources = allChunks.map((c) => ({
     postId: c.postId,
     title: postTitleMap[c.postId.toString()] || 'Untitled',
   }));
@@ -440,4 +488,5 @@ export default {
   groqGenerateStream,
   handleChat,
   getRecentHistory,
+  buildThreadContext,
 };

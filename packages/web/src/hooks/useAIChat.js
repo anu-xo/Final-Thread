@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 
 const STREAM_IDLE_TIMEOUT_MS = 30_000;
 
-export function useAIChat(communityId, communityName, isOnline = true) {
+export function useAIChat(communityId, communityName, isOnline = true, threadContext = null) {
   const [messages, setMessages] = useState([]);
   const [streaming, setStreaming] = useState(false);
   const [warning, setWarning] = useState(null);
@@ -17,6 +17,15 @@ export function useAIChat(communityId, communityName, isOnline = true) {
       clearTimeout(idleTimerRef.current);
     };
   }, []);
+
+  // New thread context (e.g. "Ask AI about this thread") starts a fresh chat
+  useEffect(() => {
+    abortRef.current?.abort();
+    setMessages([]);
+    setStreaming(false);
+    setWarning(null);
+    setError(null);
+  }, [threadContext?.postId]);
 
   useEffect(() => {
     if (!isOnline && streaming) {
@@ -51,7 +60,11 @@ export function useAIChat(communityId, communityName, isOnline = true) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ message: text, communityId }),
+        body: JSON.stringify({
+          message: text,
+          communityId,
+          thread: threadContext ? { postId: threadContext.postId } : undefined,
+        }),
         signal: controller.signal,
       });
 
@@ -135,7 +148,7 @@ export function useAIChat(communityId, communityName, isOnline = true) {
       abortRef.current = null;
       setStreaming(false);
     }
-  }, [communityId, communityName, isOnline, resetIdleTimer]);
+  }, [communityId, communityName, isOnline, threadContext, resetIdleTimer]);
 
   const retry = useCallback(() => {
     if (lastMessageRef.current) {

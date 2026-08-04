@@ -2,32 +2,37 @@ import Skeleton from './Skeleton.jsx';
 
 export default function PostCardSkeleton() {
   return (
-    <div className="flex gap-3 border border-gray-200 dark:border-white/10 rounded-lg p-3 bg-white dark:bg-slate">
-      {/* Vote column — matches VoteButton size="sm": 16px icons, p-0.5 */}
-      <div className="shrink-0 flex flex-col items-center gap-0.5 pt-0.5">
-        <Skeleton className="h-4 w-4 rounded" />
-        <Skeleton className="text-xs w-6 rounded" />
-        <Skeleton className="h-4 w-4 rounded" />
+    <div className="flex flex-col gap-2.5 border border-gray-200 dark:border-white/10 rounded-xl p-3.5 bg-white dark:bg-slate">
+      {/* Top row — avatar · community · time · online pill */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-7 w-7 rounded-full" />
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-3 w-12" />
+        <div className="ml-auto flex items-center gap-1.5">
+          <Skeleton className="h-2 w-2 rounded-full" />
+          <Skeleton className="h-3 w-14" />
+        </div>
       </div>
 
-      <div className="flex-1 min-w-0 space-y-2">
-        {/* Meta row — community badge + flair + author + time (text-xs text-gray-500) */}
-        <div className="flex items-center gap-2 text-xs">
-          <Skeleton className="h-4 w-20 rounded-full" />
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-3 w-12" />
-        </div>
+      {/* Title — matches text-[15px] font-medium leading-snug */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>
 
-        {/* Title — matches font-medium text-gray-900 leading-snug */}
-        <div className="space-y-1.5">
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
+      {/* Preview — matches text-[13px] muted */}
+      <div className="space-y-1.5">
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3" />
+      </div>
 
-        {/* Footer — matches flex items-center gap-4 mt-2 text-sm text-gray-500 */}
-        <div className="flex items-center gap-4 pt-1">
-          <Skeleton className="h-4 w-24" />
+      {/* Footer — vote pill · comments · Ask AI pill */}
+      <div className="flex items-center justify-between pt-0.5">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-4 w-20" />
         </div>
+        <Skeleton className="h-6 w-36 rounded-full" />
       </div>
     </div>
   );

@@ -8,7 +8,7 @@ import { usePostRealtimeVotes } from '../hooks/usePostRealtimeVotes';
 import PostCard from './PostCard';
 import { PostCardSkeleton } from './skeletons/index.js';
 
-const ITEM_HEIGHT = 400;
+const ITEM_HEIGHT = 200;
 const OVERSCAN = 5;
 
 function PostRow({ index, style, posts }) {

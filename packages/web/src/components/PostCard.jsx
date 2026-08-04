@@ -1,7 +1,10 @@
 // components/PostCard.jsx
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 import VoteButton from './VoteButton';
+import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
+import { useUiStore } from '../store/uiStore.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -16,11 +19,50 @@ function timeAgo(date) {
   return 'just now';
 }
 
+function compactCount(n) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
+  return String(n);
+}
+
+/** Community avatar — violet→pink gradient circle (icon image when set) */
+function CommunityAvatar({ community }) {
+  const name = community?.name || community?.slug || 'r';
+  const initial = name[0]?.toUpperCase() || 'r';
+  return (
+    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-violet to-pink text-xs font-semibold text-white">
+      {community?.icon ? (
+        <img src={community.icon} alt={name} className="h-full w-full object-cover" loading="lazy" />
+      ) : (
+        initial
+      )}
+    </span>
+  );
+}
+
+/** Live "online now" pill — pulsing mint dot + Socket.io presence count */
+function OnlinePill({ count }) {
+  if (count == null) return null;
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/10 px-2 py-0.5 text-[11px] font-medium text-mint">
+      <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint opacity-75" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-mint" />
+      </span>
+      {compactCount(count)} online
+    </span>
+  );
+}
+
 /**
  * PostCard — Midnight Aurora feed card
  *
- *  • slate surface (white in light mode), mist text, emerald/amaranth accents
- *  • Space Grotesk (font-display) for the title
+ *  • Top row: community avatar (gradient circle), r/community, timestamp,
+ *    and a live "online now" pill (pulsing mint dot + Socket.io presence count)
+ *  • Title (15px / 500) + muted preview text (13px)
+ *  • Footer: vote pill (up pink / down muted), comment count with icon, and a
+ *    right-aligned "Ask AI about this thread" pill that opens the AI chat
+ *    panel pre-loaded with this post + its comments as context
  *  • Hover: the signature glow-lift (`.card-glow`) — card lifts 3px with a
  *    violet→pink glow shadow, border transitions to --border-strong, and a
  *    one-shot diagonal sheen sweeps across once (it never loops on hover)
@@ -31,11 +73,25 @@ function timeAgo(date) {
  */
 export default function PostCard({ post, revealDelay = 0 }) {
   const reduceMotion = useReducedMotion();
+  const openThreadChat = useUiStore((s) => s.openThreadChat);
 
   const {
-    _id, title, author, community, score, commentCount,
-    createdAt, userVote, flair,
+    _id, title, body, content, community, score, commentCount,
+    createdAt, userVote,
   } = post;
+
+  const presenceCount = useCommunityPresence(community?.slug);
+  const preview = body || content;
+
+  const handleAskAI = () => {
+    openThreadChat({
+      postId: _id,
+      title,
+      communityId: community?._id,
+      communityName: community?.name || community?.slug,
+      communitySlug: community?.slug,
+    });
+  };
 
   return (
     <motion.div
@@ -43,58 +99,74 @@ export default function PostCard({ post, revealDelay = 0 }) {
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut', delay: revealDelay / 1000 }}
-      className="relative flex gap-3 rounded-lg border p-3 bg-white dark:bg-slate border-gray-200 dark:border-white/10 card-glow"
+      className="relative flex flex-col gap-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate p-3.5 card-glow"
     >
-      {/* Vote column — uses the shared VoteButton with optimistic updates */}
-      <div className="shrink-0">
-        <VoteButton
-          targetId={_id}
-          targetType="post"
-          initialScore={score}
-          initialUserVote={userVote ?? 0}
-          size="sm"
-        />
+      {/* ── Top row — community avatar · r/community · time · online pill ── */}
+      <div className="flex min-w-0 items-center gap-2">
+        <Link
+          to={`/community/${community?.slug}`}
+          className="flex min-w-0 items-center gap-2"
+        >
+          <CommunityAvatar community={community} />
+          <span className="truncate text-xs font-semibold text-gray-700 dark:text-mist/90 transition-colors hover:text-emerald">
+            r/{community?.name || community?.slug}
+          </span>
+        </Link>
+        <span className="shrink-0 text-xs text-gray-500 dark:text-mist/50">
+          · {timeAgo(createdAt)}
+        </span>
+        <div className="ml-auto shrink-0">
+          <OnlinePill count={presenceCount} />
+        </div>
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-mist/60 mb-1">
-          <span className="bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-full font-medium text-gray-700 dark:text-mist/80 truncate max-w-[160px]">
-            r/{community?.name}
-          </span>
-          {flair && (
-            <span className="bg-steel/15 text-steel px-2 py-0.5 rounded-full font-medium">
-              {flair.name}
-            </span>
-          )}
-          <span className="truncate">Posted by u/{author?.username}</span>
-          <span className="shrink-0">· {timeAgo(createdAt)}</span>
-        </div>
+      {/* ── Title — 15px / 500 ── */}
+      <Link
+        to={`/posts/${_id}`}
+        className="block font-display text-[15px] font-medium leading-snug text-gray-900 dark:text-mist line-clamp-2 transition-colors hover:text-emerald"
+      >
+        {title}
+      </Link>
 
-        <h3 className="font-display text-lg leading-snug text-gray-900 dark:text-mist">
-          <Link to={`/posts/${_id}`} className="transition-colors hover:text-emerald">
-            {title}
-          </Link>
-        </h3>
+      {/* ── Preview — 13px muted ── */}
+      {preview && (
+        <Link
+          to={`/posts/${_id}`}
+          className="block text-[13px] leading-relaxed text-gray-500 dark:text-mist/60 line-clamp-2"
+        >
+          {preview}
+        </Link>
+      )}
 
-        {post?.media?.length > 0 && (
-          <Link to={`/posts/${_id}`} className="mt-3 block overflow-hidden rounded-lg border bg-gray-50 dark:bg-void/15 border-gray-200 dark:border-white/10">
-            <img
-              src={post.media[0]}
-              alt={title}
-              className="h-56 w-full object-cover"
-              loading="lazy"
-            />
-          </Link>
-        )}
-
-        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-mist/60">
+      {/* ── Footer — vote pill · comments · Ask AI ── */}
+      <div className="mt-auto flex items-center justify-between gap-3 pt-0.5">
+        <div className="flex items-center gap-3">
+          <VoteButton
+            targetId={_id}
+            targetType="post"
+            initialScore={score}
+            initialUserVote={userVote ?? 0}
+            size="sm"
+            layout="horizontal"
+            variant="pill"
+          />
           <Link
             to={`/posts/${_id}`}
-            className="transition-colors hover:text-emerald"
+            className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-mist/60 transition-colors hover:text-emerald"
           >
-            💬 {commentCount} comments
+            <MessageCircle size={15} className="shrink-0" />
+            {commentCount} comments
           </Link>
         </div>
+
+        <button
+          type="button"
+          onClick={handleAskAI}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-violet/30 bg-gradient-to-r from-violet/10 to-pink/10 px-3 py-1.5 text-xs font-medium text-violet transition hover:brightness-110"
+        >
+          <Sparkles size={13} className="shrink-0 text-pink" />
+          Ask AI about this thread
+        </button>
       </div>
     </motion.div>
   );
