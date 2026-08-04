@@ -210,6 +210,67 @@
   animation: blur-in 0.35s ease-out both;
 }
 
+/* ── Signature card interaction — "glow-lift" ──────────────────────────────
+   The house hover animation for PostCard, CommentCard, and community cards.
+
+   On hover:
+   · transform: translateY(-3px) over 250ms ease
+   · violet→pink ambient glow shadow
+   · border-color transitions to --border-strong
+   · a single one-shot diagonal light sheen (115°, violet→pink at 10%
+     opacity) sweeps left-to-right across the card once (~900ms ease) and
+     then stops — it must not loop or repeat while the cursor stays on it.
+
+   Never paired with a spinning/rotating border or a dashed/dotted outline. */
+.card-glow {
+  position: relative;
+  transition:
+    transform 250ms ease,
+    box-shadow 250ms ease,
+    border-color 250ms ease;
+}
+
+.card-glow:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow:
+    0 10px 30px -8px rgba(139, 92, 246, 0.35),
+    0 4px 14px -4px rgba(236, 72, 153, 0.25);
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background-image: linear-gradient(
+    115deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.1) 40%,
+    rgba(236, 72, 153, 0.1) 55%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 45% 100%;
+  background-position: -100% 0;
+}
+
+.card-glow:hover::before {
+  opacity: 1;
+  animation: card-sheen 900ms ease forwards;
+}
+
+@keyframes card-sheen {
+  from {
+    background-position: -100% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .shimmer {
     animation: none;
@@ -218,5 +279,20 @@
 
   .blur-in-word {
     animation: none;
+  }
+
+  .card-glow {
+    transition:
+      box-shadow 250ms ease,
+      border-color 250ms ease;
+  }
+
+  .card-glow:hover {
+    transform: none;
+  }
+
+  .card-glow:hover::before {
+    animation: none;
+    opacity: 0;
   }
 }

@@ -23,7 +23,7 @@ function CommunityResult({ community }) {
   return (
     <Link
       to={`/community/${community.slug}`}
-      className="block rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm transition hover:border-emerald dark:hover:border-emerald hover:shadow-md"
+      className="block rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm card-glow"
     >
       <div className="flex items-start justify-between gap-4">
         <div>

@@ -9,7 +9,7 @@ import { userApi } from '../services/userApi.js';
 
 function ProfileCommentCard({ comment }) {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-4 shadow-sm card-glow">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-xs text-gray-500 dark:text-neutral-400">

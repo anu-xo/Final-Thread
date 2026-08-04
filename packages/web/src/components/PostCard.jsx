@@ -1,9 +1,7 @@
 // components/PostCard.jsx
-import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
 import VoteButton from './VoteButton';
-import StitchLine from './StitchLine';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -23,16 +21,15 @@ function timeAgo(date) {
  *
  *  • slate surface (white in light mode), mist text, emerald/amaranth accents
  *  • Space Grotesk (font-display) for the title
- *  • Hover: card lifts 2px (motion whileHover) and a StitchLine briefly
- *    traces the top border, drawing in then fading out
- *  • Mounts with a fade+rise; pass `revealDelay` (ms) to stagger cards in a
+ *  • Hover: the signature glow-lift (`.card-glow`) — card lifts 3px with a
+ *    violet→pink glow shadow, border transitions to --border-strong, and a
+ *    one-shot diagonal sheen sweeps across once (it never loops on hover)
+ *  • Mounts with a fade; pass `revealDelay` (ms) to stagger cards in a
  *    freshly loaded first page (feed virtualization keeps delay 0 so only
  *    newly-visible rows animate)
- *  • prefers-reduced-motion disables the entry/hover/trace animation
+ *  • prefers-reduced-motion disables the entry animation and hover lift/sheen
  */
 export default function PostCard({ post, revealDelay = 0 }) {
-  const [trace, setTrace] = useState(null); // { key, length } while tracing
-  const cardRef = useRef(null);
   const reduceMotion = useReducedMotion();
 
   const {
@@ -40,50 +37,14 @@ export default function PostCard({ post, revealDelay = 0 }) {
     createdAt, userVote, flair,
   } = post;
 
-  const handleEnter = () => {
-    if (reduceMotion) return; // decorative trace — skip for reduced motion
-    const el = cardRef.current;
-    if (el && el.offsetWidth > 0) {
-      setTrace({ key: Date.now(), length: el.offsetWidth });
-    }
-  };
-
-  const handleLeave = () => setTrace(null);
-
   return (
     <motion.div
-      ref={cardRef}
       data-post-id={_id}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={reduceMotion ? undefined : { y: -2, transition: { duration: 0.2, ease: 'easeOut' } }}
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: 'easeOut', delay: revealDelay / 1000 }}
-      className="relative flex gap-3 rounded-lg border p-3 bg-white dark:bg-slate border-gray-200 dark:border-white/10 transition-[box-shadow,border-color] hover:border-emerald/50 hover:shadow-lg dark:hover:border-emerald/40"
+      className="relative flex gap-3 rounded-lg border p-3 bg-white dark:bg-slate border-gray-200 dark:border-white/10 card-glow"
     >
-      {/* ── StitchLine border trace — draws in across the top edge, then fades ── */}
-      {trace && (
-        <motion.div
-          key={trace.key}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 1.2, times: [0, 0.12, 0.7, 1] }}
-          onAnimationComplete={() => setTrace(null)}
-          className="pointer-events-none absolute inset-x-0 top-0 z-10 text-emerald"
-        >
-          <StitchLine
-            orientation="horizontal"
-            length={trace.length}
-            strokeWidth={2}
-            dash={6}
-            gap={6}
-            duration={0.4}
-            delay={0}
-          />
-        </motion.div>
-      )}
-
       {/* Vote column — uses the shared VoteButton with optimistic updates */}
       <div className="shrink-0">
         <VoteButton

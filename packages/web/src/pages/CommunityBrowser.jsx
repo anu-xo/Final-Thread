@@ -11,7 +11,7 @@ function CommunityCard({ community }) {
   return (
     <Link
       to={`/community/${community.slug}`}
-      className="block border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 hover:border-emerald transition-colors bg-white dark:bg-neutral-900"
+      className="block border border-neutral-200 dark:border-neutral-700 rounded-xl p-5 card-glow bg-white dark:bg-neutral-900"
     >
       {/* Banner strip */}
       <div
