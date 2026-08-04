@@ -176,6 +176,39 @@
   }
 }
 
+/* ── Aurora backdrop — ambient color mesh behind all page content ───────────
+   Three large, heavily blurred radial-gradient blobs in the palette hues
+   (violet / pink / cyan) painted fixed behind every page. Purely ambient:
+   zero motion, pointer-events: none, z-index 0 while App wraps content at
+   z-index 10+. The heavy 120px blur plus 0.35 opacity reads as a soft mesh,
+   never a solid neon fill. */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: var(--blob-opacity, 0.35);
+}
+
+.aurora-blob--violet {
+  background: radial-gradient(circle at 50% 50%, var(--color-violet) 0%, var(--color-violet) 35%, transparent 72%);
+}
+
+.aurora-blob--pink {
+  background: radial-gradient(circle at 50% 50%, var(--color-pink) 0%, var(--color-pink) 35%, transparent 72%);
+}
+
+.aurora-blob--cyan {
+  background: radial-gradient(circle at 50% 50%, var(--color-cyan) 0%, var(--color-cyan) 35%, transparent 72%);
+}
+
 /* ── Skeleton shimmer — diagonal sheen, not a flat pulse ────────────────── */
 @keyframes shimmer-slide {
   0%   { background-position: 150% 0; }

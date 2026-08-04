@@ -12,7 +12,7 @@ export default function LandingPage() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-neutral-900 flex flex-col"
+      className="min-h-screen bg-gray-50 dark:bg-transparent flex flex-col"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
       {/* Nav */}

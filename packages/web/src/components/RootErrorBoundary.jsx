@@ -22,7 +22,7 @@ export default class RootErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-transparent flex items-center justify-center px-4">
           <div className="max-w-md w-full text-center">
             <div className="text-5xl mb-4">💥</div>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-neutral-100 mb-2">

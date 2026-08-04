@@ -37,7 +37,7 @@ export default function Login() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900"
+      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
       <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-sm p-8">

@@ -14,6 +14,7 @@ import AppLayout from './components/AppLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import TitleBar from './components/TitleBar.jsx';
 import RouteFade from './components/RouteFade.jsx';
+import AuroraBackground from './components/AuroraBackground.jsx';
 
 // Lazy-loaded Pages
 import LandingPage from './pages/LandingPage.jsx';
@@ -167,9 +168,14 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
-            <TitleBar />
-            <DesktopShortcutBridge />
-            <AppRoutes />
+            {/* Aurora sits at z-index 0; everything below is wrapped at
+                z-index 10 so the ambient mesh stays behind all content. */}
+            <AuroraBackground />
+            <div className="relative z-10">
+              <TitleBar />
+              <DesktopShortcutBridge />
+              <AppRoutes />
+            </div>
           </BrowserRouter>
         </AuthProvider>
       </QueryClientProvider>

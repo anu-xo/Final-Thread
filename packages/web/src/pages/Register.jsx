@@ -54,7 +54,7 @@ export default function Register() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900 px-4"
+      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-transparent px-4"
       style={{ paddingTop: 'var(--tv-titlebar-h, 0px)' }}
     >
       <div className="w-full max-w-md bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-8">
