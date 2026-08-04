@@ -5,6 +5,7 @@ import { MessageCircle, Sparkles } from 'lucide-react';
 import VoteButton from './VoteButton';
 import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
 import { useUiStore } from '../store/uiStore.js';
+import { accentHex, accentRgba, DEFAULT_ACCENT } from '../lib/communityAccents.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -40,14 +41,24 @@ function CommunityAvatar({ community }) {
   );
 }
 
-/** Live "online now" pill — pulsing mint dot + Socket.io presence count */
-function OnlinePill({ count }) {
+/** Live "online now" pill — pulsing accent dot + Socket.io presence count */
+function OnlinePill({ count, accent = DEFAULT_ACCENT }) {
   if (count == null) return null;
+  const dot = accentHex(accent);
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-mint/10 px-2 py-0.5 text-[11px] font-medium text-mint">
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
+      style={{ color: dot, backgroundColor: accentRgba(accent, 0.1) }}
+    >
       <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-mint opacity-75" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-mint" />
+        <span
+          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+          style={{ backgroundColor: dot }}
+        />
+        <span
+          className="relative inline-flex h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: dot }}
+        />
       </span>
       {compactCount(count)} online
     </span>
@@ -58,7 +69,7 @@ function OnlinePill({ count }) {
  * PostCard — Midnight Aurora feed card
  *
  *  • Top row: community avatar (gradient circle), r/community, timestamp,
- *    and a live "online now" pill (pulsing mint dot + Socket.io presence count)
+ *    and a live "online now" pill (pulsing accent dot + Socket.io presence count)
  *  • Title (15px / 500) + muted preview text (13px)
  *  • Footer: vote pill (up pink / down muted), comment count with icon, and a
  *    right-aligned "Ask AI about this thread" pill that opens the AI chat
@@ -82,6 +93,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
 
   const presenceCount = useCommunityPresence(community?.slug);
   const preview = body || content;
+  const accent = community?.accentColor || DEFAULT_ACCENT;
 
   const handleAskAI = () => {
     openThreadChat({
@@ -116,7 +128,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
           · {timeAgo(createdAt)}
         </span>
         <div className="ml-auto shrink-0">
-          <OnlinePill count={presenceCount} />
+          <OnlinePill count={presenceCount} accent={accent} />
         </div>
       </div>
 
@@ -162,9 +174,14 @@ export default function PostCard({ post, revealDelay = 0 }) {
         <button
           type="button"
           onClick={handleAskAI}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-violet/30 bg-gradient-to-r from-violet/10 to-pink/10 px-3 py-1.5 text-xs font-medium text-violet transition hover:brightness-110"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition hover:brightness-110"
+          style={{
+            borderColor: accentRgba(accent, 0.3),
+            backgroundColor: accentRgba(accent, 0.1),
+            color: accentHex(accent),
+          }}
         >
-          <Sparkles size={13} className="shrink-0 text-pink" />
+          <Sparkles size={13} className="shrink-0" style={{ color: accentHex(accent) }} />
           Ask AI about this thread
         </button>
       </div>

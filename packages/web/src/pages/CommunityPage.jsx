@@ -5,7 +5,9 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Helmet } from 'react-helmet-async';
 import { communityApi } from '../services/communityApi.js';
 import { useCommunityStore } from '../store/communityStore.js';
+import { useAuthStore } from '../store/authStore.js';
 import { socket } from '../lib/socket.js';
+import { COMMUNITY_ACCENTS, accentHex, DEFAULT_ACCENT } from '../lib/communityAccents.js';
 import PostFeed from '../components/PostFeed.jsx';
 import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { Skeleton } from '../components/skeletons/index.js';
@@ -69,10 +71,23 @@ function CommunityBanner({ banner, reduceMotion }) {
 function CommunityHeader({ community }) {
   const queryClient = useQueryClient();
   const { addSubscription, removeSubscription, isSubscribed } = useCommunityStore();
+  const user = useAuthStore((s) => s.user);
   const reduceMotion = useReducedMotion();
   const joined = isSubscribed(community.slug);
   const [snipKey, setSnipKey] = useState(0);
   const [liveMembers, setLiveMembers] = useState(community.members ?? 0);
+
+  const isMod =
+    !!user &&
+    (user.role === 'admin' ||
+      community.mods?.some((m) => String(m._id) === String(user._id)));
+
+  const accentKey = community.accentColor || DEFAULT_ACCENT;
+
+  const accentMutation = useMutation({
+    mutationFn: (accentColor) => communityApi.update(community.slug, { accentColor }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['community', community.slug] }),
+  });
 
   useEffect(() => {
     setLiveMembers(community.members ?? 0);
@@ -197,6 +212,34 @@ function CommunityHeader({ community }) {
           </AnimatePresence>
         </motion.button>
       </div>
+
+      {isMod && (
+        <div className="max-w-5xl mx-auto px-4 pb-4 flex items-center gap-1.5">
+          <span className="mr-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            Accent
+          </span>
+          {COMMUNITY_ACCENTS.map((accent) => (
+            <button
+              key={accent.key}
+              type="button"
+              title={accent.label}
+              aria-label={`Set community accent to ${accent.label}`}
+              aria-pressed={accent.key === accentKey}
+              disabled={accentMutation.isPending}
+              onClick={() => accentMutation.mutate(accent.key)}
+              className="h-6 w-6 rounded-full transition-transform hover:scale-110 disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+              style={{
+                backgroundColor: accent.hex,
+                outlineColor: accent.hex,
+                boxShadow:
+                  accent.key === accentKey
+                    ? `0 0 0 2px var(--color-bg-0), 0 0 0 4px ${accent.hex}`
+                    : undefined,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -240,11 +283,11 @@ export default function CommunityPage() {
         </div>
         <div className="max-w-5xl mx-auto px-4 py-6 space-y-3">
           {/* Sort tabs */}
-          <div className="flex gap-2 mb-4">
-            <Skeleton className="h-8 w-14 rounded-full" />
-            <Skeleton className="h-8 w-12 rounded-full" />
-            <Skeleton className="h-8 w-14 rounded-full" />
-            <Skeleton className="h-8 w-14 rounded-full" />
+          <div className="flex gap-1 border-b border-neutral-200 dark:border-neutral-700 mb-4">
+            <Skeleton className="h-8 w-14 rounded" />
+            <Skeleton className="h-8 w-12 rounded" />
+            <Skeleton className="h-8 w-14 rounded" />
+            <Skeleton className="h-8 w-16 rounded" />
           </div>
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex gap-3 border border-gray-200 dark:border-neutral-700 rounded-lg p-3 bg-white dark:bg-neutral-900">
@@ -325,20 +368,31 @@ export default function CommunityPage() {
               </div>
             )}
 
-            <div className="flex gap-2 mb-4">
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setSort(opt.value)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    sort === opt.value
-                      ? 'bg-emerald text-white'
-                      : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
+            <div className="flex gap-1 border-b border-neutral-200 dark:border-neutral-700 mb-4">
+              {SORT_OPTIONS.map((opt) => {
+                const isActive = sort === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    onClick={() => setSort(opt.value)}
+                    className={`relative -mb-px px-2 pb-2.5 pt-2 text-xs font-semibold transition-colors ${
+                      isActive
+                        ? 'text-neutral-900 dark:text-neutral-100'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'
+                    }`}
+                  >
+                    {opt.label}
+                    {isActive && (
+                      <motion.span
+                        layoutId="community-sort-underline"
+                        className="absolute inset-x-1 -bottom-px h-0.5 rounded-full"
+                        style={{ backgroundColor: accentHex(data.accentColor) }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             <PostFeed communityId={data._id} sort={sort} />

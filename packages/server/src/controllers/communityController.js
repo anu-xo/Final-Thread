@@ -1,12 +1,13 @@
 import Community from '../models/Community.js';
 import CommunityMember from '../models/CommunityMember.js';
+import { COMMUNITY_ACCENT_KEYS } from '../models/Community.js';
 import mongoose from 'mongoose';
 import { sanitizeError } from '../utils/sanitizeError.js';
 
 // POST /communities
 export const createCommunity = async (req, res) => {
   try {
-    const { name, slug, description, rules } = req.body;
+    const { name, slug, description, rules, accentColor } = req.body;
 
     // Slug uniqueness check
     const existing = await Community.findOne({ slug: slug.toLowerCase() });
@@ -23,6 +24,7 @@ export const createCommunity = async (req, res) => {
       mods: [req.user._id],
       members: 1, // creator auto-joins
       aiEnabled: true,
+      accentColor: COMMUNITY_ACCENT_KEYS.includes(accentColor) ? accentColor : 'violet',
     });
 
     // Auto-join creator as mod
@@ -54,7 +56,7 @@ export const getCommunities = async (req, res) => {
     const communities = await Community.find(query)
       .sort({ _id: 1 })
       .limit(limit)
-      .select('name slug description members icon banner createdAt')
+      .select('name slug description members icon banner accentColor createdAt')
       .lean();
 
     const hasMore = communities.length === limit;

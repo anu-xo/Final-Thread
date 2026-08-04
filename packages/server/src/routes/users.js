@@ -168,7 +168,7 @@ router.get('/:username/posts', async (req, res) => {
       .sort({ createdAt: -1, _id: -1 })
       .limit(limit + 1)
       .populate('author', 'username avatarUrl')
-      .populate('community', 'slug name icon')
+      .populate('community', 'slug name icon accentColor')
       .lean();
 
     const hasMore = posts.length > limit;

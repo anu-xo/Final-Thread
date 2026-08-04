@@ -5,6 +5,7 @@ import { writeLimiter } from '../middleware/rateLimiter.js';
 import { sanitizeError } from '../utils/sanitizeError.js';
 import CommunityMember from '../models/CommunityMember.js';
 import Community from '../models/Community.js'; // Added since rules/flairs modify the Community document
+import { COMMUNITY_ACCENT_KEYS } from '../models/Community.js';
 import modGuard from '../middleware/modGuard.js';
 import {
   createCommunity,
@@ -330,6 +331,10 @@ router.put('/:slug/rules', authMiddleware, async (req, res, next) => {
  *             properties:
  *               aiEnabled:
  *                 type: boolean
+ *               accentColor:
+ *                 type: string
+ *                 enum: [violet, pink, cyan, mint, amber, rose]
+ *                 description: Curated community accent swatch
  *     responses:
  *       200:
  *         description: Updated community
@@ -340,11 +345,17 @@ router.put('/:slug/rules', authMiddleware, async (req, res, next) => {
  */
 router.put('/:slug', authMiddleware, modGuard, async (req, res, next) => {
   try {
-    const { aiEnabled } = req.body;
+    const { aiEnabled, accentColor } = req.body;
+
+    const update = {};
+    if (typeof aiEnabled === 'boolean') update.aiEnabled = aiEnabled;
+    if (accentColor && COMMUNITY_ACCENT_KEYS.includes(accentColor)) {
+      update.accentColor = accentColor;
+    }
 
     const community = await Community.findOneAndUpdate(
       { slug: req.params.slug },
-      { $set: { aiEnabled } },
+      { $set: update },
       { new: true }
     );
 

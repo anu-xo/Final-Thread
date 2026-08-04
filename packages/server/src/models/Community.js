@@ -1,6 +1,18 @@
 import mongoose from 'mongoose';
 import CommunityMember from '../models/CommunityMember.js';
 
+// Curated community accent swatch — one per community, picked by mods from
+// a fixed set (not a free color picker) to keep visual consistency. Every
+// accent key must exist in the web app's `communityAccents` palette.
+export const COMMUNITY_ACCENT_KEYS = [
+  'violet',
+  'pink',
+  'cyan',
+  'mint',
+  'amber',
+  'rose',
+];
+
 const communitySchema = new mongoose.Schema(
   {
     name:        { type: String, required: true, trim: true, maxlength: 100 },
@@ -14,6 +26,7 @@ const communitySchema = new mongoose.Schema(
     flairs:      [{ name: String, color: String }],
     createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     aiEnabled:   { type: Boolean, default: true },
+    accentColor: { type: String, enum: COMMUNITY_ACCENT_KEYS, default: 'violet' },
   },
   { timestamps: true }
 );

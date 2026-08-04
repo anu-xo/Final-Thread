@@ -8,6 +8,8 @@ export const communityApi = {
   
   getBySlug: (slug) => api.get(`/communities/${slug}`),
   
+  update: (slug, data) => api.put(`/communities/${slug}`, data),
+  
   join: (slug) => api.post(`/communities/${slug}/join`),
   
   leave: (slug) => api.post(`/communities/${slug}/leave`),
