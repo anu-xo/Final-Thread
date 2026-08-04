@@ -9,7 +9,9 @@ import { useAuthStore } from '../store/authStore.js';
 import { socket } from '../lib/socket.js';
 import { COMMUNITY_ACCENTS, accentHex, DEFAULT_ACCENT } from '../lib/communityAccents.js';
 import PostFeed from '../components/PostFeed.jsx';
+import OnlinePill from '../components/OnlinePill.jsx';
 import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
+import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
 import { Skeleton } from '../components/skeletons/index.js';
 import NumberFlip from '../components/NumberFlip.jsx';
 import ThreadSnipIcon from '../components/ThreadSnipIcon.jsx';
@@ -83,6 +85,9 @@ function CommunityHeader({ community }) {
       community.mods?.some((m) => String(m._id) === String(user._id)));
 
   const accentKey = community.accentColor || DEFAULT_ACCENT;
+
+  // Live "who's online" — joins the community room and tracks presence:update
+  const presenceCount = useCommunityPresence(community.slug);
 
   const accentMutation = useMutation({
     mutationFn: (accentColor) => communityApi.update(community.slug, { accentColor }),
@@ -159,8 +164,11 @@ function CommunityHeader({ community }) {
         <div>
           <h1 className="text-xl font-bold">r/{community.slug}</h1>
           <p className="text-sm text-neutral-500">{community.name}</p>
-          <p className="text-xs text-neutral-400 mt-1">
-            <NumberFlip value={liveMembers} /> member{liveMembers !== 1 ? 's' : ''}
+          <p className="text-xs text-neutral-400 mt-1 flex items-center gap-2">
+            <span>
+              <NumberFlip value={liveMembers} /> member{liveMembers !== 1 ? 's' : ''}
+            </span>
+            <OnlinePill count={presenceCount} accent={community.accentColor} />
           </p>
         </div>
 

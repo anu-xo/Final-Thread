@@ -24,7 +24,7 @@ export const createCommunity = async (req, res) => {
       mods: [req.user._id],
       members: 1, // creator auto-joins
       aiEnabled: true,
-      accentColor: COMMUNITY_ACCENT_KEYS.includes(accentColor) ? accentColor : 'violet',
+      accentColor: COMMUNITY_ACCENT_KEYS.includes(accentColor) ? accentColor : null,
     });
 
     // Auto-join creator as mod

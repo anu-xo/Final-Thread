@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
 import { MessageCircle, Sparkles } from 'lucide-react';
 import VoteButton from './VoteButton';
+import OnlinePill from './OnlinePill.jsx';
 import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
 import { useUiStore } from '../store/uiStore.js';
-import { accentHex, accentRgba, DEFAULT_ACCENT } from '../lib/communityAccents.js';
+import { accentHex, accentRgba } from '../lib/communityAccents.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -18,12 +19,6 @@ function timeAgo(date) {
     if (val >= 1) return `${val}${label} ago`;
   }
   return 'just now';
-}
-
-function compactCount(n) {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-  return String(n);
 }
 
 /** Community avatar — violet→pink gradient circle (icon image when set) */
@@ -41,35 +36,12 @@ function CommunityAvatar({ community }) {
   );
 }
 
-/** Live "online now" pill — pulsing accent dot + Socket.io presence count */
-function OnlinePill({ count, accent = DEFAULT_ACCENT }) {
-  if (count == null) return null;
-  const dot = accentHex(accent);
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
-      style={{ color: dot, backgroundColor: accentRgba(accent, 0.1) }}
-    >
-      <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-        <span
-          className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-          style={{ backgroundColor: dot }}
-        />
-        <span
-          className="relative inline-flex h-1.5 w-1.5 rounded-full"
-          style={{ backgroundColor: dot }}
-        />
-      </span>
-      {compactCount(count)} online
-    </span>
-  );
-}
-
 /**
  * PostCard — Midnight Aurora feed card
  *
  *  • Top row: community avatar (gradient circle), r/community, timestamp,
- *    and a live "online now" pill (pulsing accent dot + Socket.io presence count)
+ *    and a live "online now" pill (pulsing dot — mint by default, community
+ *    accent when the community has accent customization enabled)
  *  • Title (15px / 500) + muted preview text (13px)
  *  • Footer: vote pill (up pink / down muted), comment count with icon, and a
  *    right-aligned "Ask AI about this thread" pill that opens the AI chat
@@ -93,7 +65,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
 
   const presenceCount = useCommunityPresence(community?.slug);
   const preview = body || content;
-  const accent = community?.accentColor || DEFAULT_ACCENT;
+  const accent = community?.accentColor ?? null;
 
   const handleAskAI = () => {
     openThreadChat({

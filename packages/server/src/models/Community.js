@@ -26,7 +26,10 @@ const communitySchema = new mongoose.Schema(
     flairs:      [{ name: String, color: String }],
     createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     aiEnabled:   { type: Boolean, default: true },
-    accentColor: { type: String, enum: COMMUNITY_ACCENT_KEYS, default: 'violet' },
+    // null = no accent customization yet (app defaults apply: violet for
+    // accent-driven UI, mint for the online indicator); a mod-chosen accent
+    // key is what "enables" accent customization.
+    accentColor: { type: String, enum: COMMUNITY_ACCENT_KEYS, default: null },
   },
   { timestamps: true }
 );
