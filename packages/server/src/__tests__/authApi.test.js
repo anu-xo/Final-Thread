@@ -142,6 +142,21 @@ describe('POST /api/auth/login', () => {
     await User.findByIdAndUpdate(sharedUser._id, { isBanned: false });
   });
 
+  it('returns 403 for a system account', async () => {
+    const sysUser = await User.create({
+      username: 'neo-test',
+      email: 'neo@threadverse.internal',
+      passwordHash: null,
+      role: 'user',
+      isSystemAccount: true,
+    });
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: sysUser.email, password: 'does-not-matter' });
+    expect(res.status).toBe(403);
+    await User.findByIdAndDelete(sysUser._id);
+  });
+
   it('returns 200 with accessToken on success', async () => {
     const res = await request(app)
       .post('/api/auth/login')

@@ -66,6 +66,23 @@ async function seed() {
   const users = [adminUser, modUser, regularUser];
   console.log(`✅ Seeded 3 users: admin, mod, user`);
 
+  // System "Neo" author — no password, never logs in. Idempotent so a reseed
+  // doesn't duplicate it (its email is outside the @threadverse.dev delete scope).
+  const neoUser = await User.findOne({ username: 'neo-ai' });
+  if (!neoUser) {
+    await User.create({
+      username: 'neo-ai',
+      email: 'neo@threadverse.internal',
+      passwordHash: null,
+      role: 'user',
+      isSystemAccount: true,
+      karma: 0,
+    });
+    console.log('✅ Seeded Neo system user (neo-ai)');
+  } else {
+    console.log('ℹ️  Neo system user (neo-ai) already exists');
+  }
+
   // 2. Create 5 Communities
   console.log('🏔 Seeding Communities...');
   const seededCommunities = [];

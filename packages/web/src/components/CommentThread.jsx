@@ -1,6 +1,7 @@
 // packages/web/src/components/CommentThread.jsx
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { Sparkles } from 'lucide-react';
 import VoteButton from './VoteButton';
 import CommentBox from './CommentBox';
 import StitchLine from './StitchLine';
@@ -116,7 +117,21 @@ export default function CommentThread({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-mist/60">
-          <span className="font-medium text-gray-700 dark:text-mist/80">{comment.author.username}</span>
+          {comment.isNeo && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amaranth/30 bg-amaranth/10 px-1.5 py-0.5 text-[10px] font-semibold text-amaranth">
+              <Sparkles size={10} className="shrink-0" />
+              Neo
+            </span>
+          )}
+          <span
+            className={
+              comment.isNeo
+                ? 'font-medium text-amaranth'
+                : 'font-medium text-gray-700 dark:text-mist/80'
+            }
+          >
+            {comment.author.username}
+          </span>
           <span>{timeAgo(comment.createdAt)}</span>
           {hasChildren && (
             <button

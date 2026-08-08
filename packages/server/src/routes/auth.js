@@ -200,6 +200,13 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(401).json({ data: null, error: 'Invalid email or password.', meta: null });
     }
 
+    // Defense in depth: system accounts (e.g. the "neo-ai" author) have a null
+    // passwordHash, so bcrypt.compare would already fail — but fail fast and
+    // explicitly so no code path can ever mint a token for one.
+    if (user.isSystemAccount) {
+      return res.status(403).json({ data: null, error: 'System accounts cannot sign in.', meta: null });
+    }
+
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return res.status(401).json({ data: null, error: 'Invalid email or password.', meta: null });

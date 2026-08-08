@@ -20,7 +20,11 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: true,
+      // System accounts (Neo) have no password and must never log in — the
+      // null hash makes bcrypt.compare fail even without the explicit guard.
+      required: function () {
+        return !this.isSystemAccount;
+      },
       select: false,
     },
     role: {
@@ -31,6 +35,12 @@ const userSchema = new mongoose.Schema(
     karma: {
       type: Number,
       default: 0,
+    },
+    // Seeded system accounts (e.g. the "neo-ai" author) — no password, and the
+    // auth routes reject any login attempt against them.
+    isSystemAccount: {
+      type: Boolean,
+      default: false,
     },
     refreshTokens: {
       type: [String],
