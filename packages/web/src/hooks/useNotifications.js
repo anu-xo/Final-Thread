@@ -68,11 +68,14 @@ export function notificationText(type) {
     case 'mention': return 'mentioned you';
     case 'mod_action': return 'took a moderator action on your content';
     case 'ai_response': return 'AI responded in your conversation';
+    case 'similar_post': return 'found a similar thread you might like';
+    case 'stale_post_nudge': return 'your thread could use a fresh reply';
     default: return 'sent a notification';
   }
 }
 
 export function buildNotificationLink(n) {
   if (n.targetType === 'Comment') return `/post/${n.postId || ''}#comment-${n.target}`;
+  if (n.targetType === 'Post') return `/posts/${n.target}`;
   return '#';
 }

@@ -12,6 +12,8 @@ const ICONS = {
   mention: '📣',
   mod_action: '🛡️',
   ai_response: '🤖',
+  similar_post: '🧵',
+  stale_post_nudge: '🌱',
 };
 
 function BellIcon() {
