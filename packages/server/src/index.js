@@ -153,8 +153,12 @@ httpServer.listen(PORT, async () => {
     const digestCron = await import('./jobs/digestCron.js');
     digestCron.registerDigestCron();
 
+    const staleNudgeCron = await import('./jobs/staleNudgeCron.js');
+    staleNudgeCron.registerStaleNudgeCron();
+
     console.log('[Server] Nightly eval cron scheduled');
     console.log('[Server] Weekly digest cron scheduled');
+    console.log('[Server] Hourly stale-post nudge cron scheduled');
   }
 });
 
