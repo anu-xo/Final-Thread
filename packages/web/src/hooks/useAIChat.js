@@ -63,7 +63,7 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
         body: JSON.stringify({
           message: text,
           communityId,
-          thread: threadContext ? { postId: threadContext.postId } : undefined,
+          postId: threadContext?.postId,
         }),
         signal: controller.signal,
       });

@@ -36,7 +36,7 @@ async function runServerEval(communityId, runId, evalLabel) {
 
       // ── Live $vectorSearch retrieval ──
       const retrievalStart = Date.now();
-      const contextChunks = await aiService.retrieveContext(queryEmbedding, communityId);
+      const contextChunks = await aiService.retrieveContext({ queryEmbedding, communityId });
       const retrievalMs = Date.now() - retrievalStart;
       const cacheHit = contextChunks.length > 0;
 

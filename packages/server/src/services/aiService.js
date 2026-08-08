@@ -155,8 +155,45 @@ export async function embedQuery(text) {
 }
 
 // 2. Retrieve top-8 relevant chunks via Atlas Vector Search
-export async function retrieveContext(queryEmbedding, communityId) {
-  const results = await PostEmbedding.aggregate([
+// Two-tier retrieval: when a postId is provided, bias hard toward that post's
+// own embedding + its comment thread first, and fall back to community-wide
+// search only when the post-scoped results are too thin to ground an answer.
+export async function retrieveContext({ queryEmbedding, communityId, postId }) {
+  if (postId) {
+    const postScoped = await PostEmbedding.aggregate([
+      {
+        $vectorSearch: {
+          index: 'post_embedding_vector_index',
+          path: 'embedding',
+          queryVector: queryEmbedding,
+          numCandidates: 50,
+          limit: 8,
+          filter: {
+            postId: new mongoose.Types.ObjectId(postId),
+          },
+        },
+      },
+      {
+        $project: {
+          postId: 1,
+          type: 1,
+          text: 1,
+          score: {
+            $meta: 'vectorSearchScore',
+          },
+        },
+      },
+    ]);
+
+    // Enough grounding from the thread itself — skip the broader search
+    if (postScoped.length >= 3) return postScoped;
+  }
+
+  return communityScopedVectorSearch(queryEmbedding, communityId);
+}
+
+async function communityScopedVectorSearch(queryEmbedding, communityId) {
+  return PostEmbedding.aggregate([
     {
       $vectorSearch: {
         index: 'post_embedding_vector_index',
@@ -180,8 +217,6 @@ export async function retrieveContext(queryEmbedding, communityId) {
       },
     },
   ]);
-
-  return results;
 }
 
 // 3. Build the final prompt
@@ -285,7 +320,7 @@ export async function handleChat({
 
   const queryEmbedding = await embedQuery(message);
 
-  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+  const contextChunks = await retrieveContext({ queryEmbedding, communityId });
 
   const history = await AIMessage.find({
     conversation: conversationId,
@@ -357,7 +392,7 @@ export async function buildRagPrompt({ message, communityId }) {
   if (!community) throw new Error(`Community not found: ${communityId}`);
 
   const queryEmbedding = await embedQuery(message);
-  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+  const contextChunks = await retrieveContext({ queryEmbedding, communityId });
 
   const prompt = buildPrompt({
     communityName: community.name,
@@ -386,18 +421,27 @@ export async function buildRagPrompt({ message, communityId }) {
 
 // 12. Stream chat response — used by POST /ai/chat route
 // Returns { stream: ReadableStream, sources: Array, tokenCount: number }
-export async function streamChatResponse({ message, communityId, conversationId, thread }) {
+export async function streamChatResponse({ message, communityId, conversationId, thread, postId }) {
   const community = await Community.findById(communityId).select('name');
   if (!community) throw new Error(`Community not found: ${communityId}`);
 
   const queryEmbedding = await embedQuery(message);
-  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+
+  // Two-tier retrieval — when launched from a post, bias hard toward that post's
+  // own embedding + its comment thread and only fall back to community-wide
+  // search when the thread is too thin to ground an answer.
+  const effectivePostId = postId || thread?.postId;
+  const contextChunks = await retrieveContext({
+    queryEmbedding,
+    communityId,
+    postId: effectivePostId,
+  });
 
   // Optional pinned thread context — the post + its top comments are prepended
   // so the AI answers about THIS thread specifically (not just RAG neighbors).
   let threadChunk = null;
-  if (thread?.postId) {
-    const post = await Post.findById(thread.postId)
+  if (effectivePostId) {
+    const post = await Post.findById(effectivePostId)
       .select('title body author')
       .populate('author', 'username')
       .lean();

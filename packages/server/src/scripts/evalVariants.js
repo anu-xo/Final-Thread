@@ -139,7 +139,7 @@ async function evalVariant(variant, question, communityName, communityId) {
   const queryEmbedding = await aiService.embedQuery(question);
 
   // Retrieve context
-  const contextChunks = await aiService.retrieveContext(queryEmbedding, communityId);
+  const contextChunks = await aiService.retrieveContext({ queryEmbedding, communityId });
 
   // Build prompt using variant's buildPrompt
   const prompt = variant.buildPrompt({

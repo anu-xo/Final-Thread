@@ -48,7 +48,7 @@ async function getCachedContext(queryEmbedding, communityId) {
  * This is what the web app does on every AI chat request.
  */
 async function getLiveContext(queryEmbedding, communityId) {
-  return aiService.retrieveContext(queryEmbedding, communityId);
+  return aiService.retrieveContext({ queryEmbedding, communityId });
 }
 
 // ── Shared eval runner ──────────────────────────────────────────────────────

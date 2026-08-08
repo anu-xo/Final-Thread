@@ -35,7 +35,7 @@ async function runEvalQuestion(q, communityId, communityName, runId, evalLabel) 
   const embedMs = Date.now() - embedStart;
 
   const retrievalStart = Date.now();
-  const contextChunks = await retrieveContext(queryEmbedding, communityId);
+  const contextChunks = await retrieveContext({ queryEmbedding, communityId });
   const retrievalMs = Date.now() - retrievalStart;
 
   const cacheHit = contextChunks.length > 0;

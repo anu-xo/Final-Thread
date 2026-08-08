@@ -106,6 +106,12 @@ router.get('/health', async (req, res) => {
  *               conversationId:
  *                 type: string
  *                 description: Existing conversation ID to continue
+ *               postId:
+ *                 type: string
+ *                 description: >
+ *                   Pin the chat to a specific post. Retrieval biases toward the
+ *                   post's own embedding + its comment thread and only falls
+ *                   back to community-wide search when that thread is thin.
  *               thread:
  *                 type: object
  *                 description: Pin a specific post (+ its comments) as context
@@ -127,7 +133,7 @@ router.get('/health', async (req, res) => {
  *         description: AI chat disabled for this community
  */
 router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
-  const { message, communityId, conversationId, thread } = req.body;
+  const { message, communityId, conversationId, postId, thread } = req.body;
 
   if (!message || !communityId) {
     return res.status(400).json({
@@ -181,6 +187,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
         message,
         communityId,
         conversationId: conversation._id,
+        postId,
         thread,
       });
 
