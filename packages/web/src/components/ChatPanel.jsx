@@ -22,7 +22,7 @@ function tokenize(text) {
 }
 
 /** Streaming assistant text: fully-typed words blur in; the trailing partial word stays static */
-function StreamingWords({ text, reduceMotion }) {
+export function StreamingWords({ text, reduceMotion }) {
   if (reduceMotion) return <span>{text}</span>;
   const { complete, partial } = tokenize(text);
   return (
@@ -35,7 +35,7 @@ function StreamingWords({ text, reduceMotion }) {
   );
 }
 
-function AIAvatar() {
+export function AIAvatar() {
   return (
     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet to-pink text-white">
       <StitchIcon className="h-3.5 w-3.5" />
@@ -43,7 +43,7 @@ function AIAvatar() {
   );
 }
 
-function PulsingStitch({ className = 'h-4 w-4' }) {
+export function PulsingStitch({ className = 'h-4 w-4' }) {
   const reduceMotion = useReducedMotion();
   if (reduceMotion) return <StitchIcon className={className} />;
   return (
@@ -57,13 +57,23 @@ function PulsingStitch({ className = 'h-4 w-4' }) {
   );
 }
 
-function ChatPanel({ communityId, communityName, isOnline = true, threadContext = null }) {
-  const { messages, streaming, warning, error, sendMessage, retry } = useAIChat(
-    communityId,
-    communityName,
-    isOnline,
-    threadContext,
-  );
+/**
+ * Shared AI chat conversation: message list (streaming render, citation pills,
+ * thumbs feedback) + input form. Used both by the full-page ChatPanel and the
+ * inline/popover AIChatInline mounted from an AskAIPill.
+ */
+export function ChatConversation({
+  messages,
+  streaming,
+  warning,
+  error,
+  retry,
+  isOnline = true,
+  threadTitle = null,
+  onSend,
+  disabled = false,
+  inputPlaceholder = 'Ask AI anything...',
+}) {
   const reduceMotion = useReducedMotion();
   const [input, setInput] = useState('');
   const scrollRef = useRef(null);
@@ -73,7 +83,6 @@ function ChatPanel({ communityId, communityName, isOnline = true, threadContext 
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, streaming]);
 
-  const disabled = !isOnline || streaming;
   const last = messages[messages.length - 1];
   const streamingAssistant = streaming && last?.role === 'assistant' ? last : null;
   const waitingFirstToken = streaming && !streamingAssistant;
@@ -83,16 +92,16 @@ function ChatPanel({ communityId, communityName, isOnline = true, threadContext 
     const trimmed = input.trim();
     if (!trimmed || disabled) return;
     setInput('');
-    sendMessage(trimmed);
+    onSend(trimmed);
   };
 
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-        {threadContext && (
+        {threadTitle && (
           <div className="flex items-center gap-2 rounded-lg border border-violet/30 bg-violet/10 px-3 py-2 text-xs text-violet">
             <Sparkles size={13} className="shrink-0 text-pink" />
-            <span className="truncate">Analyzing this thread: {threadContext.title}</span>
+            <span className="truncate">Analyzing this thread: {threadTitle}</span>
           </div>
         )}
 
@@ -205,11 +214,7 @@ function ChatPanel({ communityId, communityName, isOnline = true, threadContext 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={disabled}
-          placeholder={
-            isOnline
-              ? 'Ask AI anything...'
-              : 'Offline — input disabled'
-          }
+          placeholder={inputPlaceholder}
           className="flex-1 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-4 py-2.5 text-sm disabled:bg-gray-100 dark:disabled:bg-neutral-800 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amaranth/60"
         />
         <button
@@ -221,6 +226,32 @@ function ChatPanel({ communityId, communityName, isOnline = true, threadContext 
         </button>
       </form>
     </div>
+  );
+}
+
+function ChatPanel({ communityId, communityName, isOnline = true, threadContext = null }) {
+  const { messages, streaming, warning, error, sendMessage, retry } = useAIChat(
+    communityId,
+    communityName,
+    isOnline,
+    threadContext,
+  );
+
+  const disabled = !isOnline || streaming;
+
+  return (
+    <ChatConversation
+      messages={messages}
+      streaming={streaming}
+      warning={warning}
+      error={error}
+      retry={retry}
+      isOnline={isOnline}
+      threadTitle={threadContext?.title}
+      onSend={sendMessage}
+      disabled={disabled}
+      inputPlaceholder={isOnline ? 'Ask AI anything...' : 'Offline — input disabled'}
+    />
   );
 }
 

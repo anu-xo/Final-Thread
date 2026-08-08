@@ -577,7 +577,7 @@ export async function setupMocks(page, state) {
     const answer = `Based on the community discussions, here is what I found regarding "${b.message}". The community has several relevant posts that address this topic with practical examples and solutions.`;
     const words = answer.split(' ');
     const sseBody = words.map(w => `data: ${JSON.stringify({ type: 'token', text: w + ' ' })}\n\n`).join('')
-      + `data: ${JSON.stringify({ type: 'done', conversationId: mid(), sources: [] })}\n\n`;
+      + `data: ${JSON.stringify({ data: { conversationId: mid(), sources: [] }, error: null, meta: {} })}\n\n`;
     return route.fulfill({
       status: 200,
       contentType: 'text/event-stream',

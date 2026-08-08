@@ -87,7 +87,7 @@ router.get('/health', async (req, res) => {
  *       Returns a `text/event-stream` response. Events:
  *       - `{ type: "warning", message }` — if fewer than 3 sources found
  *       - `{ type: "token", text }` — each generated token chunk
- *       - `{ type: "done", conversationId, sources }` — stream complete
+ *       - `{ data: { conversationId, sources }, error, meta }` — stream complete
  *       - `{ type: "error", message }` — error during generation
  *     security:
  *       - bearerAuth: []
@@ -212,9 +212,12 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
 
       res.write(
         `data: ${JSON.stringify({
-          type: 'done',
-          conversationId: conversation._id,
-          sources: collectedSources,
+          data: {
+            conversationId: conversation._id,
+            sources: collectedSources,
+          },
+          error: null,
+          meta: {},
         })}\n\n`
       );
     } catch (streamErr) {

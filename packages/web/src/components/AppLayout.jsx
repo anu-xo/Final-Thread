@@ -9,7 +9,6 @@ import { useNotificationSocket } from '../hooks/useNotifications.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
 import UpdateBanner from './UpdateBanner.jsx';
-import ChatPanelDrawer from './ChatPanelDrawer.jsx';
 import AuroraBackground from './AuroraBackground.jsx';
 
 // Feed-scene aurora — minimal by design: a single violet blob, dim (0.14),
@@ -104,7 +103,6 @@ export default function AppLayout() {
         </main>
       </div>
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <ChatPanelDrawer />
     </div>
   );
 }

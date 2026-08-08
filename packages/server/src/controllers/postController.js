@@ -238,7 +238,7 @@ export async function getPostById(req, res) {
 
     const post = await Post.findById(id)
       .populate("author", "username avatarUrl")
-      .populate("community", "name slug")
+      .populate("community", "name slug aiEnabled accentColor")
       .lean();
 
     if (!post) {

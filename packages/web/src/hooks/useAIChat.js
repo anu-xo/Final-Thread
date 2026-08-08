@@ -113,15 +113,15 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
             setError(data.message);
           }
 
-          if (data.type === 'done') {
+          if (data.data?.conversationId) {
             setMessages(prev => {
               const copy = [...prev];
               const last = copy[copy.length - 1];
               if (last?.role === 'assistant') {
                 copy[copy.length - 1] = {
                   ...last,
-                  sources: data.sources || [],
-                  conversationId: data.conversationId,
+                  sources: data.data.sources || [],
+                  conversationId: data.data.conversationId,
                 };
               }
               return copy;

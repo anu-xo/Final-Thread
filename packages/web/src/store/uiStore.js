@@ -39,10 +39,6 @@ mq.addEventListener('change', () => {
 export const useUiStore = create((set, get) => ({
   theme: initialTheme,
   sidebarOpen: typeof window !== 'undefined' && window.innerWidth >= 768,
-  chatPanelOpen: false,
-  // Thread context for the AI chat panel — set by "Ask AI about this thread"
-  // so the panel opens pre-loaded with a specific post + its comments.
-  chatContext: null,
 
   setTheme: (theme) => {
     const resolved = resolveTheme(theme);
@@ -67,16 +63,4 @@ export const useUiStore = create((set, get) => ({
     set((state) => ({
       sidebarOpen: !state.sidebarOpen,
     })),
-
-  setChatPanelOpen: (open) =>
-    set((state) => ({
-      chatPanelOpen: open,
-      chatContext: open ? state.chatContext : null,
-    })),
-
-  openThreadChat: (context) =>
-    set({
-      chatContext: context,
-      chatPanelOpen: true,
-    }),
 }));

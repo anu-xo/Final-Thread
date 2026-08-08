@@ -128,7 +128,7 @@ router.get('/', authMiddleware, async (req, res) => {
       .sort(finalSortOrder)
       .limit(Number(limit) + 1) // fetch one extra to determine if a next page exists
       .populate('author', 'username avatar')
-      .populate('community', 'slug name icon accentColor')
+      .populate('community', 'slug name icon accentColor aiEnabled')
       .lean();
 
     const hasMore = posts.length > Number(limit);

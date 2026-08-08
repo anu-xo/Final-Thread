@@ -1,12 +1,11 @@
 // components/PostCard.jsx
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
-import { MessageCircle, Sparkles } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import VoteButton from './VoteButton';
 import OnlinePill from './OnlinePill.jsx';
+import AskAIPill from './AskAIPill.jsx';
 import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
-import { useUiStore } from '../store/uiStore.js';
-import { accentHex, accentRgba } from '../lib/communityAccents.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -56,7 +55,6 @@ function CommunityAvatar({ community }) {
  */
 export default function PostCard({ post, revealDelay = 0 }) {
   const reduceMotion = useReducedMotion();
-  const openThreadChat = useUiStore((s) => s.openThreadChat);
 
   const {
     _id, title, body, content, community, score, commentCount,
@@ -66,16 +64,6 @@ export default function PostCard({ post, revealDelay = 0 }) {
   const presenceCount = useCommunityPresence(community?.slug);
   const preview = body || content;
   const accent = community?.accentColor ?? null;
-
-  const handleAskAI = () => {
-    openThreadChat({
-      postId: _id,
-      title,
-      communityId: community?._id,
-      communityName: community?.name || community?.slug,
-      communitySlug: community?.slug,
-    });
-  };
 
   return (
     <motion.div
@@ -143,19 +131,14 @@ export default function PostCard({ post, revealDelay = 0 }) {
           </Link>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAskAI}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition hover:brightness-110"
-          style={{
-            borderColor: accentRgba(accent, 0.3),
-            backgroundColor: accentRgba(accent, 0.1),
-            color: accentHex(accent),
-          }}
-        >
-          <Sparkles size={13} className="shrink-0" style={{ color: accentHex(accent) }} />
-          Ask AI about this thread
-        </button>
+        <AskAIPill
+          postId={_id}
+          communityId={community?._id}
+          aiEnabled={community?.aiEnabled}
+          accent={accent}
+          title={title}
+          variant="popover"
+        />
       </div>
     </motion.div>
   );

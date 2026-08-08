@@ -155,7 +155,7 @@ function callAiChat(token, communityId) {
   if (resp.status === 200 && resp.body) {
     const tokenCount = (resp.body.match(/"type":"token"/g) || []).length;
     aiChatTokens.add(tokenCount);
-    const hasDone = resp.body.includes('"type":"done"');
+    const hasDone = resp.body.includes('"data":{"conversationId"');
     check(resp, {
       'ai delivered tokens': () => tokenCount > 0,
       'ai stream completed': () => hasDone,

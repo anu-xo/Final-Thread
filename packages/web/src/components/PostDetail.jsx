@@ -8,6 +8,7 @@ import VoteButton from './VoteButton.jsx';
 import CommentThread from './CommentThread.jsx';
 import CommentBox from './CommentBox.jsx';
 import ReportDialog from './ReportDialog.jsx';
+import AskAIPill from './AskAIPill.jsx';
 import SectionErrorBoundary from './SectionErrorBoundary.jsx';
 import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
@@ -241,6 +242,16 @@ export default function PostDetail() {
             </div>
           </div>
         </article>
+
+        {/* ── Ask AI about this thread ───────────────────────────────── */}
+        <AskAIPill
+          postId={post?._id}
+          communityId={post?.community?._id}
+          aiEnabled={post?.community?.aiEnabled}
+          accent={post?.community?.accentColor ?? null}
+          title={post?.title}
+          variant="inline"
+        />
 
         {/* ── Comment composer ────────────────────────────────────────── */}
         <CommentBox postId={id} parentId={null} />
