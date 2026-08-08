@@ -329,11 +329,11 @@ export async function handleChat({
     .limit(6)
     .lean();
 
-  const prompt = buildPrompt({
-    communityName: community.name,
-    contextChunks,
+  const { prompt, tokenCount } = await buildPromptWithinBudget({
+    systemPrompt: SYSTEM_PROMPT.replace('{community}', community.name),
+    contextChunks: contextChunks.map((chunk) => chunk.text),
     history: history.reverse(),
-    message,
+    userMessage: message,
   });
 
   const postIds = [...new Set(contextChunks.map((chunk) => chunk.postId.toString()))];
@@ -366,7 +366,7 @@ export async function handleChat({
     role: 'assistant',
     content: responseText,
     sources,
-    tokensUsed: null, // tighten on Day 10 with countTokens()
+    tokensUsed: tokenCount,
   });
 
   return {
