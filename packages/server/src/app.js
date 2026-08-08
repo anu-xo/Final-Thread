@@ -160,7 +160,7 @@ const connectDB = async () => {
       ssl: isProduction ? true : undefined,
       authSource: isProduction ? 'admin' : undefined,
       directConnection: isProduction ? true : undefined,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000,
     });
     console.log('✅ MongoDB connected');
   } catch (err) {

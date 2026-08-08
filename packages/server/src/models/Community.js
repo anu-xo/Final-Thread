@@ -35,7 +35,6 @@ const communitySchema = new mongoose.Schema(
 );
 
 // Text index for Atlas Search (Day 7), regular index for now
-communitySchema.index({ slug: 1 }, { unique: true });
 communitySchema.index({ members: -1 });
 
 export default mongoose.model('Community', communitySchema);
