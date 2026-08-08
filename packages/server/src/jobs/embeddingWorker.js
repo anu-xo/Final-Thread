@@ -5,6 +5,7 @@ import { PostEmbedding } from '../models/index.js';
 import Post from '../models/Post.js';
 import Notification from '../models/Notification.js';
 import NeoLog from '../models/NeoLog.js';
+import { getIO } from '../socket.js';
 import { preFilterBatch, mapEmbeddingsToOriginal } from '../utils/minhash.js';
 
 const embeddingQueue = getEmbeddingQueue();
@@ -92,7 +93,7 @@ async function handleDuplicateFound({ postId, communityId, matchedPostId, simila
   const newPost = await Post.findById(postId).select('author community').lean();
   if (!newPost) return;
 
-  await Notification.create({
+  const created = await Notification.create({
     user: newPost.author,
     type: 'similar_post',
     actor: null, // system-generated, not from another user
@@ -100,6 +101,22 @@ async function handleDuplicateFound({ postId, communityId, matchedPostId, simila
     targetType: 'Post',
     read: false,
   });
+
+  // Reuse the Day-12 notification:new socket path so the bell badge/knot
+  // updates live, exactly like a reply/mention notification.
+  try {
+    const io = getIO();
+    io.to('user:' + created.user).emit('notification:new', {
+      _id: created._id,
+      type: created.type,
+      actor: created.actor,
+      target: created.target,
+      targetType: created.targetType,
+      createdAt: created.createdAt,
+    });
+  } catch {
+    // Socket unavailable (tests / worker-only contexts) — notification still persisted.
+  }
 
   await NeoLog.create({
     triggerType: 'active_dedup',

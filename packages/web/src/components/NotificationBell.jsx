@@ -219,8 +219,14 @@ export default function NotificationBell() {
                 </AnimatePresence>
                 <span>{ICONS[n.type] || '🔔'}</span>
                 <div className="flex-1 text-sm">
-                  <span className="font-medium text-gray-900 dark:text-neutral-100">{n.actor?.username}</span>{' '}
-                  <span className="text-gray-700 dark:text-neutral-300">{notificationText(n.type)}</span>
+                {n.actor?.username ? (
+                  <>
+                    <span className="font-medium text-gray-900 dark:text-neutral-100">{n.actor.username}</span>{' '}
+                    <span className="text-gray-700 dark:text-neutral-300">{notificationText(n.type)}</span>
+                  </>
+                ) : (
+                  <span className="text-gray-700 dark:text-neutral-300 capitalize">{notificationText(n.type)}</span>
+                )}
                   <div className="text-xs text-gray-400 dark:text-neutral-500">{timeAgo(n.createdAt)}</div>
                 </div>
               </Link>

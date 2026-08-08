@@ -313,6 +313,7 @@ describe('Embedding queue retry logic', () => {
 
       expect(mockAggregate).toHaveBeenCalled();
       expect(mockInsertMany).not.toHaveBeenCalled();
+      expect(mockNotificationCreate).toHaveBeenCalledTimes(1);
       expect(mockNotificationCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           user: '507f1f77bcf86cd799439013',
@@ -322,6 +323,7 @@ describe('Embedding queue retry logic', () => {
           targetType: 'Post',
         })
       );
+      expect(mockNeoLogCreate).toHaveBeenCalledTimes(1);
       expect(mockNeoLogCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           triggerType: 'active_dedup',
@@ -330,6 +332,24 @@ describe('Embedding queue retry logic', () => {
           metadata: { similarity: 0.98 },
         })
       );
+    });
+
+    it('does not notify when similarity is at or below 0.95 threshold', async () => {
+      mockEmbedContentBatch.mockResolvedValue({
+        embeddings: [{ values: VEC_768 }],
+      });
+
+      mockAggregate.mockResolvedValue([{ score: 0.95, postId: '507f1f77bcf86cd799439099' }]);
+
+      await capturedProcessor({
+        data: makeJobData(),
+        id: 'job-threshold-1',
+        attemptsMade: 0,
+      });
+
+      expect(mockInsertMany).toHaveBeenCalledTimes(1);
+      expect(mockNeoLogExists).not.toHaveBeenCalled();
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
     });
 
     it('does not notify again when the duplicate pair was already logged', async () => {
