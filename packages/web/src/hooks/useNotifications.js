@@ -69,7 +69,7 @@ export function notificationText(type) {
     case 'mod_action': return 'took a moderator action on your content';
     case 'ai_response': return 'AI responded in your conversation';
     case 'similar_post': return 'a similar thread might already exist for your post';
-    case 'stale_post_nudge': return 'your thread could use a fresh reply';
+    case 'stale_post_nudge': return 'your post hasn\u2019t gotten any comments yet \u2014 might be worth a bump or a better title';
     default: return 'sent a notification';
   }
 }
