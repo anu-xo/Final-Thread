@@ -2,6 +2,9 @@ import mongoose from 'mongoose';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getEmbeddingQueue } from './embeddingQueue.js';
 import { PostEmbedding } from '../models/index.js';
+import Post from '../models/Post.js';
+import Notification from '../models/Notification.js';
+import NeoLog from '../models/NeoLog.js';
 import { preFilterBatch, mapEmbeddingsToOriginal } from '../utils/minhash.js';
 
 const embeddingQueue = getEmbeddingQueue();
@@ -43,7 +46,7 @@ async function embedContentBatch(texts) {
   return result.embeddings.map((e) => e.values);
 }
 
-async function shouldSkipEmbedding(text, communityId, embedding) {
+async function findDuplicateMatch(text, communityId, embedding) {
   const similar = await PostEmbedding.aggregate([
     {
       $vectorSearch: {
@@ -59,6 +62,7 @@ async function shouldSkipEmbedding(text, communityId, embedding) {
     },
     {
       $project: {
+        postId: 1,
         score: {
           $meta: 'vectorSearchScore',
         },
@@ -66,7 +70,46 @@ async function shouldSkipEmbedding(text, communityId, embedding) {
     },
   ]);
 
-  return similar.length > 0 && similar[0].score > 0.95;
+  if (similar.length === 0 || similar[0].score <= 0.95) return null;
+
+  return { postId: similar[0].postId, score: similar[0].score };
+}
+
+/**
+ * Notify the author of the NEW post (never the original — they didn't ask for
+ * anything) that a similar thread already exists. Rate limited so the same
+ * author is never notified twice about the same duplicate pair.
+ */
+async function handleDuplicateFound({ postId, communityId, matchedPostId, similarity }) {
+  if (!postId || !matchedPostId) return;
+
+  const alreadyLogged = await NeoLog.exists({
+    triggerType: 'active_dedup',
+    sourcePostIds: postId,
+  });
+  if (alreadyLogged) return;
+
+  const newPost = await Post.findById(postId).select('author community').lean();
+  if (!newPost) return;
+
+  await Notification.create({
+    user: newPost.author,
+    type: 'similar_post',
+    actor: null, // system-generated, not from another user
+    target: matchedPostId,
+    targetType: 'Post',
+    read: false,
+  });
+
+  await NeoLog.create({
+    triggerType: 'active_dedup',
+    layerUsed: 'vector_search',
+    sourcePostIds: [postId, matchedPostId],
+    communityId: communityId || newPost.community,
+    targetUserId: newPost.author,
+    query: null,
+    metadata: { similarity },
+  });
 }
 
 embeddingQueue.process(async (job) => {
@@ -145,13 +188,13 @@ async function flushBatch() {
         type = 'post',
       } = job.data;
 
-      const skip = await shouldSkipEmbedding(
+      const match = await findDuplicateMatch(
         text,
         communityId,
         embeddings[i]
       );
 
-      if (!skip) {
+      if (!match) {
         docs.push({
           postId,
           commentId,
@@ -159,6 +202,15 @@ async function flushBatch() {
           type,
           text,
           embedding: embeddings[i],
+        });
+      } else if (type === 'post') {
+        // Day-11 dedup, upgraded: still skip the embedding (saves Gemini
+        // quota) but tell the NEW post's author a similar thread exists.
+        await handleDuplicateFound({
+          postId,
+          communityId,
+          matchedPostId: match.postId,
+          similarity: match.score,
         });
       }
     }

@@ -8,7 +8,7 @@ const notificationSchema = new mongoose.Schema(
       required: true,
       enum: ['reply', 'mention', 'upvote', 'comment', 'follow', 'moderation', 'similar_post', 'stale_post_nudge'],
     },
-    actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     target: { type: mongoose.Schema.Types.ObjectId, required: true },
     targetType: { type: String, required: true, enum: ['Post', 'Comment', 'User'] },
     read: { type: Boolean, default: false },
