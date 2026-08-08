@@ -10,6 +10,17 @@ const commentSchema = new mongoose.Schema(
     depth: { type: Number, default: 0, max: 5 },
     score: { type: Number, default: 0 },
     isRemoved: { type: Boolean, default: false },
+    // NEO system-generated comment flags. neoTrigger only ever gets
+    // 'mention' or 'summary' (the two Autonomous-layer actions that produce
+    // a Comment); 'active' from the Phase 9 taxonomy is covered by NeoLog
+    // (active_dedup / active_stale), not by Comment.
+    isNeo: { type: Boolean, default: false },
+    neoTrigger: {
+      type: String,
+      enum: ['mention', 'summary', null],
+      default: null,
+    },
+    isPinned: { type: Boolean, default: false }, // summary comments pin to top of thread
   },
   { timestamps: true }
 );
