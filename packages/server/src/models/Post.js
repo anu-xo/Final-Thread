@@ -115,6 +115,11 @@ const PostSchema = new mongoose.Schema(
       default: 0,
     },
 
+    lastNeoReplyAt: {
+      type: Date,
+      default: null,
+    },
+
     embeddingStatus: {
       type: String,
       enum: ["pending", "processing", "done", "failed"],

@@ -14,6 +14,10 @@ const router = express.Router({ mergeParams: true });
 
 const MAX_DEPTH = 5;
 
+// Skip enqueueing a new @AskAI job when Neo already replied to this post within
+// the window — prevents Neo answering every mention in a hot thread.
+const NEO_REPLY_COOLDOWN_MS = 30 * 60 * 1000;
+
 // ==========================
 // Create Comment
 // POST /:id/comments
@@ -161,10 +165,18 @@ router.post('/:id/comments', authMiddleware, writeLimiter, async (req, res) => {
     // rate-limit bookkeeping throws we still 201 the comment — the flag is best
     // effort, the comment is never lost to an infra hiccup.
     let rateLimited = false;
+    let neoCooldown = false;
     try {
       if (ASKAI_TRIGGER.test(comment.body)) {
         const { allowed } = await checkNeoAutonomousLimit(String(req.user._id));
-        if (allowed) {
+        if (!allowed) {
+          rateLimited = true;
+        } else if (
+          post.lastNeoReplyAt &&
+          Date.now() - new Date(post.lastNeoReplyAt).getTime() < NEO_REPLY_COOLDOWN_MS
+        ) {
+          neoCooldown = true;
+        } else {
           await getNeoAutonomousQueue().add(
             'mention',
             {
@@ -182,18 +194,20 @@ router.post('/:id/comments', authMiddleware, writeLimiter, async (req, res) => {
               removeOnFail: 50,
             }
           );
-        } else {
-          rateLimited = true;
         }
       }
     } catch (err) {
       console.error('[neo] failed to enqueue @AskAI reply:', err.message);
     }
 
+    const meta = {};
+    if (rateLimited) meta.rateLimited = true;
+    if (neoCooldown) meta.neoCooldown = true;
+
     return res.status(201).json({
       data: populated,
       error: null,
-      meta: rateLimited ? { rateLimited: true } : {},
+      meta,
     });
   } catch (err) {
     console.error('Create comment error:', err);

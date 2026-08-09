@@ -6,6 +6,7 @@ const eventHandlers = {};
 const mockCommentFindById = jest.fn();
 const mockCommentCreate = jest.fn();
 const mockUserFindOne = jest.fn();
+const mockPostFindByIdAndUpdate = jest.fn();
 const mockCommunityFindById = jest.fn();
 const mockNeoLogCreate = jest.fn();
 const mockEmbedQuery = jest.fn();
@@ -32,6 +33,10 @@ jest.unstable_mockModule('../models/Comment.js', () => ({
 
 jest.unstable_mockModule('../models/User.js', () => ({
   default: { findOne: mockUserFindOne },
+}));
+
+jest.unstable_mockModule('../models/Post.js', () => ({
+  default: { findByIdAndUpdate: mockPostFindByIdAndUpdate },
 }));
 
 jest.unstable_mockModule('../models/Community.js', () => ({
@@ -98,6 +103,7 @@ function resetMocks() {
   mockCommentFindById.mockReset();
   mockCommentCreate.mockReset();
   mockUserFindOne.mockReset();
+  mockPostFindByIdAndUpdate.mockReset();
   mockCommunityFindById.mockReset();
   mockNeoLogCreate.mockReset();
   mockEmbedQuery.mockReset();
@@ -191,6 +197,14 @@ describe('neo-autonomous worker (mention)', () => {
             author: expect.objectContaining({ username: 'neo-ai' }),
           }),
         })
+      );
+
+      expect(mockPostFindByIdAndUpdate).toHaveBeenCalledWith(
+        JOB_DATA.postId,
+        {
+          $inc: { commentCount: 1 },
+          lastNeoReplyAt: expect.any(Date),
+        }
       );
 
       expect(result).toEqual({ commentId: 'neo-comment-id-1' });

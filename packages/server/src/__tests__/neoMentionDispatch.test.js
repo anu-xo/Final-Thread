@@ -128,6 +128,7 @@ describe('@AskAI autonomous mention dispatch', () => {
 
   beforeEach(async () => {
     await Notification.deleteMany({});
+    await Post.updateOne({ _id: testPost?._id }, { $unset: { lastNeoReplyAt: '' } });
     jest.clearAllMocks();
     neoQueueAdd.mockResolvedValue({ id: 'mock-neo-job-uuid' });
     mockRedis.incr.mockResolvedValue(1);
@@ -216,6 +217,16 @@ describe('@AskAI autonomous mention dispatch', () => {
       const res = await createCommentAs('please @AskAI help');
       expect(res.status).toBe(201);
       expect(res.body.meta.rateLimited).toBe(true);
+      expect(neoQueueAdd).not.toHaveBeenCalled();
+    });
+
+    it('flags meta.neoCooldown and skips the job when Neo replied to this post recently', async () => {
+      await Post.updateOne({ _id: testPost._id }, { lastNeoReplyAt: new Date() });
+
+      const res = await createCommentAs('one more @AskAI please');
+      expect(res.status).toBe(201);
+      expect(res.body.meta.neoCooldown).toBe(true);
+      expect(res.body.meta.rateLimited).toBeUndefined();
       expect(neoQueueAdd).not.toHaveBeenCalled();
     });
 

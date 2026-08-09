@@ -13,6 +13,7 @@
 // burning retries.
 import Comment from '../models/Comment.js';
 import User from '../models/User.js';
+import Post from '../models/Post.js';
 import Community from '../models/Community.js';
 import NeoLog from '../models/NeoLog.js';
 import { getNeoAutonomousQueue } from './neoAutonomousQueue.js';
@@ -69,6 +70,13 @@ export const processNeoMentionJob = async (job) => {
     depth: Math.min(triggerComment.depth + 1, 5),
     isNeo: true,
     neoTrigger: 'mention',
+  });
+
+  // Keep the post's count honest (mirrors the route's $inc) and record the
+  // reply time so the route's cooldown can skip redundant @AskAI enqueues.
+  await Post.findByIdAndUpdate(postId, {
+    $inc: { commentCount: 1 },
+    lastNeoReplyAt: new Date(),
   });
 
   await NeoLog.create({
