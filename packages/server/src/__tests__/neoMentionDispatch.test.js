@@ -55,7 +55,7 @@ const { default: Community } = await import('../models/Community.js');
 const { default: Post } = await import('../models/Post.js');
 const { default: Comment } = await import('../models/Comment.js');
 const { default: Notification } = await import('../models/Notification.js');
-const { detectNeoMention } = await import('../utils/neoMentionDetect.js');
+const { detectNeoMention, stripNeoMention } = await import('../utils/neoMentionDetect.js');
 
 describe('@AskAI autonomous mention dispatch', () => {
   let authorA;
@@ -130,6 +130,7 @@ describe('@AskAI autonomous mention dispatch', () => {
     await Notification.deleteMany({});
     jest.clearAllMocks();
     neoQueueAdd.mockResolvedValue({ id: 'mock-neo-job-uuid' });
+    mockRedis.incr.mockResolvedValue(1);
   });
 
   async function createCommentAs(body, parentId = null) {
@@ -147,10 +148,18 @@ describe('@AskAI autonomous mention dispatch', () => {
   }
 
   describe('detectNeoMention', () => {
-    it('matches @AskAI case-insensitively', () => {
+    it('matches a standalone @AskAI case-insensitively', () => {
       expect(detectNeoMention('What do you think, @AskAI?')).toBe(true);
       expect(detectNeoMention('help me out @askai')).toBe(true);
       expect(detectNeoMention('@ASKAi please')).toBe(true);
+      expect(detectNeoMention(' @AskAI leading space')).toBe(true);
+    });
+
+    it('requires a whole word — not a substring of an email or username', () => {
+      expect(detectNeoMention('emails@AskAIcorp.com')).toBe(false);
+      expect(detectNeoMention('hi@AskAI')).toBe(false);
+      expect(detectNeoMention('someone@AskAI.com')).toBe(false);
+      expect(detectNeoMention('x@AskAIy')).toBe(false);
     });
 
     it('does not match plain "AskAI" without an @', () => {
@@ -169,6 +178,14 @@ describe('@AskAI autonomous mention dispatch', () => {
     });
   });
 
+  describe('stripNeoMention', () => {
+    it('removes the trigger token and trims the question', () => {
+      expect(stripNeoMention('@AskAI what do you think?')).toBe('what do you think?');
+      expect(stripNeoMention('Summarize this, @AskAI')).toBe('Summarize this,');
+      expect(stripNeoMention('no trigger here')).toBe('no trigger here');
+    });
+  });
+
   describe('comment creation with @AskAI', () => {
     it('creates the comment normally and enqueues a mention job', async () => {
       const res = await createCommentAs('Summarize this thread, @AskAI!');
@@ -176,19 +193,30 @@ describe('@AskAI autonomous mention dispatch', () => {
       expect(res.status).toBe(201);
       expect(res.body.data.body).toBe('Summarize this thread, @AskAI!');
       expect(String(res.body.data.author._id)).toBe(String(commenterB._id));
+      expect(res.body.meta).toEqual({});
 
       expect(neoQueueAdd).toHaveBeenCalledTimes(1);
       expect(neoQueueAdd).toHaveBeenCalledWith(
         'mention',
         expect.objectContaining({
           trigger: 'mention',
+          triggerCommentId: String(res.body.data._id),
           postId: String(testPost._id),
           communityId: String(testCommunity._id),
-          sourceCommentId: String(res.body.data._id),
-          authorId: String(commenterB._id),
+          requestingUserId: String(commenterB._id),
+          question: 'Summarize this thread,!',
         }),
         expect.objectContaining({ attempts: 3 })
       );
+    });
+
+    it('flags meta.rateLimited when the daily autonomous budget is spent', async () => {
+      mockRedis.incr.mockResolvedValue(11);
+
+      const res = await createCommentAs('please @AskAI help');
+      expect(res.status).toBe(201);
+      expect(res.body.meta.rateLimited).toBe(true);
+      expect(neoQueueAdd).not.toHaveBeenCalled();
     });
 
     it('does NOT create a user-mention notification for @AskAI', async () => {
@@ -205,7 +233,11 @@ describe('@AskAI autonomous mention dispatch', () => {
       expect(neoQueueAdd).toHaveBeenCalledTimes(1);
       expect(neoQueueAdd).toHaveBeenCalledWith(
         'mention',
-        expect.objectContaining({ trigger: 'mention' }),
+        expect.objectContaining({
+          trigger: 'mention',
+          requestingUserId: String(commenterB._id),
+          question: 'please help',
+        }),
         expect.any(Object)
       );
     });
