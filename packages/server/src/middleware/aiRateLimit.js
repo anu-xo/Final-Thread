@@ -1,18 +1,16 @@
 // server/src/middleware/aiRateLimit.js
-import { redis as redisClient } from '../config/redis.js'; // your existing ioredis instance
+import { checkDailyRateLimit } from './dailyRateLimit.js';
 
 const AI_DAILY_LIMIT = 25;
 
 async function aiRateLimit(req, res, next) {
-  const key = `ai:rate:${req.user._id}:${new Date().toISOString().slice(0, 10)}`;
+  const { allowed } = await checkDailyRateLimit({
+    prefix: 'ai:rate',
+    identifier: req.user._id,
+    limit: AI_DAILY_LIMIT,
+  });
 
-  const count = await redisClient.incr(key);
-
-  if (count === 1) {
-    await redisClient.expire(key, 86400); // 24h TTL, resets daily
-  }
-
-  if (count > AI_DAILY_LIMIT) {
+  if (!allowed) {
     return res.status(429).json({
       data: null,
       error: {
