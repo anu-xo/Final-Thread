@@ -136,10 +136,12 @@ export default function PostDetail() {
 
     socket.on('vote:updated', handleVoteUpdated);
     socket.on('comment:new', handleCommentNew);
+    socket.on('comment:ai_posted', handleCommentNew);
 
     return () => {
       socket.off('vote:updated', handleVoteUpdated);
       socket.off('comment:new', handleCommentNew);
+      socket.off('comment:ai_posted', handleCommentNew);
       socket.emit('leave_post', { postId: id });
     };
   }, [id, queryClient]);
