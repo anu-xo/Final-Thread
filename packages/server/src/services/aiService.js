@@ -145,6 +145,13 @@ REFUSAL TEMPLATE:
 const SYSTEM_PROMPT_VERSION = 'prompt-v3.0-2026-07-25';
 const SYSTEM_PROMPT = SYSTEM_PROMPT_V3;
 
+// Default system prompt with the community name substituted in. The
+// neo-autonomous worker (which builds prompts outside an HTTP request) uses
+// this instead of re-deriving the SYSTEM_PROMPT replace logic.
+export function buildSystemPrompt(communityName) {
+  return SYSTEM_PROMPT.replace('{community}', communityName);
+}
+
 // 1. Embed the incoming user message using gemini-embedding-001 (768-dim)
 export async function embedQuery(text) {
   const result = await embeddingModel.embedContent({
@@ -500,7 +507,7 @@ export async function streamChatResponse({ message, communityId, conversationId,
 }
 
 // 11. Get non-streaming response (fallback to Groq if Gemini rate-limited)
-export async function getNonStreamingResponse(prompt) {
+export async function generateNonStreamingResponse(prompt) {
   try {
     const result = await model.generateContent(prompt);
     return result.response.text();
@@ -524,7 +531,8 @@ export default {
   buildPrompt,
   buildPromptWithinBudget,
   buildRagPrompt,
-  getNonStreamingResponse,
+  getNonStreamingResponse: generateNonStreamingResponse,
+  generateNonStreamingResponse,
   streamResponse,
   streamChatResponse,
   generateWithFallback,
@@ -533,4 +541,5 @@ export default {
   handleChat,
   getRecentHistory,
   buildThreadContext,
+  buildSystemPrompt,
 };

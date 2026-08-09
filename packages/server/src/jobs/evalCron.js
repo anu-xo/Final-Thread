@@ -18,7 +18,7 @@ import axios from 'axios';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import EvalResult from '../models/EvalResult.js';
 import Community from '../models/Community.js';
-import { getNonStreamingResponse, embedQuery, retrieveContext, buildPrompt } from '../services/aiService.js';
+import { generateNonStreamingResponse, embedQuery, retrieveContext, buildPrompt } from '../services/aiService.js';
 import { judgeResponse } from '../services/evalJudge.js';
 
 const questionsByCommunity = (await import('../scripts/evalQuestions.json', { with: { type: 'json' } })).default;
@@ -48,7 +48,7 @@ async function runEvalQuestion(q, communityId, communityName, runId, evalLabel) 
   });
 
   const llmStart = Date.now();
-  const answer = await getNonStreamingResponse(prompt);
+  const answer = await generateNonStreamingResponse(prompt);
   const llmMs = Date.now() - llmStart;
 
   const sources = contextChunks.map((chunk) => ({

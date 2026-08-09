@@ -144,6 +144,8 @@ httpServer.listen(PORT, async () => {
   console.log(`📋 Health check: http://localhost:${PORT}/api/health`);
   const { default: embeddingWorker } = await import('./jobs/embeddingWorker.js');
   console.log('[Server] Embedding worker started');
+  const { default: neoAutonomousWorker } = await import('./jobs/neoAutonomousWorker.js');
+  console.log('[Server] Neo autonomous worker started');
 
   if (process.env.NODE_ENV !== 'test' && !global.__evalCronScheduled) {
     global.__evalCronScheduled = true;
