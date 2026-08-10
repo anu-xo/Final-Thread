@@ -8,6 +8,7 @@ import Vote from '../models/Vote.js';
 import { resolveViewerUserId } from '../utils/voteResponse.js';
 import { ASKAI_TRIGGER, stripNeoMention } from '../utils/neoMentionDetect.js';
 import { checkNeoAutonomousLimit } from '../middleware/neoAutonomousRateLimit.js';
+import requireCommunityMod from '../middleware/requireCommunityMod.js';
 import { getNeoAutonomousQueue } from '../jobs/neoAutonomousQueue.js';
 
 const router = express.Router({ mergeParams: true });
@@ -217,6 +218,89 @@ router.post('/:id/comments', authMiddleware, writeLimiter, async (req, res) => {
       error: 'Failed to create comment',
       meta: {},
     });
+  }
+});
+
+// ==========================
+// Summarize Post Thread
+// POST /:id/summarize
+// ==========================
+/**
+ * @openapi
+ * /posts/{id}/summarize:
+ *   post:
+ *     tags: [Posts]
+ *     summary: Queue a Neo thread summary (community mod only)
+ *     description: Enqueues a 'summary' job so the autonomous worker pins a
+ *       Neo-authored summary comment at the top of the thread. One summary per
+ *       post at a time — re-summarizing requires removing the existing summary
+ *       comment first.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Summary job queued
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/Envelope'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         queued:
+ *                           type: boolean
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not a moderator of the post's community
+ *       404:
+ *         description: Post not found
+ *       409:
+ *         description: Thread already summarized
+ */
+router.post('/:id/summarize', authMiddleware, requireCommunityMod, async (req, res, next) => {
+  try {
+    const post = req.post || (await Post.findById(req.params.id));
+    if (!post) {
+      return res.status(404).json({
+        data: null,
+        error: 'Post not found',
+        meta: {},
+      });
+    }
+
+    const existing = await Comment.findOne({
+      post: post._id,
+      neoTrigger: 'summary',
+      isRemoved: false,
+    });
+    if (existing) {
+      return res.status(409).json({
+        data: null,
+        error: 'Thread already summarized — remove the existing summary comment first',
+        meta: {},
+      });
+    }
+
+    await getNeoAutonomousQueue().add('summary', {
+      postId: String(post._id),
+      communityId: post.community ? String(post.community) : null,
+      requestingUserId: String(req.user._id),
+    });
+
+    res.json({ data: { queued: true }, error: null, meta: {} });
+  } catch (err) {
+    next(err);
   }
 });
 
