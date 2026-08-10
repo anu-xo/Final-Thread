@@ -1,5 +1,7 @@
-import { autoUpdater } from 'electron-updater';
+import updaterPkg from 'electron-updater';
 import { BrowserWindow } from 'electron';
+
+const { autoUpdater } = updaterPkg;
 
 function send(channel, payload) {
   BrowserWindow.getAllWindows().forEach((win) => {
