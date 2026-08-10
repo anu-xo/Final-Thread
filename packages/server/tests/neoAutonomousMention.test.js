@@ -60,6 +60,7 @@ jest.unstable_mockModule('../src/services/aiService.js', () => ({
   retrieveContext: mockRetrieveContext,
   buildPromptWithinBudget: mockBuildPromptWithinBudget,
   buildSystemPrompt: mockBuildSystemPrompt,
+  buildThreadSummaryPrompt: jest.fn(),
   generateNonStreamingResponse: mockGenerateNonStreamingResponse,
 }));
 
