@@ -63,12 +63,8 @@ jest.unstable_mockModule('../services/aiService.js', () => ({
   retrieveContext: mockRetrieveContext,
   buildPromptWithinBudget: mockBuildPromptWithinBudget,
   buildSystemPrompt: mockBuildSystemPrompt,
-  generateNonStreamingResponse: mockGenerateNonStreamingResponse,
-}));
-
-jest.unstable_mockModule('../services/prompts/threadSummary.js', () => ({
   buildThreadSummaryPrompt: mockBuildThreadSummaryPrompt,
-  THREAD_SUMMARY_SYSTEM_PROMPT: 'summary system prompt',
+  generateNonStreamingResponse: mockGenerateNonStreamingResponse,
 }));
 
 const { processNeoSummaryJob } = await import('../jobs/neoAutonomousWorker.js');
@@ -199,6 +195,7 @@ describe('neo-autonomous worker (summary)', () => {
       expect(mockLean).toHaveBeenCalled();
 
       expect(mockBuildThreadSummaryPrompt).toHaveBeenCalledWith({
+        communityName: 'Test Community',
         post: makePostDoc(),
         topComments: makeCommentDocs(),
       });
@@ -261,6 +258,7 @@ describe('neo-autonomous worker (summary)', () => {
       });
 
       expect(mockBuildThreadSummaryPrompt).toHaveBeenCalledWith({
+        communityName: 'Test Community',
         post: makePostDoc(),
         topComments: [],
       });

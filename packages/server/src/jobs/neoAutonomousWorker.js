@@ -27,9 +27,9 @@ import {
   retrieveContext,
   buildPromptWithinBudget,
   buildSystemPrompt,
+  buildThreadSummaryPrompt,
   generateNonStreamingResponse,
 } from '../services/aiService.js';
-import { buildThreadSummaryPrompt } from '../services/prompts/threadSummary.js';
 
 // Nesting cap, mirrored from routes/comments.js. A reply that would exceed the
 // cap attaches as a sibling at the same depth instead of being silently dropped.
@@ -140,7 +140,15 @@ export const processNeoSummaryJob = async (job) => {
     .select('body author score depth')
     .lean();
 
-  const prompt = buildThreadSummaryPrompt({ post, topComments });
+  const community = communityId
+    ? await Community.findById(communityId).select('name')
+    : null;
+
+  const prompt = buildThreadSummaryPrompt({
+    communityName: community?.name || 'thread',
+    post,
+    topComments,
+  });
 
   const responseText = await generateNonStreamingResponse(prompt);
 
