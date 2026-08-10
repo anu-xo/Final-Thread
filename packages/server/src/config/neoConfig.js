@@ -17,3 +17,23 @@ export const NEO_PULSE_WINDOW_HOURS = Number(
 export const NEO_PULSE_CACHE_TTL_SECONDS = Number(
   process.env.NEO_PULSE_CACHE_TTL_SECONDS || 4200
 );
+
+// Max active-layer notifications (dedup + stale combined) a single user can get
+// per day. The two jobs share one budget so users aren't double-pinged.
+export const NEO_ACTIVE_DAILY_LIMIT = Number(process.env.NEO_ACTIVE_DAILY_LIMIT || 3);
+
+// Nightly eval sample sizes per trigger type. New layers (mention/summary/
+// digest) are cheaper and more templated than open-ended chat — bounded context,
+// templated prompts — so they need less coverage for a representative signal.
+// Deliberately NOT copied from the 20-question passive-chat suite: doing that
+// for all four types would roughly triple nightly eval cost for marginal
+// extra confidence.
+export const NEO_EVAL_MENTION_SAMPLE_SIZE = Number(
+  process.env.NEO_EVAL_MENTION_SAMPLE_SIZE || 8
+);
+export const NEO_EVAL_SUMMARY_SAMPLE_SIZE = Number(
+  process.env.NEO_EVAL_SUMMARY_SAMPLE_SIZE || 5
+);
+export const NEO_EVAL_DIGEST_SAMPLE_SIZE = Number(
+  process.env.NEO_EVAL_DIGEST_SAMPLE_SIZE || 5
+);

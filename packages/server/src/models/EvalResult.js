@@ -61,6 +61,17 @@ const evalResultSchema = new mongoose.Schema(
       default: 'v1.0',
     },
 
+    // Which Neo layer produced this result, so scores from the new layers don't
+    // get silently averaged in with direct-chat scores.
+    // ambient_pulse is deliberately excluded — it's deterministic term-frequency,
+    // not an LLM call, there's nothing to quality-grade.
+    triggerType: {
+      type: String,
+      enum: ['passive_chat', 'autonomous_mention', 'autonomous_summary', 'digest_highlight'],
+      default: 'passive_chat', // existing eval rows without this field default correctly
+      required: true,
+    },
+
     // ── Per-run tracking fields ────────────────────────────────────────────
     // Groups all EvalResults created during a single eval execution.
     // Format: `baseline-2026-07-26T12:00:00Z` or `nightly-2026-08-15T02:00:00Z`
