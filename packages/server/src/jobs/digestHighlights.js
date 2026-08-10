@@ -7,6 +7,8 @@
 // assembly in emailService.js) so ordering stays guaranteed.
 import { redis } from '../config/redis.js';
 import { NEO_DIGEST_HIGHLIGHT_TOP_N } from '../config/neoConfig.js';
+import { currentIsoWeekKey } from '../utils/isoWeekKey.js';
+export { currentIsoWeekKey };
 import {
   buildDigestHighlightPrompt,
   generateNonStreamingResponse,
@@ -17,14 +19,6 @@ import NeoLog from '../models/NeoLog.js';
 
 // 8 days — outlives next Monday's run, so a restarted cron never regenerates.
 const DIGEST_CACHE_TTL_SECONDS = 8 * 24 * 60 * 60;
-
-export function currentIsoWeekKey() {
-  // e.g. "2026-W32" — matches the Monday-9am cron cadence
-  const d = new Date();
-  const oneJan = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
-  return `${d.getFullYear()}-W${week}`;
-}
 
 export async function generateCommunityHighlights() {
   if (!redis) {

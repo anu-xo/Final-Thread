@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
+// emailService now reads the digest highlights cache via config/redis.js, which
+// would otherwise boot a real Upstash client from .env — neutralize it for tests.
+process.env.REDIS_URL = '';
+
 let mongod;
 let sendWeeklyDigest;
 let User, CommunityMember, Post;

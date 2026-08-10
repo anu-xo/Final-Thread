@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import User from '../models/User.js';
 import CommunityMember from '../models/CommunityMember.js';
 import Post from '../models/Post.js';
+import { redis } from '../config/redis.js';
+import { currentIsoWeekKey } from '../utils/isoWeekKey.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +44,7 @@ export async function sendPasswordResetEmail(toEmail, token) {
   });
 }
 
-function buildDigestHtml({ username, posts, unsubscribeUrl }) {
+function buildDigestHtml({ username, posts, highlights, unanswered, unsubscribeUrl }) {
   const siteUrl = process.env.CLIENT_URL || 'https://threadverse.app';
 
   const postCards = posts.map((p, i) => `
@@ -70,6 +72,53 @@ function buildDigestHtml({ username, posts, unsubscribeUrl }) {
     </tr>
   `).join('');
 
+  // Phase 1 highlights: one block per subscribed community that had activity.
+  // Rendered only when a cached highlight exists for that community.
+  const highlightBlocks = (highlights || [])
+    .map((h) => `
+    <tr>
+      <td style="padding:8px 24px 0;">
+        <p style="margin:0 0 4px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">
+          This week in r/${h.slug || h.name || h.communityId}
+        </p>
+        <p style="margin:0;font-size:14px;line-height:1.55;color:#374151;">${h.text}</p>
+      </td>
+    </tr>`)
+    .join('');
+
+  const highlightsSection = highlights?.length
+    ? `
+    <tr>
+      <td style="padding:28px 24px 4px;">
+        <p style="margin:0;font-size:13px;font-weight:700;color:#111827;">This week in your communities</p>
+      </td>
+    </tr>
+    ${highlightBlocks}`
+    : '';
+
+  // Phase 2 unanswered questions: up to 3 zero-comment posts, only when present.
+  const unansweredItems = (unanswered || [])
+    .map((p) => `
+    <tr>
+      <td style="padding:6px 24px;">
+        <p style="margin:0;font-size:14px;color:#374151;">
+          <a href="${siteUrl}/c/${p.community?.slug || ''}/post/${p._id}" style="color:#6366f1;text-decoration:none;">${p.title}</a>
+        </p>
+      </td>
+    </tr>`)
+    .join('');
+
+  const unansweredSection = unanswered?.length
+    ? `
+    <tr>
+      <td style="padding:28px 24px 4px;">
+        <p style="margin:0;font-size:13px;font-weight:700;color:#111827;">Still looking for answers</p>
+        <p style="margin:2px 0 0;font-size:12px;color:#9ca3af;">Your communities could use a hand on these.</p>
+      </td>
+    </tr>
+    ${unansweredItems}`
+    : '';
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -96,8 +145,14 @@ function buildDigestHtml({ username, posts, unsubscribeUrl }) {
             </td>
           </tr>
 
+          <!-- This Week Highlights -->
+          ${highlightsSection}
+
           <!-- Post Cards -->
           ${postCards}
+
+          <!-- Still Looking for Answers -->
+          ${unansweredSection}
 
           <!-- CTA -->
           <tr>
@@ -124,8 +179,8 @@ function buildDigestHtml({ username, posts, unsubscribeUrl }) {
 </html>`;
 }
 
-async function sendDigestEmail({ to, username, posts, unsubscribeUrl }) {
-  const html = buildDigestHtml({ username, posts, unsubscribeUrl });
+async function sendDigestEmail({ to, username, posts, highlights, unanswered, unsubscribeUrl }) {
+  const html = buildDigestHtml({ username, posts, highlights, unanswered, unsubscribeUrl });
   await transporter.sendMail({
     from: '"ThreadVerse" <noreply@threadverse.app>',
     to,
@@ -134,8 +189,26 @@ async function sendDigestEmail({ to, username, posts, unsubscribeUrl }) {
   });
 }
 
+// Phase 2 unanswered questions — reader-facing ("here's what your communities
+// still need help with"). Same zero-comment signal as the author-facing stale
+// nudge, but a different audience and framing, so deliberately NOT reused.
+async function getUnansweredQuestions(subscribedCommunityIds, sevenDaysAgo) {
+  return Post.find({
+    community: { $in: subscribedCommunityIds },
+    createdAt: { $gte: sevenDaysAgo },
+    commentCount: 0,
+    isRemoved: false,
+  })
+    .sort({ score: -1 })
+    .limit(3)
+    .select('title community')
+    .populate('community', 'slug name')
+    .lean();
+}
+
 export async function sendWeeklyDigest() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const weekKey = currentIsoWeekKey();
   let sent = 0, skipped = 0, failed = 0;
 
   const users = await User.find({ 'notifPrefs.digest': true, isBanned: false })
@@ -159,10 +232,27 @@ export async function sendWeeklyDigest() {
         { $replaceRoot: { newRoot: '$posts' } },
         { $lookup: { from: 'communities', localField: 'community', foreignField: '_id', as: 'community' } },
         { $unwind: '$community' },
-        { $project: { title: 1, score: 1, commentCount: 1, 'community.name': 1, 'community.slug': 1 } },
+        { $project: { title: 1, score: 1, commentCount: 1, 'community._id': 1, 'community.name': 1, 'community.slug': 1 } },
       ]);
 
       if (!topPosts.length) { skipped++; continue; }
+
+      // Phase 1 cache lookup: one cached highlight per subscribed community that
+      // had activity this week. Redis may be absent (null) — degrade gracefully.
+      let highlights = [];
+      if (redis) {
+        const activityCommunityIds = [...new Set(topPosts.map((p) => String(p.community._id)))];
+        const highlightKeys = activityCommunityIds.map((cid) => `neo:digest:community:${cid}:${weekKey}`);
+        const cachedTexts = await redis.mget(highlightKeys);
+        const communityMeta = new Map(
+          topPosts.map((p) => [String(p.community._id), { name: p.community.name, slug: p.community.slug }])
+        );
+        highlights = activityCommunityIds
+          .map((cid, i) => ({ communityId: cid, text: cachedTexts[i], ...communityMeta.get(cid) }))
+          .filter((h) => h.text);
+      }
+
+      const unanswered = await getUnansweredQuestions(communityIds, sevenDaysAgo);
 
       const unsubToken = jwt.sign(
         { userId: user._id, purpose: 'digest-unsub' },
@@ -174,6 +264,8 @@ export async function sendWeeklyDigest() {
         to: user.email,
         username: user.username,
         posts: topPosts,
+        highlights,
+        unanswered,
         unsubscribeUrl: `${process.env.APP_URL}/api/email/unsubscribe?token=${unsubToken}`,
       });
       sent++;
