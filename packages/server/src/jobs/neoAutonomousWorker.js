@@ -26,6 +26,10 @@ import {
   generateNonStreamingResponse,
 } from '../services/aiService.js';
 
+// Nesting cap, mirrored from routes/comments.js. A reply that would exceed the
+// cap attaches as a sibling at the same depth instead of being silently dropped.
+const MAX_DEPTH = 5;
+
 const neoAutonomousQueue = getNeoAutonomousQueue();
 
 export const processNeoMentionJob = async (job) => {
@@ -62,12 +66,15 @@ export const processNeoMentionJob = async (job) => {
 
   const responseText = await generateNonStreamingResponse(prompt);
 
+  const replyDepth = triggerComment.depth + 1;
+  const atDepthCap = replyDepth > MAX_DEPTH;
+
   const neoComment = await Comment.create({
     body: responseText,
     author: neoUser._id,
     post: postId,
-    parent: triggerCommentId, // reply directly to the @AskAI comment
-    depth: Math.min(triggerComment.depth + 1, 5),
+    parent: atDepthCap ? triggerComment.parent : triggerCommentId,
+    depth: atDepthCap ? triggerComment.depth : replyDepth,
     isNeo: true,
     neoTrigger: 'mention',
   });

@@ -70,8 +70,8 @@ const JOB_DATA = {
   question: 'What do you think about this thread?',
 };
 
-function makeTriggerComment(depth = 0) {
-  return { _id: JOB_DATA.triggerCommentId, depth };
+function makeTriggerComment(depth = 0, parent = null) {
+  return { _id: JOB_DATA.triggerCommentId, depth, parent };
 }
 
 function makeNeoCommentDoc() {
@@ -210,13 +210,20 @@ describe('neo-autonomous worker (mention)', () => {
       expect(result).toEqual({ commentId: 'neo-comment-id-1' });
     });
 
-    it('caps the reply depth at 5 when the trigger comment is at depth 5', async () => {
-      mockCommentFindById.mockResolvedValue(makeTriggerComment(5));
+    it('attaches the reply as a sibling at depth 5 (not 6) when the trigger comment is at depth 5', async () => {
+      const siblingParent = '507f1f77bcf86cd799439099';
+      mockCommentFindById.mockResolvedValue(makeTriggerComment(5, siblingParent));
 
       await processNeoMentionJob({ data: JOB_DATA, id: 'job-depth' });
 
       expect(mockCommentCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ depth: 5 })
+        expect.objectContaining({
+          depth: 5,
+          parent: siblingParent,
+        })
+      );
+      expect(mockCommentCreate).not.toHaveBeenCalledWith(
+        expect.objectContaining({ depth: 6 })
       );
     });
   });
