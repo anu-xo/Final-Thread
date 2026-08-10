@@ -7,6 +7,8 @@ const mockQueue = {
 const mockRedis = {
   on: jest.fn().mockReturnThis(),
   ping: jest.fn().mockResolvedValue('PONG'),
+  get: jest.fn().mockResolvedValue(null),
+  set: jest.fn().mockResolvedValue('OK'),
   quit: jest.fn().mockResolvedValue(undefined),
 };
 
@@ -155,6 +157,27 @@ describe('Communities API', () => {
 
     it('returns 404 for non-existent slug', async () => {
       const res = await request(app).get('/api/communities/does-not-exist-xyz');
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('GET /api/communities/:slug/pulse', () => {
+    it('returns empty trending array on cache miss', async () => {
+      mockRedis.get.mockResolvedValue(null);
+      const res = await request(app).get('/api/communities/test-comm-api/pulse');
+      expect(res.status).toBe(200);
+      expect(res.body.data.trending).toEqual([]);
+    });
+
+    it('returns cached trending topics', async () => {
+      mockRedis.get.mockResolvedValue(JSON.stringify([{ term: 'mongodb', count: 3 }]));
+      const res = await request(app).get('/api/communities/test-comm-api/pulse');
+      expect(res.status).toBe(200);
+      expect(res.body.data.trending).toEqual([{ term: 'mongodb', count: 3 }]);
+    });
+
+    it('returns 404 for non-existent community', async () => {
+      const res = await request(app).get('/api/communities/does-not-exist-xyz/pulse');
       expect(res.status).toBe(404);
     });
   });

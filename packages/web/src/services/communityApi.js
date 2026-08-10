@@ -7,6 +7,8 @@ export const communityApi = {
     api.get('/communities', { params: { cursor, limit: 20 } }),
   
   getBySlug: (slug) => api.get(`/communities/${slug}`),
+
+  getPulse: (slug) => api.get(`/communities/${slug}/pulse`),
   
   update: (slug, data) => api.put(`/communities/${slug}`, data),
   

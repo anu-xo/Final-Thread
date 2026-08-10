@@ -11,6 +11,7 @@ import { COMMUNITY_ACCENTS, accentHex, DEFAULT_ACCENT } from '../lib/communityAc
 import PostFeed from '../components/PostFeed.jsx';
 import OnlinePill from '../components/OnlinePill.jsx';
 import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
+import CommunityPulseWidget from '../components/CommunityPulseWidget.jsx';
 import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
 import { Skeleton } from '../components/skeletons/index.js';
 import NumberFlip from '../components/NumberFlip.jsx';
@@ -375,6 +376,8 @@ export default function CommunityPage() {
                 </ol>
               </div>
             )}
+
+            <CommunityPulseWidget slug={data.slug} />
 
             <div className="flex gap-1 border-b border-neutral-200 dark:border-neutral-700 mb-4">
               {SORT_OPTIONS.map((opt) => {

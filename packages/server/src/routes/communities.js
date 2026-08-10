@@ -7,6 +7,7 @@ import CommunityMember from '../models/CommunityMember.js';
 import Community from '../models/Community.js'; // Added since rules/flairs modify the Community document
 import { COMMUNITY_ACCENT_KEYS } from '../models/Community.js';
 import modGuard from '../middleware/modGuard.js';
+import { redis } from '../config/redis.js';
 import {
   createCommunity,
   getCommunities,
@@ -194,6 +195,41 @@ router.get('/me', authMiddleware, async (req, res) => {
  *         description: Community not found
  */
 router.get('/:slug', getCommunityBySlug);
+
+/**
+ * @openapi
+ * /communities/{slug}/pulse:
+ *   get:
+ *     tags: [Communities]
+ *     summary: Get trending topics for a community (pulse widget)
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Trending topics, empty array when no recent pulse cached
+ *       404:
+ *         description: Community not found
+ */
+// GET /communities/:slug/pulse — pulse widget data. No lazy-compute-on-miss
+// (unlike the Day-7 feed cache pattern): pulse is inherently "last hour's worth
+// of data" — computing on-demand inside the request handler would mean scanning
+// posts synchronously in the request path. Empty array on cache miss is the
+// correct fallback; the widget should just not render if trending is empty.
+router.get('/:slug/pulse', async (req, res) => {
+  const community = await Community.findOne({ slug: req.params.slug }).select('_id');
+  if (!community) return res.status(404).json({ data: null, error: 'Community not found', meta: {} });
+
+  const cached = redis ? await redis.get(`community:${community._id}:pulse`) : null;
+  res.json({
+    data: { trending: cached ? JSON.parse(cached) : [] },
+    error: null,
+    meta: {},
+  });
+});
 
 /**
  * @openapi
