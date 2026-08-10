@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const neoLogSchema = new mongoose.Schema({
   triggerType: {
     type: String,
-    enum: ['active_dedup', 'active_stale', 'autonomous_mention', 'autonomous_summary', 'passive_chat', 'digest'],
+    enum: ['active_dedup', 'active_stale', 'autonomous_mention', 'autonomous_summary',
+           'passive_chat', 'digest', 'ambient_pulse'],
     required: true,
   },
   layerUsed: {
