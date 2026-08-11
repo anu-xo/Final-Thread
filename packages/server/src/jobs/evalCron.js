@@ -19,13 +19,86 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import EvalResult from '../models/EvalResult.js';
 import Community from '../models/Community.js';
 import { generateNonStreamingResponse, embedQuery, retrieveContext, buildPrompt } from '../services/aiService.js';
-import { judgeResponse } from '../services/evalJudge.js';
 
 const questionsByCommunity = (await import('../scripts/evalQuestions.json', { with: { type: 'json' } })).default;
 
 const LOW_SCORE_THRESHOLD = 3.0;
 const EVAL_LABEL_BASELINE = 'pre-launch-baseline';
 const EVAL_LABEL_NIGHTLY = 'nightly';
+
+const JUDGE_TYPES = new Set(['passive_chat', 'autonomous_mention', 'autonomous_summary', 'digest_highlight']);
+
+// ── Type-aware judge ────────────────────────────────────────────────────────
+
+function buildJudgePrompt(type, output, context) {
+  const dimensionDefinitions = {
+    passive_chat: {
+      relevance: 'Does the response actually address the user\'s question?',
+      groundedness: 'Is every claim traceable to the provided post/comment context?',
+      faithfulness: 'Does it avoid inventing facts not present in the context?',
+    },
+    autonomous_mention: {
+      relevance: 'Does the reply address what was asked in the triggering comment?',
+      groundedness: 'Is it grounded in the specific post/thread it was posted under?',
+      faithfulness: 'Does it avoid fabricating claims about the thread?',
+    },
+    autonomous_summary: {
+      relevance: 'Does it capture the actual themes/points raised, not generic filler?',
+      groundedness: 'Are all summarized points traceable to the top comments provided?',
+      faithfulness: 'Does it stay neutral and avoid asserting a side was "right"?',
+    },
+    digest_highlight: {
+      relevance: 'Does it reflect what this specific community actually discussed this week?',
+      groundedness: 'Are the themes traceable to the top posts provided, not generic?',
+      faithfulness: 'Does it avoid inventing activity/topics not present in the posts?',
+    },
+  };
+
+  const defs = dimensionDefinitions[type];
+  return `You are grading an AI-generated response for quality. Task type: ${type}.
+
+Context provided to the AI:
+${context}
+
+AI's output:
+${output}
+
+Score each dimension 1-5:
+- relevance: ${defs.relevance}
+- groundedness: ${defs.groundedness}
+- faithfulness: ${defs.faithfulness}
+
+Respond ONLY with JSON: {"relevance": N, "groundedness": N, "faithfulness": N}`;
+}
+
+async function judgeOutput(type, output, context) {
+  if (!JUDGE_TYPES.has(type)) {
+    throw new Error(`unknown judge type: ${type}`);
+  }
+
+  const judgePrompt = buildJudgePrompt(type, output, context);
+  const raw = await generateNonStreamingResponse(judgePrompt);
+
+  try {
+    const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '');
+    const parsed = JSON.parse(cleaned);
+    const grade = {
+      relevance: Number(parsed.relevance),
+      groundedness: Number(parsed.groundedness),
+      faithfulness: Number(parsed.faithfulness),
+    };
+    for (const [dim, val] of Object.entries(grade)) {
+      if (!Number.isFinite(val) || val < 1 || val > 5) {
+        throw new Error(`${dim} score out of range: ${parsed[dim]}`);
+      }
+    }
+    return grade;
+  } catch (err) {
+    console.error(`[evalCron] judge JSON parse failed for "${type}", skipping eval row: ${err.message}`);
+    console.error('[evalCron] raw judge response:', raw);
+    throw err;
+  }
+}
 
 // ── Shared runner ───────────────────────────────────────────────────────────
 
@@ -57,20 +130,21 @@ async function runEvalQuestion(q, communityId, communityName, runId, evalLabel) 
   }));
 
   const judgeStart = Date.now();
-  const grade = await judgeResponse({ question: q.question, answer, sources });
+  const judgeContext = [
+    `QUESTION: ${q.question}`,
+    'SOURCE SNIPPETS:',
+    ...(contextChunks.length ? contextChunks.map((c) => c.text) : ['(no context retrieved)']),
+  ].join('\n\n');
+  const grade = await judgeOutput('passive_chat', answer, judgeContext);
   const judgeMs = Date.now() - judgeStart;
 
   const totalMs = embedMs + retrievalMs + llmMs + judgeMs;
-
-  // Coerce groundedness 0→1 for model min:1 constraint (keep raw for metrics)
-  const saveGrade = { ...grade };
-  if (saveGrade.groundedness === 0) saveGrade.groundedness = 1;
 
   const doc = await EvalResult.create({
     community: communityId,
     question: q.question,
     answer,
-    ...saveGrade,
+    ...grade,
     hasCitation: sources.length > 0,
     promptVersion: 'prompt-v3.0-2026-07-25',
     runId,
@@ -177,7 +251,7 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
   console.log('  ── Answer Quality ──────────────────────────────────────');
   console.log(`  Relevance (1-5):      ${avgRelevance.toFixed(2)}`);
   console.log(`  Faithfulness (1-5):   ${avgFaithfulness.toFixed(2)}`);
-  console.log(`  Groundedness (0/1):   ${avgGroundedness.toFixed(2)} (${(avgGroundedness * 100).toFixed(0)}% cited a source)`);
+  console.log(`  Groundedness (1-5):   ${avgGroundedness.toFixed(2)}`);
   console.log(`  Overall avg:          ${avgScore.toFixed(2)}`);
   console.log('');
   console.log('  ── Latency (avg per question) ─────────────────────────');
@@ -314,4 +388,4 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('Done.');
 }
 
-export { runNightlyEval, EVAL_LABEL_BASELINE, EVAL_LABEL_NIGHTLY };
+export { runNightlyEval, EVAL_LABEL_BASELINE, EVAL_LABEL_NIGHTLY, buildJudgePrompt, judgeOutput };
