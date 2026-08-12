@@ -19,6 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import EvalResult from '../models/EvalResult.js';
 import Community from '../models/Community.js';
 import { generateNonStreamingResponse, embedQuery, retrieveContext, buildPrompt } from '../services/aiService.js';
+import { runMentionSuite, runSummarySuite, runDigestSuite } from './evalNeoLayers.js';
 
 const questionsByCommunity = (await import('../scripts/evalQuestions.json', { with: { type: 'json' } })).default;
 
@@ -218,6 +219,26 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
     console.log('');
   }
 
+  // ── Neo-layer suites (mention / summary / digest) ─────────────────────────
+  const suites = [];
+  const suiteRunners = [
+    { name: 'mention', runner: runMentionSuite },
+    { name: 'summary', runner: runSummarySuite },
+    { name: 'digest', runner: runDigestSuite },
+  ];
+
+  for (const { name, runner } of suiteRunners) {
+    console.log(`  ━━━ ${name} suite ━━━`);
+    try {
+      const suite = await runner({ runId, evalLabel });
+      suites.push(suite);
+      console.log(`  ${suite.results.length} samples evaluated`);
+    } catch (err) {
+      console.error(`  [${name}] suite FAILED: ${err.message}`);
+    }
+    console.log('');
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
   const total = allResults.length;
   if (total === 0) {
@@ -287,6 +308,32 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
     }
   }
 
+  // ── Neo-layer suite sub-report ─────────────────────────────────────────────
+  if (suites.length > 0) {
+    console.log('  ── Neo Layer Suites (1-5 each) ───────────────────────────');
+    for (const suite of suites) {
+      const vals = suite.results.map((r) => r.grade).filter((g) => g && g.relevance != null);
+      if (vals.length === 0) {
+        console.log(`  ${suite.label}: 0 samples evaluated`);
+        continue;
+      }
+      const avg = (k) => vals.reduce((a, b) => a + b[k], 0) / vals.length;
+      const below =
+        avg('relevance') < LOW_SCORE_THRESHOLD ||
+        avg('groundedness') < LOW_SCORE_THRESHOLD ||
+        avg('faithfulness') < LOW_SCORE_THRESHOLD
+          ? ' ⚠️ below threshold'
+          : '';
+      console.log(
+        `  ${suite.label}: n=${vals.length} rel=${avg('relevance').toFixed(2)} gnd=${avg('groundedness').toFixed(2)} faith=${avg('faithfulness').toFixed(2)}${below}`
+      );
+      if (suite.note) {
+        console.log(`    ${suite.note}`);
+      }
+    }
+    console.log('');
+  }
+
   console.log('════════════════════════════════════════════════════════════');
 
   // ── Alert on quality drop ─────────────────────────────────────────────────
@@ -312,6 +359,28 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
     results: allResults,
+    suites: suites.map((s) => {
+      const vals = s.results.map((r) => r.grade).filter((g) => g && g.relevance != null);
+      const avg = (k) => (vals.length ? vals.reduce((a, b) => a + b[k], 0) / vals.length : 0);
+      return {
+        type: s.type,
+        label: s.label,
+        note: s.note || null,
+        count: vals.length,
+        avgRelevance: avg('relevance'),
+        avgGroundedness: avg('groundedness'),
+        avgFaithfulness: avg('faithfulness'),
+        results: s.results.map((r) => ({
+          question: r.doc.question,
+          relevance: r.grade.relevance,
+          groundedness: r.grade.groundedness,
+          faithfulness: r.grade.faithfulness,
+          llmMs: r.llmMs,
+          judgeMs: r.judgeMs,
+          totalMs: r.totalMs,
+        })),
+      };
+    }),
   };
 }
 

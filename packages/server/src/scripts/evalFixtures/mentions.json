@@ -1,0 +1,34 @@
+[
+  {
+    "triggerCommentBody": "I have a long list that re-renders on every keystroke and it's getting slow.",
+    "question": "How do I optimize rendering performance for a long list in React?"
+  },
+  {
+    "triggerCommentBody": "My Express controllers are getting bloated with too much logic.",
+    "question": "What is the best way to structure Express controllers and routes?"
+  },
+  {
+    "triggerCommentBody": "Our text search queries are getting slower as the collection grows.",
+    "question": "How do I index my MongoDB fields for ultra-fast text search?"
+  },
+  {
+    "triggerCommentBody": "I can't decide between flexbox and grid for my dashboard layout.",
+    "question": "When should I use CSS Grid versus Flexbox?"
+  },
+  {
+    "triggerCommentBody": "I want to launch my side project but I don't want to pay for hosting yet.",
+    "question": "How can I host my side project completely for free?"
+  },
+  {
+    "triggerCommentBody": "We are about to adopt server components and it feels risky for our codebase.",
+    "question": "What are the tradeoffs of React Server Components?"
+  },
+  {
+    "triggerCommentBody": "Our background jobs are piling up and blocking the main process.",
+    "question": "How do I handle background workers with Bull and Redis?"
+  },
+  {
+    "triggerCommentBody": "I am writing a complex report query but my aggregation pipeline is a mess.",
+    "question": "How do I build MongoDB aggregation pipelines by example?"
+  }
+]

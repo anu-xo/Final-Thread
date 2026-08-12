@@ -10,6 +10,21 @@ jest.unstable_mockModule('../src/services/aiService.js', () => ({
   embedQuery: jest.fn(),
   retrieveContext: jest.fn(),
   buildPrompt: jest.fn(),
+  buildPromptWithinBudget: jest.fn(),
+  buildSystemPrompt: jest.fn(),
+  buildThreadSummaryPrompt: jest.fn(),
+  buildDigestHighlightPrompt: jest.fn(),
+  THREAD_SUMMARY_PROMPT_VERSION: 'summary-v1.0',
+  DIGEST_HIGHLIGHT_PROMPT_VERSION: 'digest-v1.0',
+}));
+
+jest.unstable_mockModule('../src/jobs/embeddingQueue.js', () => ({
+  getEmbeddingQueue: () => ({ add: jest.fn().mockResolvedValue({ id: 'mock-embedding-job-uuid' }) }),
+}));
+
+jest.unstable_mockModule('../src/socket.js', () => ({
+  getIO: () => ({ to: jest.fn().mockReturnValue({ emit: jest.fn() }) }),
+  initIO: jest.fn(),
 }));
 
 jest.unstable_mockModule('node-cron', () => ({
