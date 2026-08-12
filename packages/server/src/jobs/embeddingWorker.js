@@ -7,6 +7,7 @@ import Notification from '../models/Notification.js';
 import NeoLog from '../models/NeoLog.js';
 import { getIO } from '../socket.js';
 import { preFilterBatch, mapEmbeddingsToOriginal } from '../utils/minhash.js';
+import { isActiveLayerNudgeAllowed } from '../utils/neoRateLimit.js';
 
 const embeddingQueue = getEmbeddingQueue();
 
@@ -92,6 +93,15 @@ async function handleDuplicateFound({ postId, communityId, matchedPostId, simila
 
   const newPost = await Post.findById(postId).select('author community').lean();
   if (!newPost) return;
+
+  // Per-user opt-out + daily cap shared with the stale-nudge layer.
+  const nudgeAllowed = await isActiveLayerNudgeAllowed(newPost.author);
+  if (!nudgeAllowed) {
+    console.warn(
+      `[EmbeddingWorker] user ${newPost.author} opted out or hit the daily active-layer limit — skipping duplicate-post notification`
+    );
+    return;
+  }
 
   const created = await Notification.create({
     user: newPost.author,

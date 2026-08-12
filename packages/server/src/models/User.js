@@ -66,6 +66,9 @@ const userSchema = new mongoose.Schema(
       digest: { type: Boolean, default: true },
       replies: { type: Boolean, default: true },
       mentions: { type: Boolean, default: true },
+      // Active layer (dedup notification + stale nudge). Per-user opt-out so a
+      // single active user can't be spammed by Neo's proactive nudges.
+      neoActiveNudges: { type: Boolean, default: true },
     },
   },
   {

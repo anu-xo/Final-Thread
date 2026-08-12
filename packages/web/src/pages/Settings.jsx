@@ -65,7 +65,7 @@ export default function SettingsPage() {
   const notificationSound = desktop ? (desktopSettings?.notificationSound ?? true) : true;
   const aiChatAutoOpen = desktop ? (desktopSettings?.aiChatAutoOpen ?? false) : false;
 
-  const notifPrefs = serverPrefs?.notifPrefs ?? { digest: true, replies: true, mentions: true };
+  const notifPrefs = serverPrefs?.notifPrefs ?? { digest: true, replies: true, mentions: true, neoActiveNudges: true };
 
   const handleTheme = async (val) => {
     setUiTheme(val);
@@ -209,6 +209,11 @@ export default function SettingsPage() {
               label="Mention notifications"
               checked={notifPrefs.mentions}
               onChange={(val) => handleNotifPref('mentions', val)}
+            />
+            <ToggleRow
+              label="AI suggestions and nudges"
+              checked={notifPrefs.neoActiveNudges !== false}
+              onChange={(val) => handleNotifPref('neoActiveNudges', val)}
             />
           </div>
         </Section>

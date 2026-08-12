@@ -5,6 +5,7 @@ import Community from '../models/Community.js';
 import Notification from '../models/Notification.js';
 import NeoLog from '../models/NeoLog.js';
 import { getIO } from '../socket.js';
+import { isActiveLayerNudgeAllowed } from '../utils/neoRateLimit.js';
 
 const STALE_HOURS = Number(process.env.NEO_STALE_POST_HOURS || 12);
 const MIN_MEMBERS = Number(process.env.NEO_STALE_MIN_COMMUNITY_MEMBERS || 5);
@@ -36,6 +37,17 @@ export async function runStaleNudgeCheck() {
       sourcePostIds: post._id,
     });
     if (alreadyNudged) continue;
+
+    // Per-user opt-out + daily cap shared with the dedup notification layer.
+    // Skip this candidate only — a different post's author may still be under
+    // their own limit, so keep looping.
+    const nudgeAllowed = await isActiveLayerNudgeAllowed(post.author);
+    if (!nudgeAllowed) {
+      console.warn(
+        `[staleNudgeCron] user ${post.author} opted out or hit the daily active-layer limit — skipping stale nudge`
+      );
+      continue;
+    }
 
     const created = await Notification.create({
       user: post.author,

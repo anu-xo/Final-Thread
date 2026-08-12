@@ -11,12 +11,32 @@ const mockPostFindById = jest.fn();
 const mockNotificationCreate = jest.fn().mockResolvedValue({});
 const mockNeoLogExists = jest.fn().mockResolvedValue(false);
 const mockNeoLogCreate = jest.fn().mockResolvedValue({});
+const mockUserFindById = jest.fn();
+
+const mockRedis = {
+  incr: jest.fn().mockResolvedValue(1),
+  expire: jest.fn().mockResolvedValue(1),
+};
 
 function mockPostResult(doc) {
   mockPostFindById.mockImplementation(() => ({
     select: () => ({ lean: () => Promise.resolve(doc) }),
   }));
 }
+
+function mockUserDoc(doc) {
+  mockUserFindById.mockImplementation(() => ({
+    select: () => ({ lean: () => Promise.resolve(doc) }),
+  }));
+}
+
+jest.unstable_mockModule('../config/redis.js', () => ({
+  redis: mockRedis,
+}));
+
+jest.unstable_mockModule('../models/User.js', () => ({
+  default: { findById: mockUserFindById },
+}));
 
 jest.unstable_mockModule('@google/generative-ai', () => ({
   GoogleGenerativeAI: jest.fn().mockImplementation(() => ({
@@ -81,9 +101,14 @@ function resetGeminiMocks() {
   mockAggregate.mockResolvedValue([]);
   mockInsertMany.mockResolvedValue([]);
   mockPostResult(null);
+  mockUserDoc({ notifPrefs: { neoActiveNudges: true } });
   mockNotificationCreate.mockResolvedValue({});
   mockNeoLogExists.mockResolvedValue(false);
   mockNeoLogCreate.mockResolvedValue({});
+  mockRedis.incr.mockReset();
+  mockRedis.expire.mockReset();
+  mockRedis.incr.mockResolvedValue(1);
+  mockRedis.expire.mockResolvedValue(1);
 }
 
 describe('Embedding queue retry logic', () => {
@@ -370,6 +395,54 @@ describe('Embedding queue retry logic', () => {
       expect(mockPostFindById).not.toHaveBeenCalled();
       expect(mockNotificationCreate).not.toHaveBeenCalled();
       expect(mockNeoLogCreate).not.toHaveBeenCalled();
+    });
+
+    it('does not notify when the author has hit the daily active-layer limit', async () => {
+      mockEmbedContentBatch.mockResolvedValue({
+        embeddings: [{ values: VEC_768 }],
+      });
+
+      mockAggregate.mockResolvedValue([{ score: 0.98, postId: '507f1f77bcf86cd799439099' }]);
+      mockPostResult({
+        _id: '507f1f77bcf86cd799439011',
+        author: '507f1f77bcf86cd799439013',
+        community: '507f1f77bcf86cd799439012',
+      });
+
+      mockRedis.incr.mockResolvedValueOnce(4); // 4th hit of the day → blocked
+
+      await capturedProcessor({
+        data: makeJobData(),
+        id: 'job-skip-daily-cap-1',
+        attemptsMade: 0,
+      });
+
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+      expect(mockNeoLogCreate).not.toHaveBeenCalled();
+    });
+
+    it('does not notify when the author has disabled AI nudges (neoActiveNudges=false)', async () => {
+      mockEmbedContentBatch.mockResolvedValue({
+        embeddings: [{ values: VEC_768 }],
+      });
+
+      mockAggregate.mockResolvedValue([{ score: 0.98, postId: '507f1f77bcf86cd799439099' }]);
+      mockPostResult({
+        _id: '507f1f77bcf86cd799439011',
+        author: '507f1f77bcf86cd799439013',
+        community: '507f1f77bcf86cd799439012',
+      });
+      mockUserDoc({ notifPrefs: { neoActiveNudges: false } });
+
+      await capturedProcessor({
+        data: makeJobData(),
+        id: 'job-skip-optout-1',
+        attemptsMade: 0,
+      });
+
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+      expect(mockNeoLogCreate).not.toHaveBeenCalled();
+      expect(mockRedis.incr).not.toHaveBeenCalled(); // pref short-circuits before the cap
     });
 
     it('never notifies for comment-type embeddings (postId is the parent post)', async () => {

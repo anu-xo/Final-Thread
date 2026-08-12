@@ -8,6 +8,8 @@ const mockRedis = {
   on: jest.fn().mockReturnThis(),
   ping: jest.fn().mockResolvedValue('PONG'),
   quit: jest.fn().mockResolvedValue(undefined),
+  incr: jest.fn().mockResolvedValue(1),
+  expire: jest.fn().mockResolvedValue(1),
 };
 
 const mockIo = {
@@ -173,5 +175,18 @@ describe('staleNudgeCron runStaleNudgeCheck', () => {
 
     expect(result.checked).toBe(0);
     expect(await Notification.findOne({ type: 'stale_post_nudge' })).toBeNull();
+  });
+
+  it('skips the nudge when the user has hit the daily active-layer limit', async () => {
+    const community = await seedCommunity({ slug: 'stale-limited' });
+    await seedPost(community, { hours: 13 });
+
+    mockRedis.incr.mockResolvedValueOnce(4); // 4th hit of the day → blocked
+
+    const result = await runStaleNudgeCheck();
+
+    expect(result.checked).toBe(1); // still a candidate, but suppressed by the cap
+    expect(await Notification.findOne({ type: 'stale_post_nudge' })).toBeNull();
+    expect(await NeoLog.findOne({ triggerType: 'active_stale' })).toBeNull();
   });
 });

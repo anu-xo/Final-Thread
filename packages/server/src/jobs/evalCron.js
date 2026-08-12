@@ -336,10 +336,14 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
 
   console.log('════════════════════════════════════════════════════════════');
 
-  // ── Alert on quality drop ─────────────────────────────────────────────────
-  if (avgScore < LOW_SCORE_THRESHOLD) {
-    console.log(`\n  ⚠️  Average score ${avgScore.toFixed(2)} is below threshold ${LOW_SCORE_THRESHOLD} — sending alert`);
-    await notifyDiscord(avgScore, allResults, evalLabel);
+  // ── Alert on quality drop (per-type, not blended) ─────────────────────────
+  const perType = buildPerTypeReport(allResults, suites);
+  const belowTypes = perType.filter((t) => t.below);
+  if (belowTypes.length > 0) {
+    console.log(
+      `\n  ⚠️  Below threshold (${LOW_SCORE_THRESHOLD}): ${belowTypes.map((t) => t.type).join(', ')} — sending alert`
+    );
+    await notifyDiscord(perType, evalLabel);
   }
 
   const finishedAt = new Date();
@@ -384,22 +388,48 @@ async function runNightlyEval(evalLabel = EVAL_LABEL_NIGHTLY) {
   };
 }
 
-// ── Discord alert ───────────────────────────────────────────────────────────
+// ── Per-type breakdown + Discord alert ─────────────────────────────────────
 
-async function notifyDiscord(avgScore, results, evalLabel) {
+const TRIGGER_TYPES = ['passive_chat', 'autonomous_mention', 'autonomous_summary', 'digest_highlight'];
+
+// A blended average across all four trigger types can hide one broken layer
+// behind three healthy ones, so the alert reports each type separately and
+// flags types individually below threshold rather than the overall mean.
+function buildPerTypeReport(allResults, suites) {
+  const groups = {
+    passive_chat: allResults.map((r) => r.grade).filter((g) => g && g.relevance != null),
+    ...suites.reduce((acc, suite) => {
+      acc[suite.type] = (suite.results || [])
+        .map((r) => r.grade)
+        .filter((g) => g && g.relevance != null);
+      return acc;
+    }, {}),
+  };
+
+  return TRIGGER_TYPES.map((type) => {
+    const grades = groups[type] || [];
+    if (grades.length === 0) {
+      return { type, samples: 0, avgScore: null, below: false };
+    }
+    const avg = (key) => grades.reduce((sum, g) => sum + g[key], 0) / grades.length;
+    const avgScore = (avg('relevance') + avg('faithfulness')) / 2;
+    return { type, samples: grades.length, avgScore, below: avgScore < LOW_SCORE_THRESHOLD };
+  });
+}
+
+async function notifyDiscord(perType, evalLabel) {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl) return;
 
-  const lowScoring = results.filter((r) => {
-    const s = (r.grade.groundedness + r.grade.relevance) / 2;
-    return s < LOW_SCORE_THRESHOLD;
+  const date = new Date().toISOString().slice(0, 10);
+  const lines = perType.map((t) => {
+    if (t.samples === 0) return `${t.type}: no samples evaluated`;
+    const flag = t.below ? '  ⚠️ BELOW THRESHOLD' : '';
+    return `${t.type}: ${t.avgScore.toFixed(1)} avg (${t.samples} samples)${flag}`;
   });
 
   await axios.post(webhookUrl, {
-    content:
-      `⚠️ **ThreadVerse AI eval alert** (${evalLabel})\n` +
-      `Average score dropped to **${avgScore.toFixed(2)}** (threshold: ${LOW_SCORE_THRESHOLD})\n` +
-      `${lowScoring.length} of ${results.length} questions scored low.`,
+    content: `⚠️ **ThreadVerse Neo nightly eval** — ${date} (${evalLabel})\n` + lines.join('\n'),
   });
 }
 
@@ -457,4 +487,4 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   console.log('Done.');
 }
 
-export { runNightlyEval, EVAL_LABEL_BASELINE, EVAL_LABEL_NIGHTLY, buildJudgePrompt, judgeOutput };
+export { runNightlyEval, EVAL_LABEL_BASELINE, EVAL_LABEL_NIGHTLY, buildJudgePrompt, judgeOutput, buildPerTypeReport, notifyDiscord };
