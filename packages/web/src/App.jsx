@@ -31,6 +31,7 @@ const SubmitPostPage = lazy(() => import('./pages/SubmitPostPage.jsx'));
 const SearchPage = lazy(() => import('./pages/SearchPage.jsx'));
 const AIChatPage = lazy(() => import('./pages/AIChatPage.jsx'));
 const HomePage = lazy(() => import('./pages/HomePage.jsx'));
+const GlobalFeedPage = lazy(() => import('./pages/GlobalFeedPage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
 const DownloadPage = lazy(() => import('./pages/DownloadPage.jsx'));
@@ -86,6 +87,8 @@ function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/home" element={<HomePage />} />
+            <Route path="/popular" element={<GlobalFeedPage mode="popular" />} />
+            <Route path="/all" element={<GlobalFeedPage mode="all" />} />
             <Route path="/submit" element={<SubmitPostPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/ai/chat" element={<AIChatPage />} />

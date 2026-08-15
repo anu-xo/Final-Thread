@@ -148,7 +148,7 @@ export async function getPosts(req, res) {
 
     const pageLimit = Math.min(parseInt(limit, 10) || DEFAULT_LIMIT, MAX_LIMIT);
 
-    const query = {};
+    const query = { isRemoved: false };
 
     if (community) {
       const communityId = await resolveCommunityId(community);
@@ -183,6 +183,7 @@ export async function getPosts(req, res) {
       .sort({ [sortField]: -1, _id: -1 })
       .limit(pageLimit + 1)
       .populate("author", "username avatarUrl")
+      .populate("community", "name slug icon accentColor aiEnabled")
       .lean();
 
     const hasMore = posts.length > pageLimit;

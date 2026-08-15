@@ -7,7 +7,7 @@ export function usePostFeed({ communityId, sort = 'hot' } = {}) {
     queryKey: ['posts', 'feed', { communityId, sort }],
     queryFn: async ({ pageParam }) => {
       const { data } = await api.get('/posts', {
-        params: { communityId, sort, cursor: pageParam, limit: 20 },
+        params: { community: communityId, sort, cursor: pageParam, limit: 20 },
       });
       return data.data; // { posts: [...], nextCursor: string | null, hasMore: boolean }
     },
