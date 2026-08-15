@@ -6,6 +6,7 @@ import VoteButton from './VoteButton';
 import OnlinePill from './OnlinePill.jsx';
 import AskAIPill from './AskAIPill.jsx';
 import { useCommunityPresence } from '../hooks/useCommunityPresence.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 function timeAgo(date) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -106,7 +107,9 @@ export default function PostCard({ post, revealDelay = 0 }) {
           to={`/posts/${_id}`}
           className="block text-[13px] leading-relaxed text-gray-500 dark:text-mist/60 line-clamp-2"
         >
-          {preview}
+          <span
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(preview) }}
+          />
         </Link>
       )}
 

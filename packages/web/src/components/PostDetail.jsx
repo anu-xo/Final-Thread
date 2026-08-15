@@ -10,6 +10,7 @@ import CommentBox from './CommentBox.jsx';
 import ReportDialog from './ReportDialog.jsx';
 import AskAIPill from './AskAIPill.jsx';
 import SectionErrorBoundary from './SectionErrorBoundary.jsx';
+import { sanitizeHtml } from '../utils/sanitize.js';
 import { PostCardSkeleton, CommentSkeleton } from './skeletons/index.js';
 
 function CommentBoxSkeleton() {
@@ -39,8 +40,8 @@ function CommentList({ postId, newCommentId }) {
     queryKey: ['comments', postId],
     queryFn: async () => {
       const { data } = await api.get(`/posts/${postId}/comments`);
-      // Backend returns { comments: [...] } or { data: { comments: [...] } }
-      return data?.data?.comments ?? data?.comments ?? [];
+      // Backend returns { data: <enriched comment tree array> }
+      return data?.data ?? [];
     },
     enabled: Boolean(postId),
   });
@@ -229,9 +230,10 @@ export default function PostDetail() {
             )}
 
             {post?.body && (
-              <p className="text-gray-700 dark:text-neutral-300 whitespace-pre-wrap text-sm leading-relaxed">
-                {post.body}
-              </p>
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed text-gray-700 dark:text-neutral-300"
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.body) }}
+              />
             )}
 
             <div className="mt-3 flex items-center gap-3">

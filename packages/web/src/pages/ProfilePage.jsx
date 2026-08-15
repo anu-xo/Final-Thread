@@ -6,6 +6,7 @@ import PostCard from '../components/PostCard.jsx';
 import SectionErrorBoundary from '../components/SectionErrorBoundary.jsx';
 import { ProfileSkeleton, PostCardSkeleton, CommentSkeleton } from '../components/skeletons/index.js';
 import { userApi } from '../services/userApi.js';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 function ProfileCommentCard({ comment }) {
   return (
@@ -23,7 +24,10 @@ function ProfileCommentCard({ comment }) {
               <span className="ml-2 text-gray-400">r/{comment.post.community.name}</span>
             )}
           </div>
-          <p className="mt-2 text-sm text-gray-700 dark:text-neutral-300 whitespace-pre-wrap">{comment.body}</p>
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none mt-2 text-sm text-gray-700 dark:text-neutral-300"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.body) }}
+          />
         </div>
 
         <span className="shrink-0 rounded-full bg-gray-100 dark:bg-neutral-700 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-neutral-300">

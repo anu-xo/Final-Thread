@@ -5,6 +5,7 @@ import { Sparkles } from 'lucide-react';
 import VoteButton from './VoteButton';
 import CommentBox from './CommentBox';
 import StitchLine from './StitchLine';
+import { sanitizeHtml } from '../utils/sanitize.js';
 
 const MAX_DEPTH = 5;
 const CONNECTOR_LENGTH = 48;
@@ -29,7 +30,10 @@ export default function CommentThread({
 
   const contentBody = (
     <>
-      <p className="text-sm mt-1 text-gray-700 dark:text-mist">{comment.body}</p>
+      <div
+        className="prose prose-sm dark:prose-invert max-w-none text-sm mt-1 text-gray-700 dark:text-mist"
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.body) }}
+      />
 
       <div className="flex gap-3 mt-1 text-xs text-gray-500 dark:text-mist/60">
         {comment.depth < MAX_DEPTH && (
