@@ -196,6 +196,53 @@ describe('POST /api/votes', () => {
     );
   });
 
+  it('keeps the author stored karma in sync with post/comment vote changes', async () => {
+    const authorUser = await User.create({
+      username: 'karma-author',
+      email: 'karma-author@threadverse.dev',
+      passwordHash: 'dummy_hash',
+      role: 'user',
+    });
+
+    const authorPost = await Post.create({
+      title: 'Karma Author Post',
+      body: 'Test body',
+      author: authorUser._id,
+      community: testCommunity._id,
+    });
+
+    const authorComment = await Comment.create({
+      body: 'karma sync comment',
+      author: authorUser._id,
+      post: testPost._id,
+      depth: 0,
+    });
+
+    const voteOn = (targetId, targetType, value) =>
+      createVoteRequest(authToken, { targetId, targetType, value });
+
+    const cases = [
+      { run: () => voteOn(authorPost._id, 'post', 1), expected: 1 },
+      { run: () => voteOn(authorPost._id, 'post', -1), expected: -1 },
+      { run: () => voteOn(authorPost._id, 'post', -1), expected: 0 },
+      { run: () => voteOn(authorComment._id, 'comment', 1), expected: 1 },
+      { run: () => voteOn(authorComment._id, 'comment', -1), expected: -1 },
+      { run: () => voteOn(authorComment._id, 'comment', -1), expected: 0 },
+    ];
+
+    for (const c of cases) {
+      const response = await c.run();
+      expect(response.status).toBe(200);
+      const freshAuthor = await User.findById(authorUser._id);
+      expect(freshAuthor.karma).toBe(c.expected);
+    }
+
+    await Vote.deleteMany({ user: testUser._id, target: { $in: [authorPost._id, authorComment._id] } });
+    await Comment.deleteOne({ _id: authorComment._id });
+    await Post.deleteOne({ _id: authorPost._id });
+    await User.deleteOne({ _id: authorUser._id });
+  });
+
   it('returns 400 for invalid targetType', async () => {
     const response = await createVoteRequest(authToken, {
       targetId: testPost._id,

@@ -163,8 +163,8 @@ function CommunityHeader({ community }) {
 
       <div className="max-w-5xl mx-auto px-4 py-4 flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">r/{community.slug}</h1>
-          <p className="text-sm text-neutral-500">{community.name}</p>
+          <h1 className="text-xl font-bold">{community.name}</h1>
+          <p className="text-sm text-neutral-500">{community.slug}</p>
           <p className="text-xs text-neutral-400 mt-1 flex items-center gap-2">
             <span>
               <NumberFlip value={liveMembers} /> member{liveMembers !== 1 ? 's' : ''}
@@ -344,13 +344,13 @@ export default function CommunityPage() {
   return (
     <>
       <Helmet>
-        <title>r/{data.slug} — ThreadVerse</title>
+        <title>{data.name} — ThreadVerse</title>
         <meta name="description" content={data.description?.slice(0, 160)} />
-        <meta property="og:title" content={`r/${data.slug}`} />
+        <meta property="og:title" content={data.name} />
         <meta property="og:description" content={data.description?.slice(0, 160)} />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content={`r/${data.slug}`} />
+        <meta name="twitter:title" content={data.name} />
       </Helmet>
       <SectionErrorBoundary sectionName="Community">
         <div>

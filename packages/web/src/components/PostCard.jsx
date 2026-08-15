@@ -39,7 +39,7 @@ function CommunityAvatar({ community }) {
 /**
  * PostCard — Midnight Aurora feed card
  *
- *  • Top row: community avatar (gradient circle), r/community, timestamp,
+ *  • Top row: community avatar (gradient circle), community name, timestamp,
  *    and a live "online now" pill (pulsing dot — mint by default, community
  *    accent when the community has accent customization enabled)
  *  • Title (15px / 500) + muted preview text (13px)
@@ -74,7 +74,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
       transition={{ duration: 0.4, ease: 'easeOut', delay: revealDelay / 1000 }}
       className="relative flex flex-col gap-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-slate p-3.5 card-glow"
     >
-      {/* ── Top row — community avatar · r/community · time · online pill ── */}
+      {/* ── Top row — community avatar · community · time · online pill ── */}
       <div className="flex min-w-0 items-center gap-2">
         <Link
           to={`/community/${community?.slug}`}
@@ -82,7 +82,7 @@ export default function PostCard({ post, revealDelay = 0 }) {
         >
           <CommunityAvatar community={community} />
           <span className="truncate text-xs font-semibold text-gray-700 dark:text-mist/90 transition-colors hover:text-emerald">
-            r/{community?.name || community?.slug}
+            {community?.name || community?.slug}
           </span>
         </Link>
         <span className="shrink-0 text-xs text-gray-500 dark:text-mist/50">

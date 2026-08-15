@@ -70,7 +70,7 @@ export default function Sidebar() {
                 <SidebarLink
                   key={community._id}
                   to={`/r/${community.slug}`}
-                  label={`r/${community.slug}`}
+                  label={community.name || community.slug}
                   active={location.pathname === `/r/${community.slug}`}
                 />
               ))}

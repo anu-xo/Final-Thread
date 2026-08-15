@@ -21,8 +21,8 @@ function CommunityCard({ community }) {
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-bold text-base">r/{community.slug}</h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{community.name}</p>
+          <h2 className="font-bold text-base">{community.name}</h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">{community.slug}</p>
         </div>
         {isSubscribed && (
           <span className="text-xs bg-emerald/10 dark:bg-emerald/15 text-emerald dark:text-emerald px-2 py-0.5 rounded-full font-medium shrink-0">

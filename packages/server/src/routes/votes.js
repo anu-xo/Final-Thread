@@ -5,6 +5,7 @@ import { voteLimiter } from '../middleware/rateLimiter.js';
 import Vote from '../models/Vote.js';
 import Post from '../models/Post.js';
 import Comment from '../models/Comment.js';
+import User from '../models/User.js';
 import { computeHotScore } from '../utils/scoring.js';
 import { logActivity } from '../middleware/activityLog.js';
 
@@ -149,6 +150,11 @@ router.post('/', authMiddleware, voteLimiter, async (req, res) => {
           { $set: { hotScore } },
           { new: true }
         );
+      }
+
+      // Keep the author's stored karma in sync (mirrors the hotScore pattern)
+      if (target.author) {
+        await User.updateOne({ _id: target.author }, { $inc: { karma: delta } });
       }
     }
 

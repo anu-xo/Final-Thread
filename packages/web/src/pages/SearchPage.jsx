@@ -27,7 +27,7 @@ function CommunityResult({ community }) {
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">r/{community.name}</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{community.name}</div>
           <p className="mt-1 text-sm text-gray-600 dark:text-neutral-400 line-clamp-2">
             {community.description || 'No description provided.'}
           </p>
@@ -48,7 +48,7 @@ function UserResult({ user }) {
           {user.username?.[0]?.toUpperCase() || '?'}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">u/{user.username}</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-neutral-100">{user.username}</div>
           <div className="text-xs text-gray-500 dark:text-neutral-400 capitalize">{user.role || 'user'}</div>
         </div>
         <div className="rounded-full bg-gray-50 dark:bg-neutral-700 px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-neutral-300">

@@ -25,7 +25,7 @@ function PostBody({ post }) {
       <div className="min-w-0">
         <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">{post.title}</div>
         <div className="mt-0.5 text-xs text-gray-500 dark:text-neutral-400 line-clamp-1">
-          r/{post.community?.name} · u/{post.author?.username}
+          {post.community?.name} · {post.author?.username}
         </div>
       </div>
       <span className="shrink-0 rounded-full bg-gray-100 dark:bg-neutral-700 px-2 py-1 text-xs font-medium text-gray-600 dark:text-neutral-300 tabular-nums">
@@ -39,7 +39,7 @@ function CommunityBody({ community }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">r/{community.name}</div>
+        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">{community.name}</div>
         <div className="mt-0.5 text-xs text-gray-500 dark:text-neutral-400 line-clamp-2">
           {community.description || 'No description provided.'}
         </div>
@@ -58,7 +58,7 @@ function UserBody({ user }) {
         {user.username?.[0]?.toUpperCase() || '?'}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">u/{user.username}</div>
+        <div className="text-sm font-medium text-gray-900 dark:text-neutral-100 line-clamp-1">{user.username}</div>
         <div className="text-xs text-gray-500 dark:text-neutral-400 capitalize">{user.role || 'user'}</div>
       </div>
       <span className="shrink-0 rounded-full bg-gray-100 dark:bg-neutral-700 px-2 py-1 text-xs font-medium text-gray-600 dark:text-neutral-300 tabular-nums">

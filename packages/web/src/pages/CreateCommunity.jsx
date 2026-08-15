@@ -65,7 +65,7 @@ export default function CreateCommunity() {
           <input
             {...register('name')}
             onChange={handleNameChange}
-            placeholder="React Developers"
+            placeholder="Cooking"
             className="w-full border border-neutral-300 dark:border-neutral-700 rounded-lg px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-emerald"
           />
           {errors.name && <p className="text-amaranth text-xs mt-1">{errors.name.message}</p>}
@@ -77,11 +77,9 @@ export default function CreateCommunity() {
             Slug <span className="text-neutral-400 text-xs">(auto-generated)</span>
           </label>
           <div className="flex items-center border border-neutral-300 dark:border-neutral-700 rounded-lg overflow-hidden">
-            <span className="px-3 py-2 bg-neutral-100 dark:bg-neutral-800 text-neutral-500 text-sm">
-              r/
-            </span>
             <input
               {...register('slug')}
+              placeholder="cooking"
               className="flex-1 px-3 py-2 bg-white dark:bg-neutral-900 focus:outline-none"
             />
           </div>

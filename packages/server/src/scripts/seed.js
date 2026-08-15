@@ -15,11 +15,15 @@ import CommunityMember from '../models/CommunityMember.js';
 import { computeHotScore, computeRisingScore } from '../utils/scoring.js';
 
 const COMMUNITIES = [
-  { name: 'React Developers', slug: 'reactjs', description: 'Everything React' },
-  { name: 'Node.js', slug: 'nodejs', description: 'Server-side JavaScript' },
-  { name: 'MongoDB', slug: 'mongodb', description: 'Document databases' },
-  { name: 'Web Dev', slug: 'webdev', description: 'Frontend and backend web development' },
-  { name: 'Side Projects', slug: 'sideprojects', description: 'Show off what you built' },
+  { name: 'Cooking', slug: 'cooking', description: 'Recipes, meal ideas, and kitchen wins' },
+  { name: 'Gardening', slug: 'gardening', description: 'Plants, yards, and green thumbs' },
+  { name: 'Pet Owners', slug: 'pets', description: 'Life with dogs, cats, and every critter in between' },
+  { name: 'Book Club', slug: 'books', description: 'Monthly reads and great recommendations' },
+  { name: 'Home Fitness', slug: 'homefitness', description: 'Workouts that fit around real life' },
+  { name: 'Movies & TV', slug: 'movies', description: 'What is worth watching this week' },
+  { name: 'Parenting', slug: 'parenting', description: 'Honest tips for raising little humans' },
+  { name: 'Personal Finance', slug: 'personalfinance', description: 'Budgeting, saving, and smart money habits' },
+  { name: 'Local City', slug: 'localcity', description: 'Neighborhood news, events, and hidden gems nearby' },
 ];
 
 async function seed() {
@@ -105,7 +109,7 @@ async function seed() {
     }
 
     seededCommunities.push(community);
-    console.log(`  ✅ Created r/${community.slug}`);
+    console.log(`  ✅ Created ${community.name} (${community.slug})`);
   }
 
   // 3. Create 40 Posts
@@ -167,8 +171,8 @@ async function seed() {
 
     const postData = {
       title: `Post #${i}: ${getRandomTitle(i, community.slug)}`,
-      body: `This is a beautiful and detailed discussion for post #${i} in the r/${community.slug} community. Threadverse is a modern web application built with Node, Express, Mongoose, and React. Feel free to comment or upvote/downvote!`,
-      content: `This is a beautiful and detailed discussion for post #${i} in the r/${community.slug} community. Threadverse is a modern web application built with Node, Express, Mongoose, and React. Feel free to comment or upvote/downvote!`,
+      body: `This is a friendly discussion thread for post #${i} in the ${community.name} community. Share your experiences, tips, and questions below — everyone is welcome. Feel free to comment or upvote/downvote!`,
+      content: `This is a friendly discussion thread for post #${i} in the ${community.name} community. Share your experiences, tips, and questions below — everyone is welcome. Feel free to comment or upvote/downvote!`,
       author: author._id,
       community: community._id,
       type: 'text',
@@ -196,55 +200,95 @@ async function seed() {
 
 function getRandomTitle(index, slug) {
   const topics = {
-    reactjs: [
-      'Is React 19 going to change everything?',
-      'Why I switched from React to Vue and back again',
-      'The ultimate guide to state management in 2026',
-      'Understanding Server Components: A visual guide',
-      'React Hook Form vs Formik in enterprise apps',
-      'My setup for Next.js and Tailwind CSS v4',
-      'How to optimize React rendering performance',
-      'Custom hooks you should copy-paste today',
+    cooking: [
+      'Your go-to weeknight dinner in 20 minutes or less',
+      'One-pot pasta recipes that actually taste great',
+      'The best way to keep fresh herbs alive all week',
+      'Slow cooker wins: set it and forget it',
+      'Budget meal prep ideas for busy weeks',
+      'What is in your emergency pantry, and why?',
+      'The secret to perfectly fluffy pancakes',
+      'Baking bread at home without any fancy gear',
     ],
-    nodejs: [
-      'Node.js vs Bun vs Deno: 2026 performance benchmark',
-      'Building scalable real-time servers with Socket.io',
-      'How to structure your Express controllers and routes',
-      'Why you should use fastify instead of Express',
-      'Streams in Node.js: Everything you need to know',
-      'Writing secure REST APIs with Helmet and CORS',
-      'Dockerizing a Node.js monorepo workspace',
-      'Handling background workers with Bull and Redis',
+    gardening: [
+      'Getting started: the easiest plants for beginners',
+      'Should I water in the morning or the evening?',
+      'My tomato plants are thriving and I need to brag',
+      'Building a raised garden bed on a budget',
+      'How to start composting in a small backyard',
+      'Indoor plants that survive low light',
+      'Dealing with garden pests without harsh chemicals',
+      'First harvest of the season! Show us your haul',
     ],
-    mongodb: [
-      'Understanding Mongoose pre/post save hooks',
-      'MongoDB aggregation pipelines by example',
-      'How to index your fields for ultra-fast queries',
-      'Designing schemas for a nested comment tree',
-      'Transactions in MongoDB: When and how to use them',
-      'Mongoose middleware gotchas to avoid',
-      'Atlas Search: Implementing vector similarity search',
-      'Relational vs Document databases: Choose wisely',
+    pets: [
+      'Help: my puppy will not stop chewing everything',
+      'The moment our rescue cat finally trusted us',
+      'Best toys for a bored indoor dog',
+      'What do you feed a picky cat?',
+      'Senior pets: tips for their golden years',
+      'A first-time fish owner starter guide',
+      'Grooming basics you can easily do at home',
+      'Adopting vs buying: our experience with both',
     ],
-    webdev: [
-      'The modern frontend stack in 2026',
-      'CSS Grid vs Flexbox: The final showdown',
-      'Best SEO practices for dynamic web apps',
-      'Understanding CORS and CSRF prevention',
-      'What is Glassmorphism and how to style it',
-      'Why semantic HTML matters more than ever',
-      'Micro-frontends: The good, the bad, and the ugly',
-      'PWA features you can add to your web app in 5 minutes',
+    books: [
+      'What are you reading this month?',
+      'Books that got me out of a reading slump',
+      'Best summer reads under 300 pages',
+      'A cozy mystery series you cannot put down',
+      'Books that feel like a warm hug',
+      'Non-fiction that reads like a novel',
+      'Your favorite author of all time, and why',
+      'Reading with kids: bedtime favorites',
     ],
-    sideprojects: [
-      'Show HN: I built a real-time Reddit clone in 2 days',
-      'How my side project got 10k users in a week',
-      'Failed projects: What I learned from 5 startup attempts',
-      'Building an Electron desktop client for Threadverse',
-      'Here is the stack I use for rapid prototyping',
-      'How to host your web apps completely for free',
-      'Open sourcing my side project: Lessons learned',
-      'The feedback loops that helped refine my UI design',
+    homefitness: [
+      'A 30-minute bodyweight workout with zero equipment',
+      'Starting a morning stretch routine that sticks',
+      'Walking is underrated: my 8-week progress',
+      'How to build a home gym for under $100',
+      'Knee-friendly exercises for beginners',
+      'What actually helped me lose the first 10 pounds',
+      'Strength training at home for absolute beginners',
+      'Staying motivated when you really do not feel like it',
+    ],
+    movies: [
+      'What did you watch this weekend?',
+      'Shows worth binging with your partner',
+      'The best feel-good movie for a bad day',
+      'Documentaries that changed how I see the world',
+      'A show that got better after the first season',
+      'Movie night snacks: what are we making?',
+      'Hidden gem films nobody seems to talk about',
+      'Comfort reruns you have watched ten times',
+    ],
+    parenting: [
+      'Bedtime routines that actually work',
+      'Toddler tantrums: survival tips from the trenches',
+      'Packing school lunches kids will actually eat',
+      'Screen time limits that feel reasonable',
+      'The best advice I got from other parents',
+      'Surviving the newborn months, day by day',
+      'Talking to kids about money, simply',
+      'Family activities for a rainy weekend',
+    ],
+    personalfinance: [
+      'First budget: where do I even start?',
+      'Building an emergency fund from zero',
+      'Paying off credit card debt, one payment at a time',
+      'What is a good savings rate for beginners?',
+      'Meal planning to cut your grocery bill',
+      'Side gigs that are actually worth the time',
+      'Insurance basics everyone should understand',
+      'Small wins that added up this year',
+    ],
+    localcity: [
+      'Best cheap eats in town, go',
+      'What is happening in the neighborhood this month',
+      'A hidden park nobody seems to know about',
+      'Commute hacks for getting around faster',
+      'Volunteer spots that are looking for a hand',
+      'Where to watch the big game with friends',
+      'New to town: where should I start?',
+      'Weekend trips within easy driving distance',
     ],
   };
 

@@ -75,7 +75,7 @@ export default function ModQueue() {
                         <p className="mt-1 text-xs text-gray-500 dark:text-neutral-400">{report.detail}</p>
                       )}
                       <p className="mt-1 text-xs text-gray-400 dark:text-neutral-500">
-                        Reported by u/{report.reporter?.username} &middot; {report.targetType}
+                        Reported by {report.reporter?.username} &middot; {report.targetType}
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">

@@ -55,8 +55,8 @@ test.describe('Core User Flow', () => {
     const communityInput = page.getByPlaceholder('Search communities...');
     await communityInput.click();
     await communityInput.fill('E2E');
-    await page.getByText('r/E2E Testing').first().waitFor({ state: 'visible', timeout: 5000 });
-    await page.getByText('r/E2E Testing').first().click();
+    await page.getByText('E2E Testing').first().waitFor({ state: 'visible', timeout: 5000 });
+    await page.getByText('E2E Testing').first().click();
 
     await page.getByRole('button', { name: /^post$/i }).click();
 

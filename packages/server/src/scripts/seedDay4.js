@@ -12,11 +12,15 @@ import User from '../models/User.js';
 import CommunityMember from '../models/CommunityMember.js';
 
 const COMMUNITIES = [
-  { name: 'React Developers', slug: 'reactjs', description: 'Everything React' },
-  { name: 'Node.js', slug: 'nodejs', description: 'Server-side JavaScript' },
-  { name: 'MongoDB', slug: 'mongodb', description: 'Document databases' },
-  { name: 'Web Dev', slug: 'webdev', description: 'Frontend and backend web development' },
-  { name: 'Side Projects', slug: 'sideprojects', description: 'Show off what you built' },
+  { name: 'Cooking', slug: 'cooking', description: 'Recipes, meal ideas, and kitchen wins' },
+  { name: 'Gardening', slug: 'gardening', description: 'Plants, yards, and green thumbs' },
+  { name: 'Pet Owners', slug: 'pets', description: 'Life with dogs, cats, and every critter in between' },
+  { name: 'Book Club', slug: 'books', description: 'Monthly reads and great recommendations' },
+  { name: 'Home Fitness', slug: 'homefitness', description: 'Workouts that fit around real life' },
+  { name: 'Movies & TV', slug: 'movies', description: 'What is worth watching this week' },
+  { name: 'Parenting', slug: 'parenting', description: 'Honest tips for raising little humans' },
+  { name: 'Personal Finance', slug: 'personalfinance', description: 'Budgeting, saving, and smart money habits' },
+  { name: 'Local City', slug: 'localcity', description: 'Neighborhood news, events, and hidden gems nearby' },
 ];
 
 async function seed() {
@@ -57,7 +61,7 @@ async function seed() {
       role: 'mod',
     });
 
-    console.log(`  ✅ Created r/${data.slug}`);
+    console.log(`  ✅ Created ${data.name} (${data.slug})`);
   }
 
   console.log('✅ Seed complete');

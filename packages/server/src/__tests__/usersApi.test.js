@@ -114,7 +114,7 @@ describe('Users API', () => {
       const res = await request(app).get('/api/users/profileuser');
       expect(res.status).toBe(200);
       expect(res.body.data.username).toBe('profileuser');
-      expect(res.body.data.karma).toBeDefined();
+      expect(res.body.data.karma).toBe(5);
     });
 
     it('returns 404 for non-existent user', async () => {

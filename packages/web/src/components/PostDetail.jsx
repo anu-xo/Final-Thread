@@ -209,9 +209,9 @@ export default function PostDetail() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-neutral-400 mb-2">
               <span className="font-medium text-gray-700 dark:text-neutral-300">
-                r/{post?.community?.name}
+                {post?.community?.name}
               </span>
-              <span>· u/{post?.author?.username}</span>
+              <span>· {post?.author?.username}</span>
               <span>· {timeAgo(post?.createdAt)}</span>
             </div>
 

@@ -21,7 +21,7 @@ function ProfileCommentCard({ comment }) {
               {comment.post?.title || 'View post'}
             </Link>
             {comment.post?.community?.name && (
-              <span className="ml-2 text-gray-400">r/{comment.post.community.name}</span>
+              <span className="ml-2 text-gray-400">{comment.post.community.name}</span>
             )}
           </div>
           <div
@@ -94,13 +94,13 @@ export default function ProfilePage() {
   return (
     <>
       <Helmet>
-        <title>u/{profile.username} — ThreadVerse</title>
+        <title>{profile.username} — ThreadVerse</title>
         <meta name="description" content={profile.bio?.slice(0, 160) || `${profile.username} on ThreadVerse`} />
-        <meta property="og:title" content={`u/${profile.username}`} />
+        <meta property="og:title" content={profile.username} />
         <meta property="og:description" content={profile.bio?.slice(0, 160) || `${profile.username} on ThreadVerse`} />
         <meta property="og:type" content="profile" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content={`u/${profile.username}`} />
+        <meta name="twitter:title" content={profile.username} />
       </Helmet>
       <SectionErrorBoundary sectionName="Profile">
         <div className="space-y-5">
@@ -112,7 +112,7 @@ export default function ProfilePage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-semibold tracking-wide text-emerald">Profile</p>
-                <h1 className="truncate text-2xl font-bold text-gray-900 dark:text-neutral-100">u/{profile.username}</h1>
+                <h1 className="truncate text-2xl font-bold text-gray-900 dark:text-neutral-100">{profile.username}</h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-neutral-400">Joined {new Date(profile.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
