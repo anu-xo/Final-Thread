@@ -73,15 +73,25 @@ export function ChatConversation({
   onSend,
   disabled = false,
   inputPlaceholder = 'Ask AI anything...',
+  emptyMessage = 'Ask the AI anything about this community',
+  emptyActions = null,
+  autoFocus = false,
 }) {
   const reduceMotion = useReducedMotion();
   const [input, setInput] = useState('');
   const scrollRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, streaming]);
+
+  useEffect(() => {
+    if (autoFocus && !disabled) {
+      inputRef.current?.focus();
+    }
+  }, [autoFocus, disabled]);
 
   const last = messages[messages.length - 1];
   const streamingAssistant = streaming && last?.role === 'assistant' ? last : null;
@@ -124,11 +134,18 @@ export function ChatConversation({
         )}
 
         {messages.length === 0 && !streaming && (
-          <p className="text-sm text-gray-400 dark:text-neutral-500 text-center mt-12">
-            {isOnline
-              ? 'Ask the AI anything about this community'
-              : 'Reconnect to start a new conversation'}
-          </p>
+          <div className="mt-12">
+            <p className="text-sm text-gray-400 dark:text-neutral-500 text-center">
+              {isOnline
+                ? emptyMessage
+                : 'Reconnect to start a new conversation'}
+            </p>
+            {isOnline && emptyActions && (
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {emptyActions}
+              </div>
+            )}
+          </div>
         )}
 
         {messages.map((msg, i) => {
@@ -210,10 +227,12 @@ export function ChatConversation({
 
       <form onSubmit={handleSubmit} className="flex gap-2 border-t border-gray-200 dark:border-neutral-700 p-4">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={disabled}
+          autoFocus={autoFocus}
           placeholder={inputPlaceholder}
           className="flex-1 rounded-lg border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-4 py-2.5 text-sm disabled:bg-gray-100 dark:disabled:bg-neutral-800 disabled:text-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amaranth/60"
         />

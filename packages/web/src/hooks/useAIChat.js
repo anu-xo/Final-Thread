@@ -1,7 +1,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { authFetch } from '../services/authFetch.js';
 
 const STREAM_IDLE_TIMEOUT_MS = 30_000;
 
+/**
+ * Shared AI chat hook used by every chat surface (ChatPanel on /ai/chat,
+ * AIChatInline on posts, and the standalone GlobalChatDrawer).
+ *
+ * `communityId` may be null — that's the standalone site-wide chat. The
+ * current `conversationId` is threaded back on every message so the server
+ * continues the same conversation (history is only useful if we keep it).
+ */
 export function useAIChat(communityId, communityName, isOnline = true, threadContext = null) {
   const [messages, setMessages] = useState([]);
   const [streaming, setStreaming] = useState(false);
@@ -10,6 +19,7 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
   const lastMessageRef = useRef(null);
   const abortRef = useRef(null);
   const idleTimerRef = useRef(null);
+  const conversationIdRef = useRef(null);
 
   useEffect(() => {
     return () => {
@@ -25,6 +35,7 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
     setStreaming(false);
     setWarning(null);
     setError(null);
+    conversationIdRef.current = null;
   }, [threadContext?.postId]);
 
   useEffect(() => {
@@ -42,6 +53,48 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
     }, STREAM_IDLE_TIMEOUT_MS);
   }, []);
 
+  /** Start over: clear the current conversation and its server-side id. */
+  const resetConversation = useCallback(() => {
+    abortRef.current?.abort();
+    clearTimeout(idleTimerRef.current);
+    conversationIdRef.current = null;
+    lastMessageRef.current = null;
+    setMessages([]);
+    setStreaming(false);
+    setWarning(null);
+    setError(null);
+  }, []);
+
+  /** Resume an existing conversation by loading its message history. */
+  const resumeConversation = useCallback(async (conversationId) => {
+    abortRef.current?.abort();
+    clearTimeout(idleTimerRef.current);
+    conversationIdRef.current = conversationId;
+    lastMessageRef.current = null;
+    setStreaming(false);
+    setWarning(null);
+    setError(null);
+
+    try {
+      const response = await authFetch(`/api/ai/conversations/${conversationId}/messages`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error(`Failed to load conversation: ${response.status}`);
+
+      const { data } = await response.json();
+      const loaded = (Array.isArray(data) ? data : []).map((m) => ({
+        role: m.role,
+        content: m.content,
+        sources: m.sources || [],
+      }));
+      setMessages(loaded);
+    } catch {
+      // Non-fatal — fall back to a fresh chat rather than blocking the panel.
+      conversationIdRef.current = null;
+      setMessages([]);
+    }
+  }, []);
+
   const sendMessage = useCallback(async (text) => {
     lastMessageRef.current = text;
     setError(null);
@@ -56,7 +109,7 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
     let assistantText = '';
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      const response = await authFetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -64,12 +117,20 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
           message: text,
           communityId,
           postId: threadContext?.postId,
+          conversationId: conversationIdRef.current || undefined,
         }),
         signal: controller.signal,
       });
 
       if (!response.ok || !response.body) {
-        setError('Connection lost — tap to retry');
+        let message = 'Connection lost — tap to retry';
+        try {
+          const body = await response.json();
+          message = body?.error?.message || body?.error || message;
+        } catch {
+          /* keep default */
+        }
+        setError(message);
         setStreaming(false);
         return;
       }
@@ -114,6 +175,7 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
           }
 
           if (data.data?.conversationId) {
+            conversationIdRef.current = data.data.conversationId;
             setMessages(prev => {
               const copy = [...prev];
               const last = copy[copy.length - 1];
@@ -157,5 +219,14 @@ export function useAIChat(communityId, communityName, isOnline = true, threadCon
     }
   }, [sendMessage]);
 
-  return { messages, streaming, warning, error, sendMessage, retry };
+  return {
+    messages,
+    streaming,
+    warning,
+    error,
+    sendMessage,
+    retry,
+    resetConversation,
+    resumeConversation,
+  };
 }

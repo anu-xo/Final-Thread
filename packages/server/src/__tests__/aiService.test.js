@@ -177,4 +177,74 @@ describe('aiService RAG pipeline', () => {
     const history = await aiService.getRecentHistory('conv-123', 2);
     expect(Array.isArray(history)).toBe(true);
   });
+
+  test('retrieveContext without communityId performs site-wide (global) search', async () => {
+    const queryEmbedding = new Array(768).fill(0.5);
+    const mockAggregate = (await import('../models/PostEmbedding.js')).default.aggregate;
+
+    const chunks = await aiService.retrieveContext({ queryEmbedding, communityId: null });
+
+    expect(Array.isArray(chunks)).toBe(true);
+    const call = mockAggregate.mock.calls[0][0];
+    const vectorSearch = call.find((stage) => stage.$vectorSearch);
+    expect(vectorSearch).toBeDefined();
+    expect(vectorSearch.$vectorSearch.filter).toBeUndefined();
+  });
+
+  test('retrieveContext with communityId filters by community', async () => {
+    const queryEmbedding = new Array(768).fill(0.5);
+    const mockAggregate = (await import('../models/PostEmbedding.js')).default.aggregate;
+
+    await aiService.retrieveContext({ queryEmbedding, communityId: '507f1f77bcf86cd799439011' });
+
+    const call = mockAggregate.mock.calls[0][0];
+    const vectorSearch = call.find((stage) => stage.$vectorSearch);
+    expect(vectorSearch.$vectorSearch.filter.communityId).toBeDefined();
+  });
+
+  test('buildSystemPrompt returns the site-wide global prompt when no community', () => {
+    const prompt = aiService.buildSystemPrompt(null);
+    expect(prompt).toContain('site-wide');
+    expect(prompt).not.toContain('r/{community}');
+  });
+
+  test('streamChatResponse with null communityId uses the global persona and skips community lookup', async () => {
+    mockGenerateContentStream.mockResolvedValue({
+      stream: {
+        [Symbol.asyncIterator]() {
+          let done = false;
+          return {
+            async next() {
+              if (done) return { done: true };
+              done = true;
+              return { value: { text: () => 'global answer' }, done: false };
+            },
+          };
+        },
+      },
+    });
+
+    const Community = (await import('../models/Community.js')).default;
+
+    const { stream } = await aiService.streamChatResponse({
+      message: 'What is trending across ThreadVerse?',
+      communityId: null,
+      conversationId: 'conv-1',
+    });
+
+    expect(Community.findById).not.toHaveBeenCalled();
+
+    let text = '';
+    const reader = stream.getReader();
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      text += value;
+    }
+
+    expect(text).toBe('global answer');
+    expect(mockGenerateContentStream).toHaveBeenCalledWith(
+      expect.stringContaining('site-wide')
+    );
+  });
 });

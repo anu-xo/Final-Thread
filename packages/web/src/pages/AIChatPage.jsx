@@ -52,8 +52,19 @@ export default function AIChatPage() {
 
       {!selected ? (
         <div className="flex-1 flex flex-col items-center justify-center text-sm text-gray-400 dark:text-neutral-500 gap-4">
-          <p>Join a community first to start chatting with AI.</p>
-          <Link to="/communities" className="inline-flex items-center rounded-full bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90 transition">Browse communities</Link>
+          <p>You can still chat with the AI across all of ThreadVerse — no community needed.</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('threadverse:open-ai-chat'))}
+              className="inline-flex items-center rounded-full bg-amaranth px-4 py-2 text-sm font-semibold text-white hover:bg-amaranth/90 transition"
+            >
+              Open the AI chat
+            </button>
+            <Link to="/communities" className="inline-flex items-center rounded-full border border-emerald px-4 py-2 text-sm font-semibold text-emerald hover:bg-emerald/10 transition">
+              Browse communities
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 overflow-hidden">

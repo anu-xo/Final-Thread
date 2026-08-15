@@ -89,6 +89,8 @@ router.get('/health', async (req, res) => {
  *       - `{ type: "token", text }` — each generated token chunk
  *       - `{ data: { conversationId, sources }, error, meta }` — stream complete
  *       - `{ type: "error", message }` — error during generation
+ *       `communityId` is optional: omit it for the standalone site-wide assistant
+ *       (global retrieval across all communities, no aiEnabled gate).
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -97,12 +99,15 @@ router.get('/health', async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [message, communityId]
+ *             required: [message]
  *             properties:
  *               message:
  *                 type: string
  *               communityId:
  *                 type: string
+ *                 description: >
+ *                   Omit for the standalone site-wide chat. When present, scopes
+ *                   retrieval to the community and enforces Community.aiEnabled.
  *               conversationId:
  *                 type: string
  *                 description: Existing conversation ID to continue
@@ -111,7 +116,8 @@ router.get('/health', async (req, res) => {
  *                 description: >
  *                   Pin the chat to a specific post. Retrieval biases toward the
  *                   post's own embedding + its comment thread and only falls
- *                   back to community-wide search when that thread is thin.
+ *                   back to community-wide (or global) search when that thread
+ *                   is thin.
  *               thread:
  *                 type: object
  *                 description: Pin a specific post (+ its comments) as context
@@ -126,7 +132,7 @@ router.get('/health', async (req, res) => {
  *             schema:
  *               type: string
  *       400:
- *         description: Missing message or communityId
+ *         description: Missing message
  *       401:
  *         description: Not authenticated
  *       403:
@@ -135,23 +141,26 @@ router.get('/health', async (req, res) => {
 router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
   const { message, communityId, conversationId, postId, thread } = req.body;
 
-  if (!message || !communityId) {
+  if (!message) {
     return res.status(400).json({
       data: null,
-      error: 'message and communityId required',
+      error: 'message required',
       meta: {},
     });
   }
 
   try {
-    // aiEnabled gate — check before doing any DB writes or hitting Gemini
-    const community = await Community.findById(communityId).select('aiEnabled').lean();
-    if (!community?.aiEnabled) {
-      return res.status(403).json({
-      data: null,
-      error: 'AI chat is disabled for this community',
-        meta: {},
-      });
+    // aiEnabled gate — only when a community is being chatted about. The
+    // standalone site-wide chat (no communityId) is always available.
+    if (communityId) {
+      const community = await Community.findById(communityId).select('aiEnabled').lean();
+      if (!community?.aiEnabled) {
+        return res.status(403).json({
+          data: null,
+          error: 'AI chat is disabled for this community',
+          meta: {},
+        });
+      }
     }
 
     let conversation = conversationId
@@ -161,7 +170,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     if (!conversation) {
       conversation = await AIConversation.create({
         user: req.user.id,
-        community: communityId,
+        community: communityId || null,
       });
     }
 
@@ -171,7 +180,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
       content: message,
     });
 
-    logActivity('ai.chat', req, { communityId, conversationId: conversation._id });
+    logActivity('ai.chat', req, { communityId: communityId || null, conversationId: conversation._id });
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -185,7 +194,7 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
     try {
       const { stream, sources, tokenCount } = await aiService.streamChatResponse({
         message,
-        communityId,
+        communityId: communityId || null,
         conversationId: conversation._id,
         postId,
         thread,
@@ -200,7 +209,9 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
         res.write(
           `data: ${JSON.stringify({
             type: 'warning',
-            message: 'Limited context available — this community may not have enough indexed posts yet.',
+            message: communityId
+              ? 'Limited context available — this community may not have enough indexed posts yet.'
+              : 'Limited context available — try asking about posts that exist on ThreadVerse.',
           })}\n\n`
         );
       }
@@ -249,6 +260,65 @@ router.post('/chat', authMiddleware, aiRateLimiter, async (req, res) => {
       });
     }
     res.end();
+  }
+});
+
+// GET /ai/conversations — list the user's AI conversations.
+// Without query params this returns the user's most recent conversations.
+//   ?global=1        → only standalone site-wide chats (community: null)
+//   ?communityId=xxx → only chats inside that community
+// Sorted by most recently updated, newest first. Used by the standalone chat
+// drawer to resume where the user left off.
+/**
+ * @openapi
+ * /ai/conversations:
+ *   get:
+ *     tags: [AI]
+ *     summary: List the user's AI conversations
+ *     description: >
+ *       Newest first. Pass `?global=1` for the standalone site-wide chat
+ *       (community: null) or `?communityId=<id>` to scope to a community.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: global
+ *         schema:
+ *           type: string
+ *           enum: ['1']
+ *         description: Return only standalone site-wide conversations
+ *       - in: query
+ *         name: communityId
+ *         schema:
+ *           type: string
+ *         description: Return only conversations for this community
+ *     responses:
+ *       200:
+ *         description: Conversation list sorted by updatedAt desc
+ *       401:
+ *         description: Not authenticated
+ */
+router.get('/conversations', authMiddleware, async (req, res) => {
+  try {
+    const { communityId, global } = req.query;
+    const filter = { user: req.user.id };
+
+    if (global === '1') filter.community = null;
+    else if (communityId) filter.community = communityId;
+
+    const conversations = await AIConversation.find(filter)
+      .sort({ updatedAt: -1 })
+      .limit(20)
+      .lean();
+
+    return res.json({ data: conversations, error: null, meta: {} });
+  } catch (err) {
+    console.error('Error listing conversations:', err);
+    return res.status(500).json({
+      data: null,
+      error: 'Failed to list conversations',
+      meta: {},
+    });
   }
 });
 

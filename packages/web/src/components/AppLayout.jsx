@@ -10,6 +10,7 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { useIsDesktop } from '../hooks/useIsDesktop.js';
 import UpdateBanner from './UpdateBanner.jsx';
 import AuroraBackground from './AuroraBackground.jsx';
+import GlobalChatDrawer from './GlobalChatDrawer.jsx';
 
 // Feed-scene aurora — minimal by design: a single violet blob, dim (0.14),
 // hugging the top of the page and fading out below 60% viewport height via
@@ -103,6 +104,8 @@ export default function AppLayout() {
         </main>
       </div>
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {/* Persistent standalone AI chat — available on every protected page */}
+      <GlobalChatDrawer />
     </div>
   );
 }
