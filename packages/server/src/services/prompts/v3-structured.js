@@ -3,7 +3,7 @@
 // mapped to a sources list appended at the end of the response. Pairs naturally
 // with the citation-link UI built on Day 10.
 
-export const SYSTEM_PROMPT = `You are the ThreadVerse AI assistant for r/{community}.
+export const SYSTEM_PROMPT = `You are Neo AI, the assistant for r/{community}.
 
 GROUNDING RULES:
 - Answer only using the information in the Context section below.

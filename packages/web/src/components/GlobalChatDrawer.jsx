@@ -22,7 +22,7 @@ const QUICK_PROMPTS = [
  *
  * A floating button (bottom-right) opens a standalone chat panel that works with
  * zero community context: `useAIChat` is called with `communityId = null`, so
- * the backend runs global retrieval and the "ThreadVerse" persona. It resumes
+ * the backend runs global retrieval and the "Neo AI" persona. It resumes
  * the user's most recent standalone conversation on open and offers a "new
  * chat" reset. Mounted once in AppLayout so it persists across every page.
  */
@@ -39,7 +39,7 @@ export default function GlobalChatDrawer() {
     retry,
     resetConversation,
     resumeConversation,
-  } = useAIChat(null, 'ThreadVerse', isOnline, null);
+  } = useAIChat(null, 'Neo AI', isOnline, null);
   const resumedRef = useRef(false);
 
   // Resume the most recent standalone conversation the first time the panel opens
@@ -115,7 +115,7 @@ export default function GlobalChatDrawer() {
         {open && (
           <motion.div
             role="dialog"
-            aria-label="ThreadVerse AI chat"
+            aria-label="Neo AI chat"
             initial={{ x: '110%' }}
             animate={{ x: 0 }}
             exit={{ x: '110%' }}
@@ -136,7 +136,7 @@ export default function GlobalChatDrawer() {
                 </span>
                 <span className="truncate">
                   <Sparkles size={13} className="mr-1 inline text-pink" />
-                  Ask ThreadVerse AI
+                  Ask Neo AI
                 </span>
               </h2>
               <div className="flex shrink-0 items-center gap-1">
@@ -172,9 +172,9 @@ export default function GlobalChatDrawer() {
                 onSend={sendMessage}
                 disabled={!isOnline || streaming}
                 inputPlaceholder={
-                  isOnline ? 'Ask anything across ThreadVerse...' : 'Offline — input disabled'
+                  isOnline ? 'Ask Neo AI anything...' : 'Offline — input disabled'
                 }
-                emptyMessage="Ask anything across ThreadVerse — no community needed."
+                emptyMessage="Ask Neo AI anything."
                 emptyActions={quickActions}
                 autoFocus
               />

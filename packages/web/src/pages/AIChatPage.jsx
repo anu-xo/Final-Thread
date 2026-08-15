@@ -52,7 +52,7 @@ export default function AIChatPage() {
 
       {!selected ? (
         <div className="flex-1 flex flex-col items-center justify-center text-sm text-gray-400 dark:text-neutral-500 gap-4">
-          <p>You can still chat with the AI across all of ThreadVerse — no community needed.</p>
+          <p>Chat with Neo AI across the whole platform.</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               type="button"

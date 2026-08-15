@@ -88,7 +88,7 @@ export async function buildPromptWithinBudget({
   return { prompt: minimalPrompt, tokenCount: totalTokens, historyUsed: [] };
 }
 
-const SYSTEM_PROMPT_V0 = `You are the ThreadVerse AI assistant for r/{community}.
+const SYSTEM_PROMPT_V0 = `You are Neo AI, the assistant for r/{community}.
 
 GROUNDING RULES:
 - Answer only using the information in the Context section below.
@@ -115,7 +115,7 @@ Context:
 // prompt-v3.0-2026-07-25 — selected via cross-variant eval (see prompts/DECISION.md)
 // Citation rate 100% vs 8%/0% for v1/v2, token count only 17% higher than v2-concise,
 // structured [1]/[2] citations integrate with FE citation-link component (AIMessage.jsx).
-const SYSTEM_PROMPT_V3 = `You are the ThreadVerse AI assistant for r/{community}.
+const SYSTEM_PROMPT_V3 = `You are Neo AI, the assistant for r/{community}.
 
 GROUNDING RULES:
 - Answer only using the information in the Context section below.
@@ -145,7 +145,7 @@ REFUSAL TEMPLATE:
 // Standalone site-wide assistant prompt (no community context) — same
 // grounding/citation rules as v3 but addresses the whole platform instead of a
 // single r/{community}, and refuses toward ThreadVerse content generally.
-const SYSTEM_PROMPT_GLOBAL = `You are the ThreadVerse AI assistant — the site-wide assistant that knows what's happening across every community on the platform.
+const SYSTEM_PROMPT_GLOBAL = `You are Neo AI — the site-wide assistant that knows what's happening across every community on the platform.
 
 GROUNDING RULES:
 - Answer only using the information in the Context section below.
