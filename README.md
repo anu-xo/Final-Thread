@@ -1,5 +1,5 @@
 # ⚡ ThreadVerse
-Heyy Everyone!! Anuradha this side. I have made this app completely by myself. Please have a look!! 
+Heyy Everyone!! Anuradha this side. I have made this app completely by myself. Please have a look!! Neo - Intelligence Layer
 A Reddit-style community platform with AI chat, built with pure MERN stack.
 Available as a web app and native desktop app (Windows, macOS, Linux).
 This is one of the craziest project i have made so far.
